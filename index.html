@@ -125,12 +125,12 @@
               <div class="field-group">
                 <label for="devoir1">Note de devoir 1</label>
                 <input
-                  type="number"
+                  type="text"
                   id="devoir1"
                   min="0"
                   max="20"
-                  step="0.01"
-                  placeholder="Ex : 15,25"
+                  pattern="(?:[0-9]|1[0-9]|20)(?:[,.](?:25|50|75))?"
+                  placeholder="Ex : 15,25, 15,50 ou 15,75"
                   inputmode="decimal"
                   required
                 />
@@ -139,12 +139,12 @@
               <div class="field-group">
                 <label for="devoir2">Note de devoir 2</label>
                 <input
-                  type="number"
+                  type="text"
                   id="devoir2"
                   min="0"
                   max="20"
-                  step="0.01"
-                  placeholder="Ex : 12,50"
+                  pattern="(?:[0-9]|1[0-9]|20)(?:[,.](?:25|50|75))?"
+                  placeholder="Ex : 12,25, 12,50 ou 12,75"
                   inputmode="decimal"
                   required
                 />
@@ -168,12 +168,12 @@
             <div class="field-group composition-group" id="composition-group">
               <label for="composition">Note de composition</label>
               <input
-                type="number"
+                type="text"
                 id="composition"
                 min="0"
                 max="20"
-                step="0.01"
-                placeholder="Ex : 17,25"
+                pattern="(?:[0-9]|1[0-9]|20)(?:[,.](?:25|50|75))?"
+                placeholder="Ex : 17,25, 17,50 ou 17,75"
                 inputmode="decimal"
               />
             </div>

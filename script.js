@@ -201,7 +201,7 @@ toggleCompositionField();
 function isValidDecimalNote(value) {
   const raw = String(value).trim();
   if (!raw) return false;
-  if (!/^(?:\d+)(?:[.,]\d{1,2})?$/.test(raw)) {
+  if (!/^(?:\d|1\d|20)(?:[.,](?:25|50|75))?$/.test(raw)) {
     return false;
   }
 
@@ -231,7 +231,7 @@ function calculerMoyenneDeMatiere() {
   }
 
   if (![devoir1Raw, devoir2Raw].every((value) => isValidDecimalNote(value))) {
-    setResult('Veuillez entrer des notes de devoir valides entre 0 et 20, avec maximum 2 décimales.', true);
+    setResult('Les notes doivent être comprises entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.', true);
     return null;
   }
 
@@ -242,7 +242,7 @@ function calculerMoyenneDeMatiere() {
 
   if (hasComposition) {
     if (!isValidDecimalNote(compositionRaw)) {
-      setResult('Veuillez entrer une note de composition valide entre 0 et 20, avec maximum 2 décimales.', true);
+      setResult('La composition doit être comprise entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.', true);
       return null;
     }
   }
