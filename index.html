@@ -21,11 +21,11 @@
       <header class="topbar">
         <div class="brand">
           <div class="brand-mark-wrap">
-            <img src="lynaqe-03.webp" alt="Logo de LYNAQE de Sédhiou" class="brand-logo" />
+            <img src="lynaqe-03.webp" alt="Logo du LYNAQE de Sédhiou" class="brand-logo" width="300" height="300" />
           </div>
           <div>
             <p class="brand-name">LYNAQE SENEGAL</p>
-            <small>Fais par Ahmadou Bamba Bousso SANKHARE</small>
+            <small>Fait par Ahmadou Bamba Bousso SANKHARE</small>
           </div>
         </div>
         <div class="badge">Sénégal</div>
@@ -62,12 +62,12 @@
             <div class="two-columns">
               <div class="field-group">
                 <label for="nom">Nom</label>
-                <input type="text" id="nom" name="nom" placeholder="Ex : Diop" required />
+                <input type="text" id="nom" name="nom" autocomplete="family-name" placeholder="Ex : Diop" required />
               </div>
 
               <div class="field-group">
                 <label for="prenom">Prénom</label>
-                <input type="text" id="prenom" name="prenom" placeholder="Ex : Mamadou" required />
+                <input type="text" id="prenom" name="prenom" autocomplete="given-name" placeholder="Ex : Mamadou" required />
               </div>
             </div>
 
@@ -85,8 +85,8 @@
               </select>
             </div>
 
-            <div class="field-group" id="langue-group" style="display: none;">
-              <label>Quelle langue optez-vous ?</label>
+            <fieldset class="field-group" id="langue-group" hidden>
+              <legend>Quelle langue choisissez-vous ?</legend>
               <div class="choice-group" role="radiogroup" aria-label="Choix de langue">
                 <label class="choice-option">
                   <input type="radio" name="langue" value="Espagnol" />
@@ -97,7 +97,7 @@
                   <span>Arabe</span>
                 </label>
               </div>
-            </div>
+            </fieldset>
 
             <div class="field-group">
               <label for="matiere">Matière</label>
@@ -151,8 +151,8 @@
               </div>
             </div>
 
-            <div class="field-group">
-              <label>La matière comporte-t-elle une composition ?</label>
+            <fieldset class="field-group">
+              <legend>La matière comporte-t-elle une composition ?</legend>
               <div class="choice-group" role="radiogroup" aria-label="Composition disponible">
                 <label class="choice-option">
                   <input type="radio" name="hasComposition" value="oui" checked />
@@ -163,7 +163,7 @@
                   <span>Non</span>
                 </label>
               </div>
-            </div>
+            </fieldset>
 
             <div class="field-group composition-group" id="composition-group">
               <label for="composition">Note de composition</label>
@@ -213,11 +213,13 @@
                 <th>Matière</th>
                 <th>Moyenne</th>
                 <th>Coefficient</th>
+                <th>Points</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="matiere-table-body">
               <tr>
-                <td colspan="3" class="empty-state">Aucune matière enregistrée pour le moment.</td>
+                <td colspan="5" class="empty-state">Aucune matière enregistrée pour le moment.</td>
               </tr>
             </tbody>
           </table>

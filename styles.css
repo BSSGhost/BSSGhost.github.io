@@ -238,6 +238,21 @@ label {
   font-size: 0.96rem;
 }
 
+fieldset {
+  border: 0;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  width: 100%;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--dark);
+  font-size: 0.96rem;
+}
+
 .choice-group {
   display: flex;
   gap: 12px;
@@ -333,6 +348,24 @@ button {
 button:hover {
   transform: translateY(-2px);
   filter: brightness(1.02);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(247, 201, 72, 0.9);
+  outline-offset: 3px;
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
 }
 
 .secondary-button {
@@ -479,6 +512,30 @@ th {
   text-transform: uppercase;
 }
 
+.table-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.table-action {
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  box-shadow: none;
+}
+
+.edit-action {
+  background: var(--green-700);
+}
+
+.delete-action {
+  background: rgba(217, 60, 60, 0.1);
+  border: 1px solid rgba(217, 60, 60, 0.2);
+  color: var(--red-600);
+}
+
 .empty-state {
   text-align: center;
   color: var(--muted);
@@ -515,6 +572,24 @@ th {
 
 .hidden {
   display: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 @media (max-width: 860px) {
