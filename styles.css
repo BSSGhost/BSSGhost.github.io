@@ -265,6 +265,7 @@ h1 {
   margin-top: 28px;
   position: relative;
   z-index: 1;
+  flex-wrap: wrap;
 }
 
 .partner-visual {
