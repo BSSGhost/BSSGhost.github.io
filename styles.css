@@ -258,6 +258,52 @@ h1 {
   font-size: 0.8rem;
 }
 
+.partner-visuals {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.partner-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+  height: 88px;
+  overflow: hidden;
+  border: 1px solid rgba(29, 106, 82, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 253, 248, 0.82);
+  box-shadow: 0 10px 20px rgba(28, 55, 43, 0.08);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.partner-visual-wide {
+  width: 178px;
+}
+
+.partner-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.partner-visual:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.02);
+  box-shadow: 0 14px 24px rgba(21, 91, 66, 0.2);
+}
+
+.partner-visual:hover img {
+  transform: scale(1.04);
+}
+
 .calculator-card {
   padding: 30px 28px;
   background: rgba(255, 253, 248, 0.95);
@@ -689,6 +735,19 @@ th {
 
   .info-panel {
     padding: 32px 22px;
+  }
+
+  .partner-visuals {
+    gap: 10px;
+  }
+
+  .partner-visual {
+    width: 92px;
+    height: 74px;
+  }
+
+  .partner-visual-wide {
+    width: 148px;
   }
 
   .calculator-card {
