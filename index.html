@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LYNAQE SENEGAL | Calcul de moyenne</title>
+    <meta
+      name="description"
+      content="Calculateur de moyenne pour élèves du LYNAQE."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark-wrap">
+            <img src="lynaqe-03.webp" alt="Logo de LYNAQE de Sédhiou" class="brand-logo" />
+          </div>
+          <div>
+            <p class="brand-name">LYNAQE SENEGAL</p>
+            <small>Fais par Ahmadou Bamba Bousso SANKHARE</small>
+          </div>
+        </div>
+        <div class="badge">Sénégal</div>
+      </header>
+
+      <main class="hero">
+        <section class="info-panel">
+          <p class="eyebrow">Outil scolaire officiel</p>
+          <h1>Calculez votre moyenne de matière et semestrielle en quelques secondes</h1>
+          <p class="subtitle">
+            Saisissez votre matière, votre coefficient, vos notes de devoirs et de composition,
+            puis obtenez votre moyenne finale de façon rapide et fiable.
+          </p>
+
+          <div class="stats">
+            <div>
+              <strong>2</strong>
+              <span>Devoirs</span>
+            </div>
+            <div>
+              <strong>1</strong>
+              <span>Composition</span>
+            </div>
+            <div>
+              <strong>Coeff.</strong>
+              <span>Personnalisé</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="calculator-card">
+          <h2>Formulaire</h2>
+          <form id="moyenne-form">
+            <div class="two-columns">
+              <div class="field-group">
+                <label for="nom">Nom</label>
+                <input type="text" id="nom" name="nom" placeholder="Ex : Diop" required />
+              </div>
+
+              <div class="field-group">
+                <label for="prenom">Prénom</label>
+                <input type="text" id="prenom" name="prenom" placeholder="Ex : Mamadou" required />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="classe">Classe</label>
+              <select id="classe" name="classe" required>
+                <option value="">-- Sélectionner votre classe --</option>
+                <option value="6e">6e</option>
+                <option value="5e">5e</option>
+                <option value="4e">4e</option>
+                <option value="3e">3e</option>
+                <option value="2nde">2nde</option>
+                <option value="1er">1er</option>
+                <option value="Tle">Tle</option>
+              </select>
+            </div>
+
+            <div class="field-group" id="langue-group" style="display: none;">
+              <label>Quelle langue optez-vous ?</label>
+              <div class="choice-group" role="radiogroup" aria-label="Choix de langue">
+                <label class="choice-option">
+                  <input type="radio" name="langue" value="Espagnol" />
+                  <span>Espagnol</span>
+                </label>
+                <label class="choice-option">
+                  <input type="radio" name="langue" value="Arabe" />
+                  <span>Arabe</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="matiere">Matière</label>
+              <select id="matiere" name="matiere" required>
+                <option value="">-- Sélectionner une matière --</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="coefficient">Coefficient</label>
+              <input
+                type="number"
+                id="coefficient"
+                name="coefficient"
+                min="1"
+                max="8"
+                step="1"
+                placeholder="Ex : 4"
+                inputmode="numeric"
+                required
+              />
+            </div>
+
+            <div class="two-columns">
+              <div class="field-group">
+                <label for="devoir1">Note de devoir 1</label>
+                <input
+                  type="number"
+                  id="devoir1"
+                  min="0"
+                  max="20"
+                  step="0.01"
+                  placeholder="Ex : 15,25"
+                  inputmode="decimal"
+                  required
+                />
+              </div>
+
+              <div class="field-group">
+                <label for="devoir2">Note de devoir 2</label>
+                <input
+                  type="number"
+                  id="devoir2"
+                  min="0"
+                  max="20"
+                  step="0.01"
+                  placeholder="Ex : 12,50"
+                  inputmode="decimal"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>La matière comporte-t-elle une composition ?</label>
+              <div class="choice-group" role="radiogroup" aria-label="Composition disponible">
+                <label class="choice-option">
+                  <input type="radio" name="hasComposition" value="oui" checked />
+                  <span>Oui</span>
+                </label>
+                <label class="choice-option">
+                  <input type="radio" name="hasComposition" value="non" />
+                  <span>Non</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="field-group composition-group" id="composition-group">
+              <label for="composition">Note de composition</label>
+              <input
+                type="number"
+                id="composition"
+                min="0"
+                max="20"
+                step="0.01"
+                placeholder="Ex : 17,25"
+                inputmode="decimal"
+              />
+            </div>
+
+            <div class="button-row">
+              <button type="submit">Calculer la moyenne de la matière</button>
+              <button type="button" id="calculer-semestre" class="secondary-button">
+                Calculer ma moyenne du semestre
+              </button>
+            </div>
+
+            <div class="button-row reset-row">
+              <button type="button" id="reset-donnees" class="ghost-button">
+                Réinitialiser les données
+              </button>
+            </div>
+          </form>
+        </section>
+      </main>
+
+      <section id="resultat" class="result-card" aria-live="polite">
+        <p class="result-label">Résultat</p>
+        <div class="result-content">
+          <h3>Votre moyenne apparaîtra ici.</h3>
+        </div>
+      </section>
+
+      <section id="tableau-matieres" class="subjects-card" aria-live="polite">
+        <div class="subjects-header">
+          <h3>Matières enregistrées</h3>
+          <span id="classe-label">Aucune classe sélectionnée</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Matière</th>
+                <th>Moyenne</th>
+                <th>Coefficient</th>
+              </tr>
+            </thead>
+            <tbody id="matiere-table-body">
+              <tr>
+                <td colspan="3" class="empty-state">Aucune matière enregistrée pour le moment.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <a
+          class="official-site-button"
+          href="https://lynaqesedhiou.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          En savoir plus sur le LYNAQE
+        </a>
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
