@@ -10,6 +10,7 @@ const boutonSemestre = document.getElementById('calculer-semestre');
 const boutonReset = document.getElementById('reset-donnees');
 const tableBody = document.getElementById('matiere-table-body');
 const classeLabel = document.getElementById('classe-label');
+const partnerVisuals = document.querySelectorAll('.partner-visual');
 
 const matieresCommunesBase = [
   'Mathématiques',
@@ -197,6 +198,12 @@ document.querySelectorAll('input[name="hasComposition"]').forEach((radio) => {
 });
 
 toggleCompositionField();
+
+partnerVisuals.forEach((visual) => {
+  visual.addEventListener('pointerenter', () => visual.classList.add('is-hovered'));
+  visual.addEventListener('pointerleave', () => visual.classList.remove('is-hovered'));
+  visual.addEventListener('pointercancel', () => visual.classList.remove('is-hovered'));
+});
 
 function isValidDecimalNote(value) {
   const raw = String(value).trim();
