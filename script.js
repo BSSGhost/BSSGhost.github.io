@@ -55,17 +55,27 @@ function getMatieresPourClasse(classe) {
   const matieresSansEconomie = baseMatieres.filter(
     matiere => matiere !== 'Economie Familiale et Sociale'
   );
+  const matieresSansEconomieEtCivisme = matieresSansEconomie.filter(
+    matiere => matiere !== 'Education au Civisme et à la Citoyenneté'
+  );
+  const matieresSansCivisme = baseMatieres.filter(
+    matiere => matiere !== 'Education au Civisme et à la Citoyenneté'
+  );
 
   if (classe === 'Tle') {
-    return [...matieresSansEconomie, 'Sciences Physiques', 'Philosophie'];
+    return [...matieresSansEconomieEtCivisme, 'Sciences Physiques', 'Philosophie'];
   }
 
-  if (['2nde', '1er'].includes(classe)) {
+  if (classe === '1er') {
+    return [...matieresSansEconomieEtCivisme, 'Sciences Physiques'];
+  }
+
+  if (classe === '2nde') {
     return [...matieresSansEconomie, 'Sciences Physiques'];
   }
 
   if (['4e', '3e'].includes(classe)) {
-    return [...baseMatieres, 'Sciences Physiques'];
+    return [...matieresSansCivisme, 'Sciences Physiques'];
   }
 
   return baseMatieres;
