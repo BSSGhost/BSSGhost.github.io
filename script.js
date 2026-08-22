@@ -307,6 +307,16 @@ partnerVisuals.forEach((visual) => {
   visual.addEventListener('pointercancel', () => visual.classList.remove('is-hovered'));
 });
 
+const officialSiteLogo = document.querySelector('.official-site-logo');
+
+if (officialSiteLogo && !prefersReducedMotion) {
+  officialSiteLogo.closest('.official-site-button')?.addEventListener('click', () => {
+    officialSiteLogo.classList.remove('is-tapped');
+    void officialSiteLogo.offsetWidth;
+    officialSiteLogo.classList.add('is-tapped');
+  });
+}
+
 function isValidDecimalNote(value) {
   const raw = String(value).trim();
   if (!raw) return false;
