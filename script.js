@@ -11,6 +11,94 @@ const boutonReset = document.getElementById('reset-donnees');
 const tableBody = document.getElementById('matiere-table-body');
 const classeLabel = document.getElementById('classe-label');
 const partnerVisuals = document.querySelectorAll('.partner-visual');
+const calculatorCard = document.querySelector('.calculator-card');
+
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function gradeClass(value) {
+  if (value < 10) return 'grade-faible';
+  if (value < 14) return 'grade-moyen';
+  return 'grade-bien';
+}
+
+function animateValue(el, from, to, duration = 900) {
+  if (prefersReducedMotion || duration <= 0) {
+    el.textContent = to.toFixed(2);
+    return;
+  }
+
+  const start = performance.now();
+
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = from + (to - from) * eased;
+    el.textContent = current.toFixed(2);
+
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      el.textContent = to.toFixed(2);
+    }
+  }
+
+  requestAnimationFrame(tick);
+}
+
+function pulseCard() {
+  if (prefersReducedMotion || !calculatorCard) return;
+  calculatorCard.classList.remove('just-saved');
+  void calculatorCard.offsetWidth;
+  calculatorCard.classList.add('just-saved');
+}
+
+function renderMoyenneResult({ pillText, value, subtitleText, coefficientText }) {
+  resultat.classList.remove('error', 'shake');
+  const resultContent = resultat.querySelector('.result-content');
+  resultContent.replaceChildren();
+
+  const summary = document.createElement('div');
+  summary.className = 'result-summary';
+
+  const resultPill = document.createElement('span');
+  resultPill.className = 'result-pill';
+  resultPill.textContent = pillText;
+
+  const resultValue = document.createElement('strong');
+  resultValue.className = 'result-value';
+  resultValue.textContent = '0.00';
+
+  const gauge = document.createElement('div');
+  gauge.className = `moyenne-gauge ${gradeClass(value)}`;
+  const gaugeTrack = document.createElement('div');
+  gaugeTrack.className = 'moyenne-gauge-track';
+  const gaugeFill = document.createElement('div');
+  gaugeFill.className = 'moyenne-gauge-fill';
+  gaugeTrack.appendChild(gaugeFill);
+  gauge.appendChild(gaugeTrack);
+
+  summary.append(resultPill, resultValue, gauge);
+
+  if (coefficientText) {
+    const coeffLine = document.createElement('small');
+    coeffLine.className = 'result-coeff';
+    coeffLine.textContent = coefficientText;
+    summary.appendChild(coeffLine);
+  }
+
+  const resultStudent = document.createElement('small');
+  resultStudent.textContent = subtitleText;
+  summary.appendChild(resultStudent);
+
+  resultContent.appendChild(summary);
+
+  requestAnimationFrame(() => {
+    gaugeFill.style.width = `${Math.min((value / 20) * 100, 100)}%`;
+  });
+
+  animateValue(resultValue, 0, value);
+  resultat.classList.remove('error');
+}
 
 const matieresCommunesBase = [
   'Mathématiques',
@@ -106,8 +194,10 @@ function renderTableMatiere() {
 
   tableBody.replaceChildren();
 
-  entries.forEach(([matiere, data]) => {
+  entries.forEach(([matiere, data], index) => {
     const row = document.createElement('tr');
+    row.className = 'row-in';
+    row.style.animationDelay = prefersReducedMotion ? '0s' : `${index * 45}ms`;
     const moyenne = Number(data.moyenne);
     const coefficient = Number(data.coefficient);
     const points = Number(data.points ?? moyenne);
@@ -176,15 +266,17 @@ langueRadios.forEach(radio => radio.addEventListener('change', updateMatieres));
 function setResult(message, isError = false) {
   resultat.classList.toggle('error', isError);
   const resultContent = resultat.querySelector('.result-content');
-  let resultTitle = resultContent.querySelector('h3');
+  resultContent.replaceChildren();
 
-  if (!resultTitle) {
-    resultContent.replaceChildren();
-    resultTitle = document.createElement('h3');
-    resultContent.appendChild(resultTitle);
-  }
-
+  const resultTitle = document.createElement('h3');
   resultTitle.textContent = message;
+  resultContent.appendChild(resultTitle);
+
+  if (isError && !prefersReducedMotion) {
+    resultat.classList.remove('shake');
+    void resultat.offsetWidth;
+    resultat.classList.add('shake');
+  }
 }
 classeSelect.addEventListener('change', function () {
   langueRadios.forEach((radio) => {
@@ -285,7 +377,13 @@ function calculerMoyenneDeMatiere() {
     prenom
   });
 
-  setResult(`${prenom} ${nom} (${classe}) — ${matiere} : moyenne = ${moyenneMatiere.toFixed(2)}`);
+  renderMoyenneResult({
+    pillText: matiere,
+    value: moyenneMatiere,
+    subtitleText: `${prenom} ${nom} • ${classe}`,
+    coefficientText: `Coefficient ${coefficient}`
+  });
+  pulseCard();
   return { moyenneMatiere, coefficient };
 }
 
@@ -344,25 +442,11 @@ boutonSemestre.addEventListener('click', function () {
 
   const moyenneSemestre = sommePoints / sommeCoefficients;
 
-  const resultContent = resultat.querySelector('.result-content');
-  resultContent.replaceChildren();
-
-  const summary = document.createElement('div');
-  summary.className = 'result-summary';
-
-  const resultPill = document.createElement('span');
-  resultPill.className = 'result-pill';
-  resultPill.textContent = 'Moyenne du semestre';
-
-  const resultValue = document.createElement('strong');
-  resultValue.textContent = moyenneSemestre.toFixed(2);
-
-  const resultStudent = document.createElement('small');
-  resultStudent.textContent = `${prenom} ${nom} • ${classe}`;
-
-  summary.append(resultPill, resultValue, resultStudent);
-  resultContent.appendChild(summary);
-  resultat.classList.remove('error');
+  renderMoyenneResult({
+    pillText: 'Moyenne du semestre',
+    value: moyenneSemestre,
+    subtitleText: `${prenom} ${nom} • ${classe}`
+  });
 });
 
 tableBody.addEventListener('click', function (event) {
