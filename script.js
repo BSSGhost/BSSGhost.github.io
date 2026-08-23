@@ -28,7 +28,7 @@ function updateViewportScale() {
 
   const actualWidth = deviceViewportOuter.clientWidth;
 
-  // Si on est sur téléphone ou si l'écran est petit, on adapte en 100% de largeur sans scaling problématique
+  // AJOUT : Évite de rétrécir / casser l'affichage sur téléphone et petits écrans
   if (currentDevice === 'phone' || actualWidth <= 480) {
     deviceViewport.style.width = '100%';
     deviceViewport.style.transform = 'none';
@@ -48,6 +48,11 @@ function updateViewportScale() {
 
 function setDeviceReference(device) {
   currentDevice = device;
+  const refWidth = DEVICE_REFERENCE_WIDTHS[device];
+
+  if (!deviceViewport || !refWidth) return;
+
+  deviceViewport.style.width = `${refWidth}px`;
   requestAnimationFrame(updateViewportScale);
 }
 
@@ -297,7 +302,6 @@ function renderTableMatiere() {
     const row = document.createElement('tr');
     row.className = 'row-in';
     row.style.animationDelay = prefersReducedMotion ? '0s' : `${index * 45}ms`;
-
     const moyenne = Number(data.moyenne);
     const coefficient = Number(data.coefficient);
     const points = Number(data.points ?? moyenne);
@@ -333,6 +337,7 @@ function renderTableMatiere() {
 
 function updateMatieres() {
   const selectedClasse = classeSelect.value;
+  const selectedLangue = document.querySelector('input[name="langue"]:checked')?.value;
 
   matiereSelect.innerHTML = '<option value="">-- Sélectionner une matière --</option>';
 
@@ -365,18 +370,32 @@ langueRadios.forEach(radio => radio.addEventListener('change', updateMatieres));
 function setResult(message, isError = false) {
   resultat.classList.toggle('error', isError);
   const resultContent = resultat.querySelector('.result-content');
-  resultContent.innerHTML = `<p class="result-message">${message}</p>`;
+  resultContent.replaceChildren();
+
+  const resultTitle = document.createElement('h3');
+  resultTitle.textContent = message;
+  resultContent.appendChild(resultTitle);
+
+  if (isError && !prefersReducedMotion) {
+    resultat.classList.remove('shake');
+    void resultat.offsetWidth;
+    resultat.classList.add('shake');
+  }
 }
+classeSelect.addEventListener('change', function () {
+  langueRadios.forEach((radio) => {
+    radio.checked = false;
+  });
+  updateMatieres();
+});
 
 function toggleCompositionField() {
-  const hasComposition = document.querySelector('input[name="hasComposition"]:checked')?.value;
-  if (hasComposition === 'non') {
-    compositionGroup.hidden = true;
-    compositionInput.required = false;
+  const hasComposition = document.querySelector('input[name="hasComposition"]:checked')?.value === 'oui';
+  compositionGroup.classList.toggle('hidden', !hasComposition);
+  compositionInput.required = hasComposition;
+
+  if (!hasComposition) {
     compositionInput.value = '';
-  } else {
-    compositionGroup.hidden = false;
-    compositionInput.required = true;
   }
 }
 
@@ -384,48 +403,201 @@ document.querySelectorAll('input[name="hasComposition"]').forEach((radio) => {
   radio.addEventListener('change', toggleCompositionField);
 });
 
-classeSelect.addEventListener('change', updateMatieres);
+toggleCompositionField();
 
-tableBody.addEventListener('click', (e) => {
-  const button = e.target.closest('button[data-action]');
-  if (!button) return;
+partnerVisuals.forEach((visual) => {
+  visual.addEventListener('pointerenter', () => visual.classList.add('is-hovered'));
+  visual.addEventListener('pointerleave', () => visual.classList.remove('is-hovered'));
+  visual.addEventListener('pointercancel', () => visual.classList.remove('is-hovered'));
+});
 
-  const action = button.dataset.action;
-  const matiere = button.dataset.matiere;
-  const classe = classeSelect.value;
+const officialSiteLogo = document.querySelector('.official-site-logo');
 
-  if (!classe || !matiere) return;
+if (officialSiteLogo && !prefersReducedMotion) {
+  officialSiteLogo.closest('.official-site-button')?.addEventListener('click', () => {
+    officialSiteLogo.classList.remove('is-tapped');
+    void officialSiteLogo.offsetWidth;
+    officialSiteLogo.classList.add('is-tapped');
+  });
+}
 
-  if (action === 'delete') {
-    const notes = getStoredNotesForClasse(classe);
-    delete notes[matiere];
-    localStorage.setItem(getClassStorageKey(classe), JSON.stringify(notes));
-    renderTableMatiere();
-    setResult(`La matière "${matiere}" a été supprimée.`);
+function isValidDecimalNote(value) {
+  const raw = String(value).trim();
+  if (!raw) return false;
+  if (!/^(?:\d|1\d|20)(?:[.,](?:25|50|75))?$/.test(raw)) {
+    return false;
+  }
+
+  const normalized = raw.replace(',', '.');
+  const number = Number(normalized);
+  return Number.isFinite(number) && number >= 0 && number <= 20;
+}
+
+function parseDecimalNote(value) {
+  return Number(String(value).trim().replace(',', '.'));
+}
+
+function calculerMoyenneDeMatiere() {
+  const nom = document.getElementById('nom').value.trim();
+  const prenom = document.getElementById('prenom').value.trim();
+  const classe = document.getElementById('classe').value.trim();
+  const matiere = document.getElementById('matiere').value.trim();
+  const coefficient = Number(document.getElementById('coefficient').value);
+  const devoir1Raw = document.getElementById('devoir1').value;
+  const devoir2Raw = document.getElementById('devoir2').value;
+  const hasComposition = document.querySelector('input[name="hasComposition"]:checked')?.value === 'oui';
+  const compositionRaw = compositionInput.value;
+
+  if (!nom || !prenom || !classe || !matiere) {
+    setResult('Veuillez renseigner votre nom, prénom, classe et matière.', true);
+    return null;
+  }
+
+  if (![devoir1Raw, devoir2Raw].every((value) => isValidDecimalNote(value))) {
+    setResult('Les notes doivent être comprises entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.', true);
+    return null;
+  }
+
+  if (!Number.isInteger(coefficient) || coefficient < 1 || coefficient > 8) {
+    setResult('Veuillez entrer un coefficient valide entre 1 et 8.', true);
+    return null;
+  }
+
+  if (hasComposition) {
+    if (!isValidDecimalNote(compositionRaw)) {
+      setResult('La composition doit être comprise entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.', true);
+      return null;
+    }
+  }
+
+  const devoir1 = parseDecimalNote(devoir1Raw);
+  const devoir2 = parseDecimalNote(devoir2Raw);
+  const composition = hasComposition ? parseDecimalNote(compositionRaw) : null;
+  const moyenneDevoirs = (devoir1 + devoir2) / 2;
+  const moyenneMatiere = hasComposition
+    ? (moyenneDevoirs + composition) / 2
+    : moyenneDevoirs;
+  const points = moyenneMatiere * coefficient;
+
+  saveMatiereNote(classe, matiere, {
+    moyenne: moyenneMatiere,
+    points,
+    coefficient,
+    devoir1,
+    devoir2,
+    composition,
+    hasComposition,
+    nom,
+    prenom
+  });
+
+  renderMoyenneResult({
+    pillText: matiere,
+    value: moyenneMatiere,
+    subtitleText: `${prenom} ${nom} • ${classe}`,
+    coefficientText: `Coefficient ${coefficient}`
+  });
+  pulseCard();
+  return { moyenneMatiere, coefficient };
+}
+
+form.addEventListener('submit', function (event) {
+  event.preventDefault();
+  calculerMoyenneDeMatiere();
+});
+
+boutonSemestre.addEventListener('click', function () {
+  const classe = classeSelect.value.trim();
+  const prenom = document.getElementById('prenom').value.trim();
+  const nom = document.getElementById('nom').value.trim();
+
+  if (!classe) {
+    setResult('Veuillez d’abord sélectionner une classe pour calculer votre moyenne du semestre.', true);
     return;
   }
 
-  if (action === 'edit') {
-    const notes = getStoredNotesForClasse(classe);
-    const note = notes[matiere];
-    if (!note) return;
-
-    matiereSelect.value = matiere;
-    document.getElementById('coefficient').value = note.coefficient ?? '';
-    document.getElementById('devoir1').value = note.devoir1 ?? '';
-    document.getElementById('devoir2').value = note.devoir2 ?? '';
-    compositionInput.value = note.composition ?? '';
-    document.getElementById('nom').value = note.nom ?? '';
-    document.getElementById('prenom').value = note.prenom ?? '';
-
-    const compositionRadio = document.querySelector(
-      `input[name="hasComposition"][value="${note.hasComposition === false ? 'non' : 'oui'}"]`
-    );
-    if (compositionRadio) compositionRadio.checked = true;
-    toggleCompositionField();
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setResult(`Les données de ${matiere} sont prêtes à être modifiées.`);
+  if (['4e', '3e', '2nde', '1er', 'Tle'].includes(classe)) {
+    const selectedLangue = document.querySelector('input[name="langue"]:checked')?.value;
+    if (!selectedLangue) {
+      setResult('Veuillez choisir votre langue pour cette classe avant de calculer la moyenne du semestre.', true);
+      return;
+    }
   }
+
+  const matieres = getMatieresDisponiblesPourClasse(classe);
+  const notes = getStoredNotesForClasse(classe);
+  const matieresCalculees = matieres
+    .map(matiere => ({
+      matiere,
+      note: notes[matiere]
+    }))
+    .filter(entry => entry.note);
+
+  if (matieresCalculees.length !== matieres.length) {
+    const matieresManquantes = matieres.filter(matiere => !notes[matiere]);
+
+    setResult(
+      `Vous devez d’abord calculer toutes les matières de la classe. Matières manquantes : ${matieresManquantes.join(', ')}.`,
+      true
+    );
+    return;
+  }
+
+  const sommePoints = matieresCalculees.reduce(
+    (total, item) => total + Number(item.note.points ?? item.note.moyenne),
+    0
+  );
+  const sommeCoefficients = matieresCalculees.reduce((total, item) => total + Number(item.note.coefficient), 0);
+
+  if (sommeCoefficients === 0) {
+    setResult('Aucun coefficient disponible pour calculer la moyenne du semestre.', true);
+    return;
+  }
+
+  const moyenneSemestre = sommePoints / sommeCoefficients;
+
+  renderMoyenneResult({
+    pillText: 'Moyenne du semestre',
+    value: moyenneSemestre,
+    subtitleText: `${prenom} ${nom} • ${classe}`
+  });
+});
+
+tableBody.addEventListener('click', function (event) {
+  const actionButton = event.target.closest('button[data-action]');
+  if (!actionButton) return;
+
+  const classe = classeSelect.value.trim();
+  const matiere = actionButton.dataset.matiere;
+  const notes = getStoredNotesForClasse(classe);
+  const note = notes[matiere];
+
+  if (!classe || !note) return;
+
+  if (actionButton.dataset.action === 'delete') {
+    if (!window.confirm(`Supprimer la matière « ${matiere} » ?`)) return;
+    delete notes[matiere];
+    localStorage.setItem(getClassStorageKey(classe), JSON.stringify(notes));
+    renderTableMatiere();
+    setResult(`La matière ${matiere} a été supprimée.`);
+    return;
+  }
+
+  matiereSelect.value = matiere;
+  document.getElementById('coefficient').value = note.coefficient ?? '';
+  document.getElementById('devoir1').value = note.devoir1 ?? '';
+  document.getElementById('devoir2').value = note.devoir2 ?? '';
+  compositionInput.value = note.composition ?? '';
+  document.getElementById('nom').value = note.nom ?? '';
+  document.getElementById('prenom').value = note.prenom ?? '';
+
+  const compositionRadio = document.querySelector(
+    `input[name="hasComposition"][value="${note.hasComposition === false ? 'non' : 'oui'}"]`
+  );
+  if (compositionRadio) compositionRadio.checked = true;
+  toggleCompositionField();
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setResult(`Les données de ${matiere} sont prêtes à être modifiées.`);
 });
 
 boutonReset.addEventListener('click', function () {
@@ -443,111 +615,12 @@ boutonReset.addEventListener('click', function () {
   toggleCompositionField();
   renderTableMatiere();
   setResult('Les données ont été réinitialisées avec succès.', false);
-});
-
-form.addEventListener('submit', function (e) {
-  e.preventDefault();
-
-  const nom = document.getElementById('nom').value.trim();
-  const prenom = document.getElementById('prenom').value.trim();
-  const classe = classeSelect.value;
-  const matiere = matiereSelect.value;
-  const coefficient = parseFloat(document.getElementById('coefficient').value);
-  const devoir1 = parseFloat(document.getElementById('devoir1').value);
-  const devoir2 = parseFloat(document.getElementById('devoir2').value);
-  const hasComposition = document.querySelector('input[name="hasComposition"]:checked')?.value !== 'non';
-  const composition = hasComposition ? parseFloat(compositionInput.value) : null;
-
-  if (!nom || !prenom || !classe || !matiere || isNaN(coefficient)) {
-    setResult('Veuillez remplir correctement tous les champs obligatoires.', true);
-    return;
-  }
-
-  let moyDevoirs = 0;
-  let nbDevoirs = 0;
-  if (!isNaN(devoir1)) { moyDevoirs += devoir1; nbDevoirs++; }
-  if (!isNaN(devoir2)) { moyDevoirs += devoir2; nbDevoirs++; }
-
-  if (nbDevoirs === 0 && (!hasComposition || isNaN(composition))) {
-    setResult('Veuillez saisir au moins une note (devoir ou composition).', true);
-    return;
-  }
-
-  moyDevoirs = nbDevoirs > 0 ? moyDevoirs / nbDevoirs : 0;
-
-  let moyenneMatiere = 0;
-  if (hasComposition && !isNaN(composition)) {
-    moyenneMatiere = nbDevoirs > 0 ? (moyDevoirs + composition) / 2 : composition;
-  } else {
-    moyenneMatiere = moyDevoirs;
-  }
-
-  const points = moyenneMatiere * coefficient;
-
-  saveMatiereNote(classe, matiere, {
-    nom,
-    prenom,
-    coefficient,
-    devoir1: isNaN(devoir1) ? null : devoir1,
-    devoir2: isNaN(devoir2) ? null : devoir2,
-    hasComposition,
-    composition,
-    moyenne: moyenneMatiere,
-    points
-  });
-
-  pulseCard();
-  renderMoyenneResult({
-    pillText: matiere,
-    value: moyenneMatiere,
-    subtitleText: `${prenom} ${nom} (${classe})`,
-    coefficientText: `Coefficient : ${coefficient} | Points : ${points.toFixed(2)}`
-  });
-});
-
-boutonSemestre?.addEventListener('click', function () {
-  const classe = classeSelect.value;
   if (!classe) {
-    setResult('Veuillez sélectionner une classe pour calculer la moyenne du semestre.', true);
-    return;
+    matiereSelect.innerHTML = '<option value="">-- Sélectionner une matière --</option>';
+    classeSelect.value = '';
+    langueGroup.hidden = true;
   }
-
-  const notes = getStoredNotesForClasse(classe);
-  const entries = Object.entries(notes);
-
-  if (!entries.length) {
-    setResult('Aucune matière enregistrée pour cette classe.', true);
-    return;
-  }
-
-  let totalPoints = 0;
-  let totalCoefficients = 0;
-  let studentName = '';
-
-  entries.forEach(([, data]) => {
-    const coeff = Number(data.coefficient) || 0;
-    const moy = Number(data.moyenne) || 0;
-    totalPoints += moy * coeff;
-    totalCoefficients += coeff;
-    if (!studentName && data.prenom && data.nom) {
-      studentName = `${data.prenom} ${data.nom}`;
-    }
-  });
-
-  if (totalCoefficients === 0) {
-    setResult('Les coefficients enregistrés sont invalides.', true);
-    return;
-  }
-
-  const moyenneSemestrielle = totalPoints / totalCoefficients;
-
-  renderMoyenneResult({
-    pillText: 'Moyenne Général (Semestre)',
-    value: moyenneSemestrielle,
-    subtitleText: studentName ? `${studentName} (${classe})` : `Classe : ${classe}`,
-    coefficientText: `Total coefficients : ${totalCoefficients} | Total points : ${totalPoints.toFixed(2)}`
-  });
 });
 
-// Initialisation au chargement
-toggleCompositionField();
+updateMatieres();
+renderTableMatiere();
