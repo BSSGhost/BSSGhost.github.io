@@ -12,8 +12,61 @@ const tableBody = document.getElementById('matiere-table-body');
 const classeLabel = document.getElementById('classe-label');
 const partnerVisuals = document.querySelectorAll('.partner-visual');
 const calculatorCard = document.querySelector('.calculator-card');
+const deviceModal = document.getElementById('device-modal');
+const deviceOptions = document.querySelectorAll('.device-option');
+const changeDeviceBtn = document.getElementById('change-device-btn');
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const DEVICE_STORAGE_KEY = 'lynaqe_device';
+const DEVICE_CLASSES = ['device-phone', 'device-tablette', 'device-ordinateur'];
+
+function applyDeviceClass(device) {
+  DEVICE_CLASSES.forEach((cls) => document.documentElement.classList.remove(cls));
+  document.documentElement.classList.add(`device-${device}`);
+  document.documentElement.setAttribute('data-device-picked', 'true');
+}
+
+function closeDeviceModal() {
+  if (!deviceModal) return;
+
+  if (prefersReducedMotion) {
+    deviceModal.style.display = 'none';
+    return;
+  }
+
+  deviceModal.classList.add('is-closing');
+  deviceModal.addEventListener(
+    'animationend',
+    () => {
+      deviceModal.style.display = 'none';
+      deviceModal.classList.remove('is-closing');
+    },
+    { once: true }
+  );
+}
+
+function openDeviceModal() {
+  if (!deviceModal) return;
+  deviceModal.classList.remove('is-closing');
+  deviceModal.style.display = 'flex';
+  deviceOptions[0]?.focus();
+}
+
+deviceOptions.forEach((button) => {
+  button.addEventListener('click', () => {
+    const device = button.dataset.device;
+    try {
+      localStorage.setItem(DEVICE_STORAGE_KEY, device);
+    } catch {
+      // stockage indisponible : le choix restera actif seulement pour cette visite
+    }
+    applyDeviceClass(device);
+    closeDeviceModal();
+  });
+});
+
+changeDeviceBtn?.addEventListener('click', openDeviceModal);
 
 function gradeClass(value) {
   if (value < 10) return 'grade-faible';

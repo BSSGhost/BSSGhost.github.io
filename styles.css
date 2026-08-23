@@ -74,10 +74,124 @@ th {
   }
 }
 
+.device-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(16, 47, 40, 0.72), rgba(23, 37, 31, 0.82));
+  backdrop-filter: blur(6px);
+  animation: rise-in 0.35s ease both;
+}
+
+html[data-device-picked="true"] .device-modal {
+  display: none;
+}
+
+@keyframes modal-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modal-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+.device-modal.is-closing {
+  animation: modal-fade-out 0.25s ease forwards;
+}
+
+.device-modal-card {
+  width: min(480px, 100%);
+  background: var(--card-strong);
+  border-radius: 20px;
+  padding: 34px 30px;
+  text-align: center;
+  box-shadow: 0 30px 60px rgba(10, 25, 20, 0.35);
+  animation: modal-pop-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.device-modal-subtitle {
+  margin: 10px auto 0;
+  max-width: 360px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.device-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.device-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: #f7f4ed;
+  border: 1.5px solid var(--soft-border);
+  border-radius: 14px;
+  padding: 18px 10px;
+  cursor: pointer;
+  color: var(--dark);
+  font-weight: 700;
+  font-size: 0.82rem;
+  box-shadow: none;
+  flex: initial;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.device-option svg {
+  width: 34px;
+  height: 34px;
+  color: var(--green-700);
+  transition: transform 0.2s ease;
+}
+
+.device-option:hover,
+.device-option:focus-visible {
+  transform: translateY(-4px);
+  border-color: var(--green-500);
+  background: #eef5ee;
+  box-shadow: 0 14px 24px rgba(28, 55, 43, 0.14);
+  outline: none;
+}
+
+.device-option:hover svg,
+.device-option:focus-visible svg {
+  transform: scale(1.08);
+}
+
+.device-option:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   background: rgba(255, 253, 248, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 18px;
@@ -85,6 +199,34 @@ th {
   box-shadow: 0 12px 30px rgba(28, 55, 43, 0.07);
   backdrop-filter: blur(14px);
   animation: rise-in 0.55s ease both;
+}
+
+.device-change-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fffdf8;
+  color: var(--green-800);
+  border: 1px solid var(--soft-border);
+  border-radius: 9px;
+  padding: 9px 13px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 0 0 auto;
+  box-shadow: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.device-change-btn svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.device-change-btn:hover {
+  transform: translateY(-2px);
+  background: #f2f6f1;
 }
 
 .brand {
@@ -814,6 +956,166 @@ th {
 
 .official-site-logo.is-tapped {
   animation: shield-tap 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================
+   Mise en page forcée selon l'appareil choisi dans la fenêtre
+   d'accueil (indépendamment de la largeur réelle de l'écran)
+   ============================================================ */
+
+body.device-phone .hero,
+body.device-tablette .hero {
+  grid-template-columns: 1fr;
+}
+
+body.device-ordinateur .hero {
+  grid-template-columns: 1.08fr 1fr;
+}
+
+body.device-phone .two-columns {
+  grid-template-columns: 1fr;
+}
+
+body.device-tablette .two-columns,
+body.device-ordinateur .two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.device-phone .page-shell {
+  width: min(96vw, 1200px);
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+body.device-tablette .page-shell {
+  width: min(1240px, 94vw);
+}
+
+body.device-ordinateur .page-shell {
+  width: min(1240px, 92vw);
+}
+
+body.device-phone .info-panel,
+body.device-tablette .info-panel,
+body.device-ordinateur .info-panel {
+  padding: 32px 22px;
+}
+
+body.device-tablette .info-panel {
+  padding: 42px 36px;
+}
+
+body.device-ordinateur .info-panel {
+  padding: 48px 42px;
+}
+
+body.device-phone .calculator-card {
+  padding: 24px 18px;
+}
+
+body.device-tablette .calculator-card {
+  padding: 28px 24px;
+}
+
+body.device-ordinateur .calculator-card {
+  padding: 30px 28px;
+}
+
+body.device-phone h1 {
+  font-size: clamp(2.45rem, 12vw, 3.4rem);
+}
+
+body.device-tablette h1 {
+  font-size: clamp(2.7rem, 5vw, 3.6rem);
+}
+
+body.device-ordinateur h1 {
+  font-size: clamp(2.7rem, 4.3vw, 4.7rem);
+}
+
+body.device-phone .partner-visual {
+  width: 92px;
+  height: 74px;
+}
+
+body.device-phone .partner-visual-wide {
+  width: 148px;
+}
+
+body.device-tablette .partner-visual {
+  width: 104px;
+  height: 82px;
+}
+
+body.device-tablette .partner-visual-wide {
+  width: 164px;
+}
+
+body.device-phone .subjects-header {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+body.device-phone th,
+body.device-phone td {
+  padding: 11px 10px;
+  font-size: 0.78rem;
+}
+
+body.device-phone .table-actions {
+  min-width: 142px;
+}
+
+body.device-phone .table-action {
+  padding: 7px 8px;
+  font-size: 0.7rem;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+}
+
+body.device-tablette .table-action {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+}
+
+body.device-phone input,
+body.device-phone select {
+  font-size: 16px;
+}
+
+body.device-phone button {
+  min-height: 48px;
+}
+
+body.device-phone .choice-option,
+body.device-tablette .choice-option {
+  min-height: 44px;
+}
+
+body.device-phone .official-site-logo {
+  width: 104px;
+}
+
+body.device-tablette .official-site-logo {
+  width: 116px;
+}
+
+body.device-ordinateur .official-site-logo {
+  width: 128px;
+}
+
+body.device-phone .topbar {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+@media (max-width: 380px) {
+  .device-options {
+    grid-template-columns: 1fr;
+  }
 }
 
 .hidden {
