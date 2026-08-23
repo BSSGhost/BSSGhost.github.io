@@ -12,6 +12,53 @@ const tableBody = document.getElementById('matiere-table-body');
 const classeLabel = document.getElementById('classe-label');
 const partnerVisuals = document.querySelectorAll('.partner-visual');
 const calculatorCard = document.querySelector('.calculator-card');
+const deviceViewportOuter = document.getElementById('device-viewport-outer');
+const deviceViewport = document.getElementById('device-viewport');
+
+const DEVICE_REFERENCE_WIDTHS = {
+  phone: 430,
+  tablette: 834,
+  ordinateur: 1280
+};
+
+let currentDevice = null;
+
+function updateViewportScale() {
+  if (!deviceViewport || !deviceViewportOuter || !currentDevice) return;
+
+  const refWidth = DEVICE_REFERENCE_WIDTHS[currentDevice];
+  const actualWidth = deviceViewportOuter.clientWidth;
+  const scale = Math.min(actualWidth / refWidth, 1);
+
+  deviceViewport.style.transform = `scale(${scale})`;
+
+  const naturalHeight = deviceViewport.offsetHeight;
+  deviceViewportOuter.style.height = `${naturalHeight * scale}px`;
+}
+
+function setDeviceReference(device) {
+  currentDevice = device;
+  const refWidth = DEVICE_REFERENCE_WIDTHS[device];
+
+  if (!deviceViewport || !refWidth) return;
+
+  deviceViewport.style.width = `${refWidth}px`;
+  requestAnimationFrame(updateViewportScale);
+}
+
+let scaleUpdateFrame = null;
+function scheduleViewportScaleUpdate() {
+  if (scaleUpdateFrame) cancelAnimationFrame(scaleUpdateFrame);
+  scaleUpdateFrame = requestAnimationFrame(updateViewportScale);
+}
+
+window.addEventListener('resize', scheduleViewportScaleUpdate);
+
+if (deviceViewport && 'ResizeObserver' in window) {
+  const viewportResizeObserver = new ResizeObserver(() => scheduleViewportScaleUpdate());
+  viewportResizeObserver.observe(deviceViewport);
+}
+
 const deviceModal = document.getElementById('device-modal');
 const deviceOptions = document.querySelectorAll('.device-option');
 const changeDeviceBtn = document.getElementById('change-device-btn');
@@ -25,6 +72,7 @@ function applyDeviceClass(device) {
   DEVICE_CLASSES.forEach((cls) => document.documentElement.classList.remove(cls));
   document.documentElement.classList.add(`device-${device}`);
   document.documentElement.setAttribute('data-device-picked', 'true');
+  setDeviceReference(device);
 }
 
 function closeDeviceModal() {
@@ -67,6 +115,22 @@ deviceOptions.forEach((button) => {
 });
 
 changeDeviceBtn?.addEventListener('click', openDeviceModal);
+
+// Si un appareil a déjà été choisi lors d'une visite précédente, on
+// applique tout de suite la largeur de référence et la mise à l'échelle.
+(function initDeviceReferenceFromStorage() {
+  let storedDevice = null;
+  try {
+    storedDevice = localStorage.getItem(DEVICE_STORAGE_KEY);
+  } catch {
+    storedDevice = null;
+  }
+
+  if (storedDevice && DEVICE_REFERENCE_WIDTHS[storedDevice]) {
+    currentDevice = storedDevice;
+    setDeviceReference(storedDevice);
+  }
+})();
 
 function gradeClass(value) {
   if (value < 10) return 'grade-faible';

@@ -43,6 +43,20 @@ body {
   background-size: 34px 34px, 34px 34px, auto;
 }
 
+#device-viewport-outer {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+}
+
+#device-viewport {
+  position: relative;
+  transform-origin: top center;
+  flex-shrink: 0;
+}
+
 strong,
 h1,
 h2,
@@ -981,18 +995,16 @@ body.device-ordinateur .two-columns {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+body.device-phone .page-shell,
+body.device-tablette .page-shell,
+body.device-ordinateur .page-shell {
+  width: 100%;
+  max-width: none;
+}
+
 body.device-phone .page-shell {
-  width: min(96vw, 1200px);
   padding-left: 10px;
   padding-right: 10px;
-}
-
-body.device-tablette .page-shell {
-  width: min(1240px, 94vw);
-}
-
-body.device-ordinateur .page-shell {
-  width: min(1240px, 92vw);
 }
 
 body.device-phone .info-panel,
@@ -1022,15 +1034,33 @@ body.device-ordinateur .calculator-card {
 }
 
 body.device-phone h1 {
-  font-size: clamp(2.45rem, 12vw, 3.4rem);
+  font-size: 3.2rem;
 }
 
 body.device-tablette h1 {
-  font-size: clamp(2.7rem, 5vw, 3.6rem);
+  font-size: 2.7rem;
 }
 
 body.device-ordinateur h1 {
-  font-size: clamp(2.7rem, 4.3vw, 4.7rem);
+  font-size: 3.44rem;
+}
+
+body.device-phone .result-card h3,
+body.device-tablette .result-card h3 {
+  font-size: 1.25rem;
+}
+
+body.device-ordinateur .result-card h3 {
+  font-size: 1.6rem;
+}
+
+body.device-phone .result-summary strong,
+body.device-tablette .result-summary strong {
+  font-size: 2.1rem;
+}
+
+body.device-ordinateur .result-summary strong {
+  font-size: 3.2rem;
 }
 
 body.device-phone .partner-visual {

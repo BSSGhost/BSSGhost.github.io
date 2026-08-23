@@ -30,7 +30,7 @@
   <body>
     <div id="device-modal" class="device-modal" role="dialog" aria-modal="true" aria-labelledby="device-modal-title">
       <div class="device-modal-card">
-        <p class="eyebrow">Bienvenue sur Degg notes</p>
+        <p class="eyebrow">Bienvenue sur LYNAQE</p>
         <h2 id="device-modal-title">Quel appareil utilisez-vous ?</h2>
         <p class="device-modal-subtitle">
           Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.
@@ -65,7 +65,24 @@
       </div>
     </div>
 
-    <div class="page-shell">
+    <div id="device-viewport-outer">
+      <div id="device-viewport">
+        <script>
+          (function () {
+            try {
+              var device = localStorage.getItem('lynaqe_device');
+              var refWidths = { phone: 430, tablette: 834, ordinateur: 1280 };
+              var refWidth = refWidths[device];
+              if (refWidth) {
+                var viewport = document.currentScript.parentElement;
+                var scale = Math.min(window.innerWidth / refWidth, 1);
+                viewport.style.width = refWidth + 'px';
+                viewport.style.transform = 'scale(' + scale + ')';
+              }
+            } catch (e) {}
+          })();
+        </script>
+        <div class="page-shell">
       <header class="topbar">
         <div class="brand">
           <div class="brand-mark-wrap">
@@ -311,6 +328,8 @@
           />
         </a>
       </footer>
+        </div>
+      </div>
     </div>
 
     <script src="script.js"></script>
