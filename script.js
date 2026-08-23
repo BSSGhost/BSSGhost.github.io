@@ -65,13 +65,11 @@ const changeDeviceBtn = document.getElementById('change-device-btn');
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const DEVICE_STORAGE_KEY = 'lynaqe_device';
 const DEVICE_CLASSES = ['device-phone', 'device-tablette', 'device-ordinateur'];
 
 function applyDeviceClass(device) {
   DEVICE_CLASSES.forEach((cls) => document.documentElement.classList.remove(cls));
   document.documentElement.classList.add(`device-${device}`);
-  document.documentElement.setAttribute('data-device-picked', 'true');
   setDeviceReference(device);
 }
 
@@ -104,33 +102,12 @@ function openDeviceModal() {
 deviceOptions.forEach((button) => {
   button.addEventListener('click', () => {
     const device = button.dataset.device;
-    try {
-      localStorage.setItem(DEVICE_STORAGE_KEY, device);
-    } catch {
-      // stockage indisponible : le choix restera actif seulement pour cette visite
-    }
     applyDeviceClass(device);
     closeDeviceModal();
   });
 });
 
 changeDeviceBtn?.addEventListener('click', openDeviceModal);
-
-// Si un appareil a déjà été choisi lors d'une visite précédente, on
-// applique tout de suite la largeur de référence et la mise à l'échelle.
-(function initDeviceReferenceFromStorage() {
-  let storedDevice = null;
-  try {
-    storedDevice = localStorage.getItem(DEVICE_STORAGE_KEY);
-  } catch {
-    storedDevice = null;
-  }
-
-  if (storedDevice && DEVICE_REFERENCE_WIDTHS[storedDevice]) {
-    currentDevice = storedDevice;
-    setDeviceReference(storedDevice);
-  }
-})();
 
 function gradeClass(value) {
   if (value < 10) return 'grade-faible';

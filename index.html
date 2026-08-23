@@ -15,17 +15,6 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
-    <script>
-      (function () {
-        try {
-          var device = localStorage.getItem('lynaqe_device');
-          if (device === 'phone' || device === 'tablette' || device === 'ordinateur') {
-            document.documentElement.classList.add('device-' + device);
-            document.documentElement.setAttribute('data-device-picked', 'true');
-          }
-        } catch (e) {}
-      })();
-    </script>
   </head>
   <body>
     <div id="device-modal" class="device-modal" role="dialog" aria-modal="true" aria-labelledby="device-modal-title">
@@ -67,21 +56,6 @@
 
     <div id="device-viewport-outer">
       <div id="device-viewport">
-        <script>
-          (function () {
-            try {
-              var device = localStorage.getItem('lynaqe_device');
-              var refWidths = { phone: 430, tablette: 834, ordinateur: 1280 };
-              var refWidth = refWidths[device];
-              if (refWidth) {
-                var viewport = document.currentScript.parentElement;
-                var scale = Math.min(window.innerWidth / refWidth, 1);
-                viewport.style.width = refWidth + 'px';
-                viewport.style.transform = 'scale(' + scale + ')';
-              }
-            } catch (e) {}
-          })();
-        </script>
         <div class="page-shell">
       <header class="topbar">
         <div class="brand">

@@ -101,10 +101,6 @@ th {
   animation: rise-in 0.35s ease both;
 }
 
-html[data-device-picked="true"] .device-modal {
-  display: none;
-}
-
 @keyframes modal-pop-in {
   from {
     opacity: 0;
