@@ -356,44 +356,20 @@ th {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(16, 47, 40, 0.85);
+  background: rgba(16, 47, 40, 0.9);
   color: #f8f2e6;
   padding: 6px 14px;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  border: 1px solid rgba(134, 200, 157, 0.3);
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(134, 200, 157, 0.25);
   box-shadow: 0 4px 12px rgba(16, 47, 40, 0.15);
-  backdrop-filter: blur(8px);
 }
 
-/* Puce lumineuse animée */
-.badge::before {
-  content: "";
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #4eaa7e;
-  box-shadow: 0 0 8px #4eaa7e;
-  animation: pulse-dot 2s infinite;
-}
-
-@keyframes pulse-dot {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.4;
-    transform: scale(0.85);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+.flag-icon {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 .hero {
