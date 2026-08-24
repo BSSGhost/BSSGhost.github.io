@@ -650,7 +650,12 @@ const CITATIONS_DU_JOUR = [
   "Un bon élève n’est pas celui qui ne se trompe jamais, mais celui qui persévère.",
   "Prends soin de ta concentration : coupe les distractions pendant que tu révises.",
   "Explique un cours à quelqu’un d’autre : c’est la meilleure façon de vérifier que tu l’as compris.",
-  "Chaque semestre est une nouvelle chance de progresser, quel que soit le précédent."
+  "Chaque semestre est une nouvelle chance de progresser, quel que soit le précédent.",
+  "Ne te compare pas aux autres : compare-toi à toi-même et à tes progrès.",
+  "La confiance en soi se construit par la préparation et la pratique, pas par la chance.",
+  "Même un petit progrès chaque jour finit par faire une grande différence sur le long terme.",
+  "Les révisions actives (exercices, questions) sont plus efficaces que la simple lecture.",
+  "Un esprit reposé retient mieux : n’oublie pas de faire des pauses pendant tes révisions.",
 ];
 
 function afficherCitationDuJour() {
@@ -865,7 +870,7 @@ document.getElementById('telecharger-bulletin').addEventListener('click', functi
   doc.text('LYNAQE SENEGAL', marginX, 16);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('Lycée National de Qualification et d’Excellence de Sédhiou', marginX, 23);
+  doc.text('Lycée Nation-Armée pour la Qualité et l’Equité', marginX, 23);
   doc.text(`Bulletin — Semestre ${semestre === 'S1' ? '1' : '2'}`, marginX, 29);
 
   y = 46;
