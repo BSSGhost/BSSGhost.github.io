@@ -1,5 +1,27 @@
 const form = document.getElementById('moyenne-form');
 const resultat = document.getElementById('resultat');
+
+const loadingScreen = document.getElementById('loading-screen');
+
+window.addEventListener('load', () => {
+  const hide = () => {
+    if (!loadingScreen) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      loadingScreen.style.display = 'none';
+      return;
+    }
+    loadingScreen.classList.add('is-hidden');
+    loadingScreen.addEventListener(
+      'animationend',
+      () => {
+        loadingScreen.style.display = 'none';
+      },
+      { once: true }
+    );
+  };
+  setTimeout(hide, 900);
+});
+
 const compositionGroup = document.getElementById('composition-group');
 const compositionInput = document.getElementById('composition');
 const classeSelect = document.getElementById('classe');
@@ -26,20 +48,10 @@ let currentDevice = null;
 function updateViewportScale() {
   if (!deviceViewport || !deviceViewportOuter || !currentDevice) return;
 
-  const actualWidth = deviceViewportOuter.clientWidth;
-
-  // AJOUT : Évite de rétrécir / casser l'affichage sur téléphone et petits écrans
-  if (currentDevice === 'phone' || actualWidth <= 480) {
-    deviceViewport.style.width = '100%';
-    deviceViewport.style.transform = 'none';
-    deviceViewportOuter.style.height = 'auto';
-    return;
-  }
-
   const refWidth = DEVICE_REFERENCE_WIDTHS[currentDevice];
+  const actualWidth = deviceViewportOuter.clientWidth;
   const scale = Math.min(actualWidth / refWidth, 1);
 
-  deviceViewport.style.width = `${refWidth}px`;
   deviceViewport.style.transform = `scale(${scale})`;
 
   const naturalHeight = deviceViewport.offsetHeight;
@@ -78,8 +90,8 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 const DEVICE_CLASSES = ['device-phone', 'device-tablette', 'device-ordinateur'];
 
 function applyDeviceClass(device) {
-  DEVICE_CLASSES.forEach((cls) => document.documentElement.classList.remove(cls));
-  document.documentElement.classList.add(`device-${device}`);
+  DEVICE_CLASSES.forEach((cls) => document.body.classList.remove(cls));
+  document.body.classList.add(`device-${device}`);
   setDeviceReference(device);
 }
 
@@ -125,6 +137,14 @@ function gradeClass(value) {
   return 'grade-bien';
 }
 
+function getMention(value) {
+  if (value < 10) return { label: 'Insuffisant', cls: 'mention-insuffisant' };
+  if (value < 14) return { label: 'Peux mieux faire', cls: 'mention-peux-mieux-faire' };
+  if (value < 16) return { label: 'Bon travail', cls: 'mention-bon-travail' };
+  if (value < 18) return { label: 'Très bon travail', cls: 'mention-tres-bon-travail' };
+  return { label: 'Excellent travail', cls: 'mention-excellent-travail' };
+}
+
 function animateValue(el, from, to, duration = 900) {
   if (prefersReducedMotion || duration <= 0) {
     el.textContent = to.toFixed(2);
@@ -156,7 +176,7 @@ function pulseCard() {
   calculatorCard.classList.add('just-saved');
 }
 
-function renderMoyenneResult({ pillText, value, subtitleText, coefficientText }) {
+function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, mention = false }) {
   resultat.classList.remove('error', 'shake');
   const resultContent = resultat.querySelector('.result-content');
   resultContent.replaceChildren();
@@ -182,6 +202,14 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText })
   gauge.appendChild(gaugeTrack);
 
   summary.append(resultPill, resultValue, gauge);
+
+  if (mention) {
+    const { label, cls } = getMention(value);
+    const mentionBadge = document.createElement('span');
+    mentionBadge.className = `mention-badge ${cls}`;
+    mentionBadge.textContent = label;
+    summary.appendChild(mentionBadge);
+  }
 
   if (coefficientText) {
     const coeffLine = document.createElement('small');
@@ -219,12 +247,16 @@ const matieresCommunesBase = [
 
 const STORAGE_PREFIX = 'lynaqe_moyennes';
 
-function getClassStorageKey(classe) {
-  return `${STORAGE_PREFIX}_${classe.replace(/\s+/g, '_')}`;
+function getSemestreActuel() {
+  return document.querySelector('input[name="semestre"]:checked')?.value || 'S1';
 }
 
-function getStoredNotesForClasse(classe) {
-  const raw = localStorage.getItem(getClassStorageKey(classe));
+function getClassStorageKey(classe, semestre = getSemestreActuel()) {
+  return `${STORAGE_PREFIX}_${classe.replace(/\s+/g, '_')}_${semestre}`;
+}
+
+function getStoredNotesForClasse(classe, semestre = getSemestreActuel()) {
+  const raw = localStorage.getItem(getClassStorageKey(classe, semestre));
   if (!raw) return {};
 
   try {
@@ -286,13 +318,17 @@ function getMatieresDisponiblesPourClasse(classe) {
 
 function renderTableMatiere() {
   const classe = classeSelect.value;
-  const notes = classe ? getStoredNotesForClasse(classe) : {};
+  const semestre = getSemestreActuel();
+  const notes = classe ? getStoredNotesForClasse(classe, semestre) : {};
   const entries = Object.entries(notes).sort(([a], [b]) => a.localeCompare(b));
 
-  classeLabel.textContent = classe ? `Classe : ${classe}` : 'Aucune classe sélectionnée';
+  classeLabel.textContent = classe
+    ? `Classe : ${classe} • Semestre ${semestre === 'S1' ? '1' : '2'}`
+    : 'Aucune classe sélectionnée';
 
   if (!entries.length) {
     tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">Aucune matière enregistrée pour le moment.</td></tr>';
+    renderRadarChart([]);
     return;
   }
 
@@ -333,6 +369,8 @@ function renderTableMatiere() {
     row.appendChild(actionsCell);
     tableBody.appendChild(row);
   });
+
+  renderRadarChart(entries);
 }
 
 function updateMatieres() {
@@ -366,6 +404,10 @@ function updateMatieres() {
 }
 
 langueRadios.forEach(radio => radio.addEventListener('change', updateMatieres));
+
+document.querySelectorAll('input[name="semestre"]').forEach((radio) => {
+  radio.addEventListener('change', renderTableMatiere);
+});
 
 function setResult(message, isError = false) {
   resultat.classList.toggle('error', isError);
@@ -495,7 +537,8 @@ function calculerMoyenneDeMatiere() {
     pillText: matiere,
     value: moyenneMatiere,
     subtitleText: `${prenom} ${nom} • ${classe}`,
-    coefficientText: `Coefficient ${coefficient}`
+    coefficientText: `Coefficient ${coefficient}`,
+    mention: true
   });
   pulseCard();
   return { moyenneMatiere, coefficient };
@@ -506,10 +549,148 @@ form.addEventListener('submit', function (event) {
   calculerMoyenneDeMatiere();
 });
 
+function escapeXml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&apos;'
+  }[c]));
+}
+
+function renderRadarChart(entries) {
+  const radarWrap = document.getElementById('radar-wrap');
+  const svg = document.getElementById('radar-chart');
+  if (!radarWrap || !svg) return;
+
+  if (!entries.length) {
+    radarWrap.hidden = true;
+    svg.innerHTML = '';
+    return;
+  }
+
+  radarWrap.hidden = false;
+
+  const size = 360;
+  const center = size / 2;
+  const maxRadius = 120;
+  const maxValue = 20;
+  const levels = 4;
+  const count = entries.length;
+  const angleStep = (Math.PI * 2) / count;
+
+  const pointFor = (index, value) => {
+    const angle = angleStep * index - Math.PI / 2;
+    const radius = (Math.min(value, maxValue) / maxValue) * maxRadius;
+    return {
+      x: center + radius * Math.cos(angle),
+      y: center + radius * Math.sin(angle)
+    };
+  };
+
+  let svgContent = '';
+
+  for (let level = 1; level <= levels; level += 1) {
+    const r = (maxRadius / levels) * level;
+    const points = entries
+      .map((_, i) => {
+        const angle = angleStep * i - Math.PI / 2;
+        return `${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`;
+      })
+      .join(' ');
+    svgContent += `<polygon class="radar-grid" points="${points}" />`;
+  }
+
+  entries.forEach(([matiere], i) => {
+    const angle = angleStep * i - Math.PI / 2;
+    const x2 = center + maxRadius * Math.cos(angle);
+    const y2 = center + maxRadius * Math.sin(angle);
+    svgContent += `<line class="radar-axis" x1="${center}" y1="${center}" x2="${x2}" y2="${y2}" />`;
+
+    const labelRadius = maxRadius + 22;
+    const lx = center + labelRadius * Math.cos(angle);
+    const ly = center + labelRadius * Math.sin(angle);
+    const shortLabel = matiere.length > 16 ? `${matiere.slice(0, 14)}…` : matiere;
+    const anchor = Math.cos(angle) > 0.25 ? 'start' : Math.cos(angle) < -0.25 ? 'end' : 'middle';
+    svgContent += `<text class="radar-label" x="${lx}" y="${ly}" text-anchor="${anchor}" dominant-baseline="middle">${escapeXml(shortLabel)}</text>`;
+  });
+
+  const shapePoints = entries
+    .map(([, data], i) => {
+      const p = pointFor(i, Number(data.moyenne));
+      return `${p.x},${p.y}`;
+    })
+    .join(' ');
+  svgContent += `<polygon class="radar-shape" points="${shapePoints}" />`;
+
+  entries.forEach(([, data], i) => {
+    const p = pointFor(i, Number(data.moyenne));
+    svgContent += `<circle class="radar-point" cx="${p.x}" cy="${p.y}" r="3.5" />`;
+  });
+
+  svg.innerHTML = svgContent;
+}
+
+const CITATIONS_DU_JOUR = [
+  "La réussite est la somme de petits efforts répétés jour après jour.",
+  "Un examen ne mesure pas ton intelligence, seulement ta préparation du moment.",
+  "Relis tes cours le soir même : c’est le moment où la mémoire retient le mieux.",
+  "Une bonne moyenne se construit devoir après devoir, pas la veille de la composition.",
+  "Pose des questions en classe : ce n’est jamais une perte de temps.",
+  "Un planning de révision simple vaut mieux qu’un plan parfait jamais suivi.",
+  "Le sommeil avant un examen compte autant que les révisions.",
+  "Comprendre un exercice vaut mieux que le mémoriser sans le comprendre.",
+  "Chaque matière compte : ne néglige pas celles qui te semblent moins importantes.",
+  "Fixe-toi un petit objectif clair pour chaque séance de révision.",
+  "Les erreurs corrigées sont les meilleures leçons pour le prochain devoir.",
+  "Travailler un peu chaque jour vaut mieux que tout réviser en une nuit.",
+  "Note tes points faibles après chaque devoir pour savoir où progresser.",
+  "La régularité bat le talent quand le talent ne travaille pas régulièrement.",
+  "Un bon élève n’est pas celui qui ne se trompe jamais, mais celui qui persévère.",
+  "Prends soin de ta concentration : coupe les distractions pendant que tu révises.",
+  "Explique un cours à quelqu’un d’autre : c’est la meilleure façon de vérifier que tu l’as compris.",
+  "Chaque semestre est une nouvelle chance de progresser, quel que soit le précédent."
+];
+
+function afficherCitationDuJour() {
+  const quoteEl = document.getElementById('quote-of-day-text');
+  if (!quoteEl) return;
+
+  const debutAnnee = new Date(new Date().getFullYear(), 0, 0);
+  const diffJours = Math.floor((new Date() - debutAnnee) / 86400000);
+  const citation = CITATIONS_DU_JOUR[diffJours % CITATIONS_DU_JOUR.length];
+  quoteEl.textContent = citation;
+}
+
+function computeMoyennePonderee(matieres, notes) {
+  const matieresCalculees = matieres
+    .map(matiere => ({ matiere, note: notes[matiere] }))
+    .filter(entry => entry.note);
+
+  if (matieresCalculees.length !== matieres.length) {
+    const matieresManquantes = matieres.filter(matiere => !notes[matiere]);
+    return { complete: false, matieresManquantes };
+  }
+
+  const sommePoints = matieresCalculees.reduce(
+    (total, item) => total + Number(item.note.points ?? item.note.moyenne),
+    0
+  );
+  const sommeCoefficients = matieresCalculees.reduce((total, item) => total + Number(item.note.coefficient), 0);
+
+  if (sommeCoefficients === 0) {
+    return { complete: false, matieresManquantes: [] };
+  }
+
+  return { complete: true, value: sommePoints / sommeCoefficients };
+}
+
 boutonSemestre.addEventListener('click', function () {
   const classe = classeSelect.value.trim();
   const prenom = document.getElementById('prenom').value.trim();
   const nom = document.getElementById('nom').value.trim();
+  const semestre = getSemestreActuel();
 
   if (!classe) {
     setResult('Veuillez d’abord sélectionner une classe pour calculer votre moyenne du semestre.', true);
@@ -525,41 +706,64 @@ boutonSemestre.addEventListener('click', function () {
   }
 
   const matieres = getMatieresDisponiblesPourClasse(classe);
-  const notes = getStoredNotesForClasse(classe);
-  const matieresCalculees = matieres
-    .map(matiere => ({
-      matiere,
-      note: notes[matiere]
-    }))
-    .filter(entry => entry.note);
+  const notes = getStoredNotesForClasse(classe, semestre);
+  const result = computeMoyennePonderee(matieres, notes);
 
-  if (matieresCalculees.length !== matieres.length) {
-    const matieresManquantes = matieres.filter(matiere => !notes[matiere]);
-
+  if (!result.complete) {
     setResult(
-      `Vous devez d’abord calculer toutes les matières de la classe. Matières manquantes : ${matieresManquantes.join(', ')}.`,
+      result.matieresManquantes.length
+        ? `Vous devez d’abord calculer toutes les matières de la classe. Matières manquantes : ${result.matieresManquantes.join(', ')}.`
+        : 'Aucun coefficient disponible pour calculer la moyenne du semestre.',
       true
     );
     return;
   }
 
-  const sommePoints = matieresCalculees.reduce(
-    (total, item) => total + Number(item.note.points ?? item.note.moyenne),
-    0
-  );
-  const sommeCoefficients = matieresCalculees.reduce((total, item) => total + Number(item.note.coefficient), 0);
+  renderMoyenneResult({
+    pillText: `Moyenne du semestre ${semestre === 'S1' ? '1' : '2'}`,
+    value: result.value,
+    subtitleText: `${prenom} ${nom} • ${classe}`,
+    mention: true
+  });
+});
 
-  if (sommeCoefficients === 0) {
-    setResult('Aucun coefficient disponible pour calculer la moyenne du semestre.', true);
+document.getElementById('calculer-annee').addEventListener('click', function () {
+  const classe = classeSelect.value.trim();
+  const prenom = document.getElementById('prenom').value.trim();
+  const nom = document.getElementById('nom').value.trim();
+
+  if (!classe) {
+    setResult('Veuillez d’abord sélectionner une classe pour calculer votre moyenne annuelle.', true);
     return;
   }
 
-  const moyenneSemestre = sommePoints / sommeCoefficients;
+  if (['4e', '3e', '2nde', '1er', 'Tle'].includes(classe)) {
+    const selectedLangue = document.querySelector('input[name="langue"]:checked')?.value;
+    if (!selectedLangue) {
+      setResult('Veuillez choisir votre langue pour cette classe avant de calculer la moyenne annuelle.', true);
+      return;
+    }
+  }
+
+  const matieres = getMatieresDisponiblesPourClasse(classe);
+  const resultS1 = computeMoyennePonderee(matieres, getStoredNotesForClasse(classe, 'S1'));
+  const resultS2 = computeMoyennePonderee(matieres, getStoredNotesForClasse(classe, 'S2'));
+
+  if (!resultS1.complete || !resultS2.complete) {
+    setResult(
+      `Il manque des notes au ${!resultS1.complete ? 'semestre 1' : 'semestre 2'} pour toutes les matières de la classe. Complétez les deux semestres avant de calculer la moyenne annuelle.`,
+      true
+    );
+    return;
+  }
+
+  const moyenneAnnuelle = (resultS1.value + resultS2.value) / 2;
 
   renderMoyenneResult({
-    pillText: 'Moyenne du semestre',
-    value: moyenneSemestre,
-    subtitleText: `${prenom} ${nom} • ${classe}`
+    pillText: 'Moyenne annuelle',
+    value: moyenneAnnuelle,
+    subtitleText: `${prenom} ${nom} • ${classe}`,
+    mention: true
   });
 });
 
@@ -604,7 +808,8 @@ boutonReset.addEventListener('click', function () {
   const classe = classeSelect.value.trim();
 
   if (classe) {
-    localStorage.removeItem(getClassStorageKey(classe));
+    localStorage.removeItem(getClassStorageKey(classe, 'S1'));
+    localStorage.removeItem(getClassStorageKey(classe, 'S2'));
   } else {
     Object.keys(localStorage)
       .filter((key) => key.startsWith(`${STORAGE_PREFIX}_`))
@@ -622,5 +827,140 @@ boutonReset.addEventListener('click', function () {
   }
 });
 
+document.getElementById('telecharger-bulletin').addEventListener('click', function () {
+  const classe = classeSelect.value.trim();
+  const prenom = document.getElementById('prenom').value.trim();
+  const nom = document.getElementById('nom').value.trim();
+  const semestre = getSemestreActuel();
+
+  if (!classe || !prenom || !nom) {
+    setResult('Veuillez renseigner votre nom, prénom et classe avant de télécharger le bulletin.', true);
+    return;
+  }
+
+  const notes = getStoredNotesForClasse(classe, semestre);
+  const entries = Object.entries(notes).sort(([a], [b]) => a.localeCompare(b));
+
+  if (!entries.length) {
+    setResult('Aucune matière enregistrée pour ce semestre : rien à mettre dans le bulletin.', true);
+    return;
+  }
+
+  if (!window.jspdf) {
+    setResult('Le générateur de PDF n’a pas pu se charger. Vérifiez votre connexion puis réessayez.', true);
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const marginX = 18;
+  let y = 20;
+
+  doc.setFillColor(16, 47, 40);
+  doc.rect(0, 0, pageWidth, 34, 'F');
+  doc.setTextColor(255, 250, 240);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('LYNAQE SENEGAL', marginX, 16);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Lycée National de Qualification et d’Excellence de Sédhiou', marginX, 23);
+  doc.text(`Bulletin — Semestre ${semestre === 'S1' ? '1' : '2'}`, marginX, 29);
+
+  y = 46;
+  doc.setTextColor(20, 30, 26);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`${prenom} ${nom}`, marginX, y);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Classe : ${classe}`, pageWidth - marginX, y, { align: 'right' });
+  y += 5;
+  doc.setFontSize(9);
+  doc.setTextColor(100, 110, 100);
+  doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, marginX, y);
+
+  y += 10;
+
+  const colX = [marginX, marginX + 78, marginX + 110, marginX + 142];
+  const headers = ['Matière', 'Moyenne /20', 'Coefficient', 'Points'];
+
+  doc.setFillColor(231, 239, 231);
+  doc.rect(marginX, y, pageWidth - marginX * 2, 8, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(16, 47, 40);
+  headers.forEach((h, i) => doc.text(h, colX[i] + 2, y + 5.5));
+  y += 8;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(30, 40, 34);
+
+  let sommePoints = 0;
+  let sommeCoeff = 0;
+
+  entries.forEach(([matiere, data], index) => {
+    const moyenne = Number(data.moyenne);
+    const coefficient = Number(data.coefficient);
+    const points = Number(data.points ?? moyenne);
+    sommePoints += points;
+    sommeCoeff += coefficient;
+
+    if (index % 2 === 0) {
+      doc.setFillColor(248, 245, 238);
+      doc.rect(marginX, y, pageWidth - marginX * 2, 7, 'F');
+    }
+
+    doc.text(matiere, colX[0] + 2, y + 5);
+    doc.text(moyenne.toFixed(2), colX[1] + 2, y + 5);
+    doc.text(String(coefficient), colX[2] + 2, y + 5);
+    doc.text(points.toFixed(2), colX[3] + 2, y + 5);
+    y += 7;
+  });
+
+  y += 4;
+  doc.setDrawColor(200, 200, 200);
+  doc.line(marginX, y, pageWidth - marginX, y);
+  y += 8;
+
+  const moyenneGenerale = sommeCoeff > 0 ? sommePoints / sommeCoeff : 0;
+  const mentionSemestre = getMention(moyenneGenerale);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(16, 47, 40);
+  doc.text(`Moyenne générale : ${moyenneGenerale.toFixed(2)} / 20`, marginX, y);
+  y += 7;
+  doc.setFontSize(11);
+  doc.text(`Mention : ${mentionSemestre.label}`, marginX, y);
+
+  const matieresRequises = getMatieresDisponiblesPourClasse(classe);
+  const resultS1 = computeMoyennePonderee(matieresRequises, getStoredNotesForClasse(classe, 'S1'));
+  const resultS2 = computeMoyennePonderee(matieresRequises, getStoredNotesForClasse(classe, 'S2'));
+
+  if (resultS1.complete && resultS2.complete) {
+    const moyenneAnnuelle = (resultS1.value + resultS2.value) / 2;
+    const mentionAnnuelle = getMention(moyenneAnnuelle);
+    y += 10;
+    doc.setDrawColor(210, 168, 74);
+    doc.setLineWidth(0.6);
+    doc.line(marginX, y, pageWidth - marginX, y);
+    y += 8;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(140, 105, 30);
+    doc.text(`Moyenne annuelle : ${moyenneAnnuelle.toFixed(2)} / 20 — ${mentionAnnuelle.label}`, marginX, y);
+  }
+
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(8);
+  doc.setTextColor(120, 130, 120);
+  doc.text('Document généré automatiquement par le calculateur LYNAQE SENEGAL — à valeur indicative.', marginX, 285);
+
+  doc.save(`Bulletin_${nom}_${prenom}_${classe}_${semestre}.pdf`);
+});
+
+afficherCitationDuJour();
 updateMatieres();
 renderTableMatiere();

@@ -15,8 +15,17 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
   </head>
   <body>
+    <div id="loading-screen">
+      <img src="lynaqe-cta-logo.png" alt="LYNAQE" class="loading-logo" width="120" height="177" />
+      <p class="loading-text">LYNAQE SENEGAL</p>
+    </div>
+
     <div id="device-modal" class="device-modal" role="dialog" aria-modal="true" aria-labelledby="device-modal-title">
       <div class="device-modal-card">
         <p class="eyebrow">Bienvenue sur LYNAQE</p>
@@ -113,6 +122,11 @@
               <img src="SEN.avif" alt="Emblème du Sénégal" width="400" height="400" />
             </div>
           </div>
+
+          <div class="quote-of-day" id="quote-of-day">
+            <span class="quote-of-day-label">Conseil du jour</span>
+            <p class="quote-of-day-text" id="quote-of-day-text"></p>
+          </div>
         </section>
 
         <section class="calculator-card">
@@ -143,6 +157,20 @@
                 <option value="Tle">Tle</option>
               </select>
             </div>
+
+            <fieldset class="field-group">
+              <legend>Semestre</legend>
+              <div class="choice-group" role="radiogroup" aria-label="Choix du semestre">
+                <label class="choice-option">
+                  <input type="radio" name="semestre" value="S1" checked />
+                  <span>Semestre 1</span>
+                </label>
+                <label class="choice-option">
+                  <input type="radio" name="semestre" value="S2" />
+                  <span>Semestre 2</span>
+                </label>
+              </div>
+            </fieldset>
 
             <fieldset class="field-group" id="langue-group" hidden>
               <legend>Quelle langue choisissez-vous ?</legend>
@@ -244,6 +272,15 @@
               </button>
             </div>
 
+            <div class="button-row">
+              <button type="button" id="calculer-annee" class="secondary-button">
+                Calculer ma moyenne annuelle
+              </button>
+              <button type="button" id="telecharger-bulletin" class="pdf-button">
+                Télécharger mon bulletin (PDF)
+              </button>
+            </div>
+
             <div class="button-row reset-row">
               <button type="button" id="reset-donnees" class="ghost-button">
                 Réinitialiser les données
@@ -265,6 +302,11 @@
           <h3>Matières enregistrées</h3>
           <span id="classe-label">Aucune classe sélectionnée</span>
         </div>
+
+        <div class="radar-wrap" id="radar-wrap" hidden>
+          <svg id="radar-chart" viewBox="0 0 360 360" role="img" aria-label="Graphique radar des moyennes par matière"></svg>
+        </div>
+
         <div class="table-wrap">
           <table>
             <thead>
@@ -306,6 +348,7 @@
       </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
