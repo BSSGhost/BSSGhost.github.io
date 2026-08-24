@@ -235,14 +235,14 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, m
 const matieresCommunesBase = [
   'Mathématiques',
   'Français',
-  'Science de la Vie et de la Terre',
+  'SVT',
   'Anglais',
   'Histoire Géographie',
-  'Education Civique',
-  'Education Physique et Sportive',
+  'EC',
+  'EPS',
   'Informatique',
-  'Education au Civisme et à la Citoyenneté',
-  'Economie Familiale et Sociale'
+  'E2C',
+  'ECOFAM'
 ];
 
 const STORAGE_PREFIX = 'lynaqe_moyennes';
