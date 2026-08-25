@@ -177,6 +177,213 @@ function pulseCard() {
   calculatorCard.classList.add('just-saved');
 }
 
+/* ---------- Favicon dynamique selon la dernière moyenne ---------- */
+
+const LAST_MOYENNE_STORAGE_KEY = 'lynaqe_last_moyenne';
+
+function setFaviconHref(dataUrl) {
+  const oldLink = document.querySelector('link[rel="icon"]');
+  const newLink = document.createElement('link');
+  newLink.rel = 'icon';
+  newLink.type = 'image/png';
+  newLink.href = dataUrl;
+  if (oldLink) {
+    oldLink.replaceWith(newLink);
+  } else {
+    document.head.appendChild(newLink);
+  }
+}
+
+function updateFaviconBadge(value) {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let colorStart;
+    let colorEnd;
+    if (value < 10) {
+      colorStart = '#e8837a';
+      colorEnd = '#c23b3b';
+    } else if (value < 14) {
+      colorStart = '#e8c875';
+      colorEnd = '#d2a84a';
+    } else {
+      colorStart = '#86c89d';
+      colorEnd = '#1d6a52';
+    }
+
+    const gradient = ctx.createLinearGradient(0, 0, 64, 64);
+    gradient.addColorStop(0, colorStart);
+    gradient.addColorStop(1, colorEnd);
+
+    ctx.beginPath();
+    ctx.arc(32, 32, 29, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = "bold 26px Arial, sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(Math.round(value)), 32, 35);
+
+    setFaviconHref(canvas.toDataURL('image/png'));
+
+    try {
+      localStorage.setItem(LAST_MOYENNE_STORAGE_KEY, String(value));
+    } catch {
+      /* stockage indisponible, on ignore silencieusement */
+    }
+  } catch (e) {
+    console.log("Impossible de mettre à jour le favicon :", e);
+  }
+}
+
+function restoreFaviconBadgeFromStorage() {
+  try {
+    const stored = Number(localStorage.getItem(LAST_MOYENNE_STORAGE_KEY));
+    if (Number.isFinite(stored)) {
+      updateFaviconBadge(stored);
+    }
+  } catch {
+    /* pas de localStorage disponible, on garde le favicon par défaut */
+  }
+}
+
+/* ---------- Son discret et optionnel au moment du résultat ---------- */
+
+const SOUND_STORAGE_KEY = 'lynaqe_sound_enabled';
+let audioContextInstance = null;
+
+function isSoundEnabled() {
+  try {
+    const stored = localStorage.getItem(SOUND_STORAGE_KEY);
+    return stored === null ? true : stored === 'true';
+  } catch {
+    return true;
+  }
+}
+
+function getAudioContext() {
+  if (audioContextInstance) return audioContextInstance;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  audioContextInstance = new AudioContextClass();
+  return audioContextInstance;
+}
+
+function playTone(ctx, freq, startTime, duration, gainValue = 0.07) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(gainValue, startTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.03);
+}
+
+function playResultSound(value) {
+  if (!isSoundEnabled()) return;
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+
+  const now = ctx.currentTime;
+
+  if (value >= 14) {
+    playTone(ctx, 660, now, 0.16);
+    playTone(ctx, 880, now + 0.11, 0.22);
+  } else if (value >= 10) {
+    playTone(ctx, 540, now, 0.2);
+  } else {
+    playTone(ctx, 330, now, 0.24, 0.055);
+  }
+}
+
+function updateSoundButtonUI() {
+  const boutonSon = document.getElementById('toggle-son-btn');
+  if (!boutonSon) return;
+
+  const enabled = isSoundEnabled();
+  const iconOn = boutonSon.querySelector('.son-icon-on');
+  const iconOff = boutonSon.querySelector('.son-icon-off');
+  const label = boutonSon.querySelector('.son-label');
+
+  boutonSon.setAttribute('aria-pressed', String(enabled));
+  boutonSon.classList.toggle('is-muted', !enabled);
+  if (iconOn) iconOn.hidden = !enabled;
+  if (iconOff) iconOff.hidden = enabled;
+  if (label) label.textContent = enabled ? 'Son activé' : 'Son désactivé';
+}
+
+document.getElementById('toggle-son-btn')?.addEventListener('click', () => {
+  const nextEnabled = !isSoundEnabled();
+  try {
+    localStorage.setItem(SOUND_STORAGE_KEY, String(nextEnabled));
+  } catch {
+    /* stockage indisponible, le réglage ne persistera pas */
+  }
+  updateSoundButtonUI();
+  if (nextEnabled) {
+    playResultSound(16);
+  }
+});
+
+updateSoundButtonUI();
+
+/* ---------- Frise d'étapes du formulaire ---------- */
+
+function updateStepsTimeline() {
+  const steps = document.querySelectorAll('.step-item');
+  if (!steps.length) return;
+
+  const classeVal = classeSelect.value.trim();
+  const nom = document.getElementById('nom').value.trim();
+  const prenom = document.getElementById('prenom').value.trim();
+  const hasBasicInfo = Boolean(nom && prenom && classeVal);
+
+  const notes = classeVal ? getStoredNotesForClasse(classeVal) : {};
+  const hasAtLeastOneMatiere = Object.keys(notes).length > 0;
+
+  steps.forEach((step) => {
+    const stepNumber = Number(step.dataset.step);
+    step.classList.remove('is-active', 'is-done');
+
+    if (stepNumber === 1) {
+      if (hasBasicInfo) {
+        step.classList.add('is-done');
+      } else {
+        step.classList.add('is-active');
+      }
+    } else if (stepNumber === 2) {
+      if (hasAtLeastOneMatiere) {
+        step.classList.add('is-done');
+      } else if (hasBasicInfo) {
+        step.classList.add('is-active');
+      }
+    } else if (stepNumber === 3 && hasAtLeastOneMatiere) {
+      step.classList.add('is-active');
+    }
+  });
+}
+
+document.getElementById('nom')?.addEventListener('input', updateStepsTimeline);
+document.getElementById('prenom')?.addEventListener('input', updateStepsTimeline);
+
 function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, mention = false }) {
   resultat.classList.remove('error', 'shake');
   const resultContent = resultat.querySelector('.result-content');
@@ -231,6 +438,9 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, m
 
   animateValue(resultValue, 0, value);
   resultat.classList.remove('error');
+
+  updateFaviconBadge(value);
+  playResultSound(value);
 }
 
 const matieresCommunesBase = [
@@ -372,6 +582,7 @@ function renderTableMatiere() {
   });
 
   renderRadarChart(entries);
+  updateStepsTimeline();
 }
 
 function updateMatieres() {
@@ -1087,3 +1298,4 @@ boutonReset.addEventListener('click', function () {
 afficherCitationDuJour();
 updateMatieres();
 renderTableMatiere();
+restoreFaviconBadgeFromStorage();

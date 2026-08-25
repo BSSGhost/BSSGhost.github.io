@@ -10,8 +10,7 @@
     />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" type="image/png" sizes="512x512" href="LYNAQE.png">
   </head>
@@ -72,6 +71,19 @@
           </div>
         </div>
         <div class="badge">SN</div>
+        <button type="button" id="toggle-son-btn" class="device-change-btn" aria-pressed="true">
+          <svg class="son-icon-on" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 18v12h8l12 10V8L14 18H6Z"></path>
+            <path d="M33 16c3 2.6 3 13.4 0 16"></path>
+            <path d="M39 11c6 5.6 6 20.4 0 26"></path>
+          </svg>
+          <svg class="son-icon-off" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+            <path d="M6 18v12h8l12 10V8L14 18H6Z"></path>
+            <line x1="32" y1="18" x2="44" y2="30"></line>
+            <line x1="44" y1="18" x2="32" y2="30"></line>
+          </svg>
+          <span class="son-label">Son activé</span>
+        </button>
         <button type="button" id="change-device-btn" class="device-change-btn">
           <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="6" y="9" width="27" height="18" rx="2.5"></rect>
@@ -126,6 +138,24 @@
 
         <section class="calculator-card">
           <h2>Formulaire</h2>
+
+          <ol class="steps-timeline" id="steps-timeline" aria-label="Étapes à suivre">
+            <li class="step-item" data-step="1">
+              <span class="step-number">1</span>
+              <span class="step-label">Renseigner ses infos</span>
+            </li>
+            <li class="step-connector" aria-hidden="true"></li>
+            <li class="step-item" data-step="2">
+              <span class="step-number">2</span>
+              <span class="step-label">Ajouter ses matières</span>
+            </li>
+            <li class="step-connector" aria-hidden="true"></li>
+            <li class="step-item" data-step="3">
+              <span class="step-number">3</span>
+              <span class="step-label">Télécharger le bulletin</span>
+            </li>
+          </ol>
+
           <form id="moyenne-form">
             <div class="two-columns">
               <div class="field-group">
