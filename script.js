@@ -890,7 +890,8 @@ function getAnneeScolaire() {
   }
 }
 
-document.getElementById("annee-scolaire").textContent = getAnneeScolaire();
+const anneeScolaireEl = document.getElementById("annee-scolaire");
+if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   doc.text(`Moyenne Générale : ${moyenneGen.toFixed(2)} / 20`, pageWidth - 18, 78, { align: "right" });
 
   // Tableau des Notes Soigné avec Colonne d'Appréciation
