@@ -156,6 +156,13 @@
             </li>
           </ol>
 
+          <div class="progress-tracker" id="progress-tracker" hidden>
+            <div class="progress-tracker-bar">
+              <div class="progress-tracker-fill" id="progress-tracker-fill"></div>
+            </div>
+            <span class="progress-tracker-label" id="progress-tracker-label">0 / 0 matières renseignées</span>
+          </div>
+
           <form id="moyenne-form">
             <div class="two-columns">
               <div class="field-group">
@@ -291,7 +298,7 @@
             </div>
 
             <div class="button-row">
-              <button type="submit">Calculer la moyenne de la matière</button>
+              <button type="submit" class="primary-button">Calculer la moyenne de la matière</button>
               <button type="button" id="calculer-semestre" class="secondary-button">
                 Calculer ma moyenne du semestre
               </button>

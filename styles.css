@@ -727,6 +727,57 @@ h1 {
   }
 }
 
+.progress-tracker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -8px 0 22px;
+}
+
+.progress-tracker-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: #f0ede3;
+  border: 1px solid var(--soft-border);
+  overflow: hidden;
+}
+
+.progress-tracker-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--green-600), var(--yellow-500));
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.progress-tracker-label {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.progress-tracker.is-complete .progress-tracker-fill {
+  background: linear-gradient(90deg, var(--green-500), var(--yellow-400));
+}
+
+.progress-tracker.is-complete .progress-tracker-label {
+  color: var(--green-700);
+}
+
+@media (max-width: 480px) {
+  .progress-tracker {
+    flex-wrap: wrap;
+  }
+
+  .progress-tracker-label {
+    flex-basis: 100%;
+    text-align: right;
+  }
+}
+
 form {
   display: flex;
   flex-direction: column;
@@ -908,6 +959,46 @@ button:disabled {
   box-shadow: 0 10px 18px rgba(160, 119, 35, 0.18);
 }
 
+/* ---------- Bouton principal : accent doré pour créer un point focal ---------- */
+
+.primary-button {
+  position: relative;
+  flex: 1 1 240px;
+  background: linear-gradient(135deg, var(--green-700) 0%, var(--green-600) 100%);
+  box-shadow: 0 10px 20px rgba(23, 75, 61, 0.22), 0 0 0 0 rgba(232, 200, 117, 0.45);
+  animation: primary-glow 2.6s ease-in-out infinite;
+}
+
+.primary-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(120deg, var(--yellow-400), transparent 40%, transparent 60%, var(--yellow-500));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.primary-button:hover {
+  background: linear-gradient(135deg, var(--green-600) 0%, var(--green-500) 100%);
+  box-shadow: 0 14px 26px rgba(23, 75, 61, 0.24), 0 0 0 6px rgba(232, 200, 117, 0.14);
+}
+
+@keyframes primary-glow {
+  0%, 100% { box-shadow: 0 10px 20px rgba(23, 75, 61, 0.22), 0 0 0 0 rgba(232, 200, 117, 0.35); }
+  50% { box-shadow: 0 10px 20px rgba(23, 75, 61, 0.22), 0 0 0 8px rgba(232, 200, 117, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary-button {
+    animation: none;
+  }
+}
+
 .ghost-button {
   background: transparent;
   color: var(--dark);
@@ -931,12 +1022,13 @@ button:disabled {
 
 .result-card {
   margin-top: 26px;
-  padding: 30px 24px;
+  padding: 36px 24px;
   text-align: center;
-  background: var(--green-900);
+  background: linear-gradient(150deg, var(--green-900) 0%, var(--green-800) 55%, var(--green-700) 100%);
   border: 1px solid rgba(15, 23, 42, 0.04);
   position: relative;
   overflow: hidden;
+  transition: background 0.5s ease;
 }
 
 .result-card::before {
@@ -945,6 +1037,32 @@ button:disabled {
   inset: 0;
   background: linear-gradient(110deg, rgba(255,255,255,0.08), transparent 45%);
   pointer-events: none;
+}
+
+/* Halo doré tournant en fond, discret, pour donner un effet "récompense" */
+.result-card::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: 50%;
+  width: 140%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(232, 200, 117, 0.16) 0%, transparent 62%);
+  pointer-events: none;
+}
+
+/* Dégradé de fond différent selon le niveau atteint */
+.result-card.grade-faible {
+  background: linear-gradient(150deg, #3a1414 0%, #5a1f1f 55%, #7a2b2b 100%);
+}
+
+.result-card.grade-moyen {
+  background: linear-gradient(150deg, #3a2c10 0%, #5c451a 55%, #7a5c24 100%);
+}
+
+.result-card.grade-bien {
+  background: linear-gradient(150deg, var(--green-900) 0%, var(--green-800) 50%, var(--green-500) 130%);
 }
 
 .result-label {
@@ -989,6 +1107,34 @@ button:disabled {
   animation: shake 0.5s ease;
 }
 
+/* Apparition marquée du résultat : effet "récompense" */
+@keyframes result-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(18px);
+  }
+
+  55% {
+    opacity: 1;
+    transform: scale(1.035) translateY(-3px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.result-card.is-revealing {
+  animation: result-reveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-card.is-revealing {
+    animation: none;
+  }
+}
+
 .result-summary {
   display: flex;
   flex-direction: column;
@@ -1016,8 +1162,53 @@ button:disabled {
   color: #fffaf0;
 }
 
+.mention-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  margin-bottom: 2px;
+  background: rgba(232, 200, 117, 0.14);
+  border: 1px solid rgba(232, 200, 117, 0.3);
+  animation: mention-icon-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+}
+
+.mention-icon-wrap svg {
+  width: 26px;
+  height: 26px;
+  color: var(--yellow-400);
+}
+
+.mention-icon-wrap.mention-icon-top {
+  background: rgba(232, 200, 117, 0.22);
+  border-color: rgba(232, 200, 117, 0.45);
+  box-shadow: 0 0 0 6px rgba(232, 200, 117, 0.08);
+}
+
+@keyframes mention-icon-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-20deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mention-icon-wrap {
+    animation: none;
+  }
+}
+
 .mention-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 14px;
   border-radius: 999px;
   font-size: 0.78rem;

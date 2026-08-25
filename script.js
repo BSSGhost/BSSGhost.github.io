@@ -34,6 +34,9 @@ const boutonTelechargerPdf = document.getElementById('telecharger-bulletin');
 const tableBody = document.getElementById('matiere-table-body');
 const classeLabel = document.getElementById('classe-label');
 const partnerVisuals = document.querySelectorAll('.partner-visual');
+const progressTracker = document.getElementById('progress-tracker');
+const progressTrackerFill = document.getElementById('progress-tracker-fill');
+const progressTrackerLabel = document.getElementById('progress-tracker-label');
 const calculatorCard = document.querySelector('.calculator-card');
 const deviceViewportOuter = document.getElementById('device-viewport-outer');
 const deviceViewport = document.getElementById('device-viewport');
@@ -144,6 +147,22 @@ function getMention(value) {
   if (value < 16) return { label: 'Bon travail', cls: 'mention-bon-travail' };
   if (value < 18) return { label: 'Très bon travail', cls: 'mention-tres-bon-travail' };
   return { label: 'Excellent travail', cls: 'mention-excellent-travail' };
+}
+
+/* Icône associée à chaque mention : étoile pour les meilleurs résultats,
+   médaille pour un bon travail, flèche ascendante pour encourager la suite. */
+function getMentionIcon(cls) {
+  const star = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.06 6.6.79-4.9 4.5 1.28 6.6L12 17.3l-5.88 3.15 1.28-6.6-4.9-4.5 6.6-.79L12 2.5Z"/></svg>';
+  const medal = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="14" r="6"></circle><path d="M9 2h6l-2 6.2h-2L9 2Z"></path><path d="M10.3 12.6l1.2 2.6 1.2-2.6"></path></svg>';
+  const trending = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 15 10 9 14 13 20 6"></polyline><polyline points="14 6 20 6 20 12"></polyline></svg>';
+
+  if (cls === 'mention-excellent-travail' || cls === 'mention-tres-bon-travail') {
+    return { svg: star, isTop: true };
+  }
+  if (cls === 'mention-bon-travail') {
+    return { svg: medal, isTop: false };
+  }
+  return { svg: trending, isTop: false };
 }
 
 function animateValue(el, from, to, duration = 900) {
@@ -351,6 +370,27 @@ updateSoundButtonUI();
 
 /* ---------- Frise d'étapes du formulaire ---------- */
 
+function updateProgressTracker(classeVal, notes) {
+  if (!progressTracker || !progressTrackerFill || !progressTrackerLabel) return;
+
+  if (!classeVal) {
+    progressTracker.hidden = true;
+    return;
+  }
+
+  const totalMatieres = getMatieresDisponiblesPourClasse(classeVal).length;
+  const doneMatieres = Object.keys(notes).length;
+  const percent = totalMatieres > 0 ? Math.min((doneMatieres / totalMatieres) * 100, 100) : 0;
+  const isComplete = totalMatieres > 0 && doneMatieres >= totalMatieres;
+
+  progressTracker.hidden = false;
+  progressTracker.classList.toggle('is-complete', isComplete);
+  progressTrackerFill.style.width = `${percent}%`;
+  progressTrackerLabel.textContent = isComplete
+    ? `${doneMatieres} / ${totalMatieres} matières • Bulletin prêt !`
+    : `${doneMatieres} / ${totalMatieres} matières renseignées`;
+}
+
 function updateStepsTimeline() {
   const steps = document.querySelectorAll('.step-item');
   if (!steps.length) return;
@@ -362,6 +402,8 @@ function updateStepsTimeline() {
 
   const notes = classeVal ? getStoredNotesForClasse(classeVal) : {};
   const hasAtLeastOneMatiere = Object.keys(notes).length > 0;
+
+  updateProgressTracker(classeVal, notes);
 
   steps.forEach((step) => {
     const stepNumber = Number(step.dataset.step);
@@ -393,8 +435,19 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, m
   const resultContent = resultat.querySelector('.result-content');
   resultContent.replaceChildren();
 
+  const grade = gradeClass(value);
+
   const summary = document.createElement('div');
   summary.className = 'result-summary';
+
+  if (mention) {
+    const { label, cls } = getMention(value);
+    const { svg, isTop } = getMentionIcon(cls);
+    const iconWrap = document.createElement('div');
+    iconWrap.className = `mention-icon-wrap${isTop ? ' mention-icon-top' : ''}`;
+    iconWrap.innerHTML = svg;
+    summary.appendChild(iconWrap);
+  }
 
   const resultPill = document.createElement('span');
   resultPill.className = 'result-pill';
@@ -405,7 +458,7 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, m
   resultValue.textContent = '0.00';
 
   const gauge = document.createElement('div');
-  gauge.className = `moyenne-gauge ${gradeClass(value)}`;
+  gauge.className = `moyenne-gauge ${grade}`;
   const gaugeTrack = document.createElement('div');
   gaugeTrack.className = 'moyenne-gauge-track';
   const gaugeFill = document.createElement('div');
@@ -442,6 +495,12 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, m
 
   animateValue(resultValue, 0, value);
   resultat.classList.remove('error');
+
+  /* Dégradé de fond + effet d'apparition "récompense" cohérents avec la note */
+  resultat.classList.remove('grade-faible', 'grade-moyen', 'grade-bien', 'is-revealing');
+  resultat.classList.add(grade);
+  void resultat.offsetWidth;
+  resultat.classList.add('is-revealing');
 
   updateFaviconBadge(value);
   playResultSound(value);
@@ -626,6 +685,7 @@ document.querySelectorAll('input[name="semestre"]').forEach((radio) => {
 
 function setResult(message, isError = false) {
   resultat.classList.toggle('error', isError);
+  resultat.classList.remove('grade-faible', 'grade-moyen', 'grade-bien', 'is-revealing');
   const resultContent = resultat.querySelector('.result-content');
   resultContent.replaceChildren();
 
