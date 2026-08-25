@@ -23,7 +23,7 @@ jobs:
           path = Path('script.js')
           text = path.read_text(encoding='utf-8')
           old = 'document.getElementById("annee-scolaire").textContent = getAnneeScolaire();'
-          new = 'document.getElementById("annee-scolaire")?.textContent = getAnneeScolaire();'
+          new = 'const anneeScolaireEl = document.getElementById("annee-scolaire");\nif (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();'
 
           if old not in text:
               print('La ligne problématique est déjà corrigée ou absente.')
