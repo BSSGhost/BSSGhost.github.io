@@ -842,7 +842,7 @@ function generatePDFBulletin() {
   doc.text("Un Peuple - Un But - Une Foi", pageWidth - 14, 19, { align: "right" });
   doc.text("MINISTÈRE DE L'ÉDUCATION NATIONALE", pageWidth - 14, 23, { align: "right" });
   doc.setFont("helvetica", "bold");
-  doc.text("LYCÉE NATIONAL DE QUALIFICATION ET D'EXCELLENCE DE SÉDHIOU", pageWidth - 14, 27, { align: "right" });
+  doc.text("Lycéé Nation-Armée pour la Qualité et l'Equité", pageWidth - 14, 27, { align: "right" });
 
   // Ligne de séparation élégante
   doc.setDrawColor(16, 47, 40);
@@ -878,7 +878,19 @@ function generatePDFBulletin() {
   const moyenneGen = totalCoeff > 0 ? (totalPoints / totalCoeff) : 0;
   const mentionObj = getMention(moyenneGen);
 
-  doc.text(`Année Scolaire : 2025 - 2026`, pageWidth - 18, 71, { align: "right" });
+function getAnneeScolaire() {
+  const aujourdhui = new Date();
+  const annee = aujourdhui.getFullYear();
+  const mois = aujourdhui.getMonth();
+
+  if (mois < 8) {
+    return `${annee - 1}-${annee}`;
+  } else {
+    return `${annee}-${annee + 1}`;
+  }
+}
+
+document.getElementById("annee-scolaire").textContent = getAnneeScolaire();
   doc.text(`Moyenne Générale : ${moyenneGen.toFixed(2)} / 20`, pageWidth - 18, 78, { align: "right" });
 
   // Tableau des Notes Soigné avec Colonne d'Appréciation
@@ -992,7 +1004,7 @@ function generatePDFBulletin() {
   doc.rect(pageWidth / 2 - 27.5, curY + 3, 55, 25);
 
   // Cadre 3 : Le Proviseur
-  doc.text("Le Proviseur du LYNAQE", pageWidth - 69, curY);
+  doc.text("Le Commandant d'école", pageWidth - 69, curY);
   doc.rect(pageWidth - 69, curY + 3, 55, 25);
 
   doc.setFont("helvetica", "italic");
