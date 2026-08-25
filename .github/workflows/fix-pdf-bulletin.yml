@@ -1,0 +1,46 @@
+name: Fix PDF bulletin
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Correct PDF generation bug
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('script.js')
+          text = path.read_text(encoding='utf-8')
+          old = 'document.getElementById("annee-scolaire").textContent = getAnneeScolaire();'
+          new = 'document.getElementById("annee-scolaire")?.textContent = getAnneeScolaire();'
+
+          if old not in text:
+              print('La ligne problématique est déjà corrigée ou absente.')
+          else:
+              path.write_text(text.replace(old, new, 1), encoding='utf-8')
+              print('Correction appliquée.')
+          PY
+
+      - name: Commit correction
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add script.js
+          if git diff --cached --quiet; then
+            echo "Aucune modification à committer."
+          else
+            git commit -m "Corriger le téléchargement du bulletin PDF"
+            git push
+          fi
