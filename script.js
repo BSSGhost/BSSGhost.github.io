@@ -194,44 +194,48 @@ function setFaviconHref(dataUrl) {
   }
 }
 
-function updateFaviconBadge(value) {
+const BADGE_IMAGE_SRC = 'LYNAQE.png';
+let badgeImagePromise = null;
+
+function getBadgeImage() {
+  if (!badgeImagePromise) {
+    badgeImagePromise = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = BADGE_IMAGE_SRC;
+    });
+  }
+  return badgeImagePromise;
+}
+
+async function updateFaviconBadge(value) {
   try {
+    const img = await getBadgeImage();
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let colorStart;
-    let colorEnd;
+    /* On dessine le badge LYNAQE tel quel */
+    ctx.drawImage(img, 0, 0, 64, 64);
+
+    /* Puis on applique une teinte selon la moyenne, en ne colorant
+       que les pixels non transparents du badge (source-atop) */
+    let tintColor;
     if (value < 10) {
-      colorStart = '#e8837a';
-      colorEnd = '#c23b3b';
+      tintColor = 'rgba(194, 59, 59, 0.5)';
     } else if (value < 14) {
-      colorStart = '#e8c875';
-      colorEnd = '#d2a84a';
+      tintColor = 'rgba(210, 168, 74, 0.45)';
     } else {
-      colorStart = '#86c89d';
-      colorEnd = '#1d6a52';
+      tintColor = 'rgba(29, 106, 82, 0.4)';
     }
 
-    const gradient = ctx.createLinearGradient(0, 0, 64, 64);
-    gradient.addColorStop(0, colorStart);
-    gradient.addColorStop(1, colorEnd);
-
-    ctx.beginPath();
-    ctx.arc(32, 32, 29, 0, Math.PI * 2);
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = "bold 26px Arial, sans-serif";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(Math.round(value)), 32, 35);
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.fillStyle = tintColor;
+    ctx.fillRect(0, 0, 64, 64);
+    ctx.globalCompositeOperation = 'source-over';
 
     setFaviconHref(canvas.toDataURL('image/png'));
 
