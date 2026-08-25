@@ -30,6 +30,7 @@ const langueGroup = document.getElementById('langue-group');
 const langueRadios = document.querySelectorAll('input[name="langue"]');
 const boutonSemestre = document.getElementById('calculer-semestre');
 const boutonReset = document.getElementById('reset-donnees');
+const boutonTelechargerPdf = document.getElementById('telecharger-bulletin');
 const tableBody = document.getElementById('matiere-table-body');
 const classeLabel = document.getElementById('classe-label');
 const partnerVisuals = document.querySelectorAll('.partner-visual');
@@ -248,7 +249,7 @@ const matieresCommunesBase = [
 const STORAGE_PREFIX = 'lynaqe_moyennes';
 
 function getSemestreActuel() {
-  return document.querySelector('input[name="semestre"]:checked')?.value || 'S1';
+  return document.querySelector('input[name="semestre"]:checked')?.value || 'Semestre1';
 }
 
 function getClassStorageKey(classe, semestre = getSemestreActuel()) {
@@ -323,7 +324,7 @@ function renderTableMatiere() {
   const entries = Object.entries(notes).sort(([a], [b]) => a.localeCompare(b));
 
   classeLabel.textContent = classe
-    ? `Classe : ${classe} • Semestre ${semestre === 'S1' ? '1' : '2'}`
+    ? `Classe : ${classe} • ${semestre === 'Semestre1' ? 'Semestre 1' : 'Semestre 2'}`
     : 'Aucune classe sélectionnée';
 
   if (!entries.length) {
@@ -375,7 +376,6 @@ function renderTableMatiere() {
 
 function updateMatieres() {
   const selectedClasse = classeSelect.value;
-  const selectedLangue = document.querySelector('input[name="langue"]:checked')?.value;
 
   matiereSelect.innerHTML = '<option value="">-- Sélectionner une matière --</option>';
 
@@ -424,6 +424,7 @@ function setResult(message, isError = false) {
     resultat.classList.add('shake');
   }
 }
+
 classeSelect.addEventListener('change', function () {
   langueRadios.forEach((radio) => {
     radio.checked = false;
@@ -725,7 +726,7 @@ boutonSemestre.addEventListener('click', function () {
   }
 
   renderMoyenneResult({
-    pillText: `Moyenne du semestre ${semestre === 'S1' ? '1' : '2'}`,
+    pillText: `Moyenne du ${semestre === 'Semestre1' ? 'Semestre 1' : 'Semestre 2'}`,
     value: result.value,
     subtitleText: `${prenom} ${nom} • ${classe}`,
     mention: true
@@ -751,8 +752,8 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
   }
 
   const matieres = getMatieresDisponiblesPourClasse(classe);
-  const resultS1 = computeMoyennePonderee(matieres, getStoredNotesForClasse(classe, 'S1'));
-  const resultS2 = computeMoyennePonderee(matieres, getStoredNotesForClasse(classe, 'S2'));
+  const resultS1 = computeMoyennePonderee(matieres, getStoredNotesForClasse(classe, 'Semestre1'));
+  const resultS2 = computeMoyennePonderee(matieres, getStoredNotesForClasse(classe, 'Semestre2'));
 
   if (!resultS1.complete || !resultS2.complete) {
     setResult(
@@ -771,6 +772,244 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
     mention: true
   });
 });
+
+// PDF Premium Generation Function
+function generatePDFBulletin() {
+  const { jsPDF } = window.jspdf;
+  if (!jsPDF) {
+    alert("Erreur: La bibliothèque jsPDF n'est pas chargée.");
+    return;
+  }
+
+  const nom = document.getElementById('nom').value.trim() || 'DIOP';
+  const prenom = document.getElementById('prenom').value.trim() || 'Mamadou';
+  const classe = document.getElementById('classe').value.trim() || '2nde';
+  const semestreVal = getSemestreActuel();
+  const semestreText = semestreVal === 'Semestre1' ? '1er Semestre' : '2ème Semestre';
+  const notes = getStoredNotesForClasse(classe, semestreVal);
+  const entries = Object.entries(notes);
+
+  if (entries.length === 0) {
+    alert("Aucune note enregistrée pour cette classe et ce semestre. Veuillez remplir les notes d'abord.");
+    return;
+  }
+
+  const doc = new jsPDF({
+    orientation: 'p',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const pageWidth = doc.internal.pageSize.getWidth(); // 210
+  const pageHeight = doc.internal.pageSize.getHeight(); // 297
+
+  // Double Cadre Soigné
+  doc.setDrawColor(16, 47, 40); // Vert Foncé Premium (#102F28)
+  doc.setLineWidth(0.8);
+  doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
+
+  doc.setDrawColor(210, 168, 74); // Doré (#D2A84A)
+  doc.setLineWidth(0.3);
+  doc.rect(9.5, 9.5, pageWidth - 19, pageHeight - 19);
+
+  // Filigrane (Watermark en arrière-plan)
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(40);
+  doc.setTextColor(232, 238, 234);
+  doc.text("LYNAQE SÉDHIOU", pageWidth / 2, pageHeight / 2, {
+    align: "center",
+    angle: 35
+  });
+
+  // Logo Intégré
+  const logoImg = document.querySelector('.brand-logo') || document.querySelector('.official-site-logo');
+  if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
+    try {
+      doc.addImage(logoImg, 'PNG', 14, 13, 22, 28);
+    } catch(e) {
+      console.log("Erreur lors de l'intégration du logo :", e);
+    }
+  }
+
+  // En-tête officiel
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(16, 47, 40);
+  doc.text("RÉPUBLIQUE DU SÉNÉGAL", pageWidth - 14, 15, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(80, 80, 80);
+  doc.text("Un Peuple - Un But - Une Foi", pageWidth - 14, 19, { align: "right" });
+  doc.text("MINISTÈRE DE L'ÉDUCATION NATIONALE", pageWidth - 14, 23, { align: "right" });
+  doc.setFont("helvetica", "bold");
+  doc.text("LYCÉE NATIONAL DE QUALIFICATION ET D'EXCELLENCE DE SÉDHIOU", pageWidth - 14, 27, { align: "right" });
+
+  // Ligne de séparation élégante
+  doc.setDrawColor(16, 47, 40);
+  doc.setLineWidth(0.8);
+  doc.line(14, 43, pageWidth - 14, 43);
+  doc.setDrawColor(210, 168, 74);
+  doc.setLineWidth(0.4);
+  doc.line(14, 44.2, pageWidth - 14, 44.2);
+
+  // Bannière Titre
+  doc.setFillColor(16, 47, 40);
+  doc.roundedRect(14, 48, pageWidth - 28, 12, 2, 2, 'F');
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.setTextColor(255, 255, 255);
+  doc.text(`BULLETIN DE NOTES - ${semestreText.toUpperCase()}`, pageWidth / 2, 55.5, { align: "center" });
+
+  // Cartouche Informations Élève
+  doc.setFillColor(248, 246, 240);
+  doc.setDrawColor(220, 220, 210);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(14, 64, pageWidth - 28, 22, 2, 2, 'FD');
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(16, 47, 40);
+  doc.text(`Élève : ${prenom.toUpperCase()} ${nom.toUpperCase()}`, 18, 71);
+  doc.text(`Classe : ${classe}`, 18, 78);
+
+  const totalCoeff = entries.reduce((acc, [, item]) => acc + Number(item.coefficient), 0);
+  const totalPoints = entries.reduce((acc, [, item]) => acc + Number(item.points ?? (item.moyenne * item.coefficient)), 0);
+  const moyenneGen = totalCoeff > 0 ? (totalPoints / totalCoeff) : 0;
+  const mentionObj = getMention(moyenneGen);
+
+  doc.text(`Année Scolaire : 2025 - 2026`, pageWidth - 18, 71, { align: "right" });
+  doc.text(`Moyenne Générale : ${moyenneGen.toFixed(2)} / 20`, pageWidth - 18, 78, { align: "right" });
+
+  // Tableau des Notes Soigné avec Colonne d'Appréciation
+  const startY = 92;
+  const colWidths = [45, 20, 20, 22, 20, 22, 33]; // Somme = 182
+  const headers = ["Discipline", "Devoir 1", "Devoir 2", "Compo.", "Coeff.", "Moyenne", "Appréciation"];
+
+  let curY = startY;
+
+  // En-tête du tableau
+  doc.setFillColor(23, 75, 61);
+  doc.rect(14, curY, pageWidth - 28, 8, 'F');
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(255, 255, 255);
+
+  let curX = 14;
+  const colAligns = ["left", "center", "center", "center", "center", "center", "left"];
+
+  headers.forEach((h, i) => {
+    let xPos = curX + (colAligns[i] === "center" ? colWidths[i] / 2 : (colAligns[i] === "right" ? colWidths[i] - 2 : 2));
+    doc.text(h, xPos, curY + 5.5, { align: colAligns[i] });
+    curX += colWidths[i];
+  });
+
+  curY += 8;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+
+  function getAppreciation(moy) {
+    if (moy < 8) return "Insuffisant";
+    if (moy < 10) return "Passable";
+    if (moy < 12) return "Assez Bien";
+    if (moy < 14) return "Bien";
+    if (moy < 16) return "Très Bien";
+    return "Excellent";
+  }
+
+  // Lignes du tableau
+  entries.forEach(([matiere, item], idx) => {
+    const moy = Number(item.moyenne);
+    const d1 = item.devoir1 !== undefined && item.devoir1 !== null ? Number(item.devoir1).toFixed(2) : '-';
+    const d2 = item.devoir2 !== undefined && item.devoir2 !== null ? Number(item.devoir2).toFixed(2) : '-';
+    const comp = item.hasComposition ? (item.composition !== null ? Number(item.composition).toFixed(2) : '-') : 'N/A';
+    const coeff = item.coefficient;
+    const app = getAppreciation(moy);
+
+    if (idx % 2 === 0) {
+      doc.setFillColor(250, 249, 245);
+      doc.rect(14, curY, pageWidth - 28, 7, 'F');
+    }
+
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.2);
+    doc.line(14, curY + 7, pageWidth - 14, curY + 7);
+
+    doc.setTextColor(30, 30, 30);
+    let x = 14;
+
+    const rowData = [matiere, d1, d2, comp, String(coeff), moy.toFixed(2), app];
+
+    rowData.forEach((val, i) => {
+      let xPos = x + (colAligns[i] === "center" ? colWidths[i] / 2 : (colAligns[i] === "right" ? colWidths[i] - 2 : 2));
+      if (i === 5) doc.setFont("helvetica", "bold");
+      else doc.setFont("helvetica", "normal");
+      doc.text(val, xPos, curY + 4.8, { align: colAligns[i] });
+      x += colWidths[i];
+    });
+
+    curY += 7;
+  });
+
+  // Bordure extérieure du tableau
+  doc.setDrawColor(16, 47, 40);
+  doc.setLineWidth(0.5);
+  doc.rect(14, startY, pageWidth - 28, curY - startY);
+
+  // Synthèse Finale
+  curY += 6;
+  doc.setFillColor(243, 241, 233);
+  doc.setDrawColor(16, 47, 40);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(14, curY, pageWidth - 28, 16, 1.5, 1.5, 'FD');
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(16, 47, 40);
+  doc.text(`Total Coefficients : ${totalCoeff}`, 18, curY + 6);
+  doc.text(`Total Points : ${totalPoints.toFixed(2)}`, 18, curY + 12);
+
+  doc.text(`Moyenne Semestrielle : ${moyenneGen.toFixed(2)} / 20`, pageWidth / 2 - 10, curY + 6);
+
+  doc.setTextColor(210, 100, 30);
+  doc.text(`Mention : ${mentionObj.label}`, pageWidth - 18, curY + 9, { align: "right" });
+
+  // Bloc Cadre de Signatures
+  curY += 24;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(16, 47, 40);
+
+  // Cadre 1 : Parents
+  doc.text("Observation & Signature des Parents", 14, curY);
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.3);
+  doc.rect(14, curY + 3, 55, 25);
+
+  // Cadre 2 : Professeur Principal
+  doc.text("Le Professeur Principal", pageWidth / 2 - 27.5, curY);
+  doc.rect(pageWidth / 2 - 27.5, curY + 3, 55, 25);
+
+  // Cadre 3 : Le Proviseur
+  doc.text("Le Proviseur du LYNAQE", pageWidth - 69, curY);
+  doc.rect(pageWidth - 69, curY + 3, 55, 25);
+
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(7.5);
+  doc.setTextColor(120, 120, 120);
+  doc.text("Signature et Cachet Officiel", pageWidth - 41.5, curY + 16, { align: "center" });
+
+  // Bas de page
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(120, 120, 120);
+  doc.text("Document officiel généré par DEGG NOTES - Lycée National de Qualification et d'Excellence de Sédhiou", pageWidth / 2, pageHeight - 12, { align: "center" });
+
+  doc.save(`Bulletin_${prenom}_${nom}_${classe}_${semestreVal}.pdf`);
+}
+
+boutonTelechargerPdf?.addEventListener('click', generatePDFBulletin);
 
 tableBody.addEventListener('click', function (event) {
   const actionButton = event.target.closest('button[data-action]');
@@ -813,8 +1052,8 @@ boutonReset.addEventListener('click', function () {
   const classe = classeSelect.value.trim();
 
   if (classe) {
-    localStorage.removeItem(getClassStorageKey(classe, 'S1'));
-    localStorage.removeItem(getClassStorageKey(classe, 'S2'));
+    localStorage.removeItem(getClassStorageKey(classe, 'Semestre1'));
+    localStorage.removeItem(getClassStorageKey(classe, 'Semestre2'));
   } else {
     Object.keys(localStorage)
       .filter((key) => key.startsWith(`${STORAGE_PREFIX}_`))
@@ -831,6 +1070,7 @@ boutonReset.addEventListener('click', function () {
     langueGroup.hidden = true;
   }
 });
+
 afficherCitationDuJour();
 updateMatieres();
 renderTableMatiere();
