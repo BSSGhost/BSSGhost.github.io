@@ -862,6 +862,7 @@ document.getElementById('telecharger-bulletin').addEventListener('click', functi
   const marginX = 18;
   let y = 20;
 
+  // En-tête du bulletin
   doc.setFillColor(16, 47, 40);
   doc.rect(0, 0, pageWidth, 34, 'F');
   doc.setTextColor(255, 250, 240);
@@ -873,6 +874,7 @@ document.getElementById('telecharger-bulletin').addEventListener('click', functi
   doc.text('Lycée Nation-Armée pour la Qualité et l’Equité', marginX, 23);
   doc.text(`Bulletin — Semestre ${semestre === 'S1' ? '1' : '2'}`, marginX, 29);
 
+  // Informations de l'élève (sans matricule)
   y = 46;
   doc.setTextColor(20, 30, 26);
   doc.setFontSize(11);
@@ -887,6 +889,7 @@ document.getElementById('telecharger-bulletin').addEventListener('click', functi
 
   y += 10;
 
+  // Colonnes du tableau (Matière, Moyenne /20, Coefficient, Points - sans Rang)
   const colX = [marginX, marginX + 78, marginX + 110, marginX + 142];
   const headers = ['Matière', 'Moyenne /20', 'Coefficient', 'Points'];
 
@@ -929,6 +932,7 @@ document.getElementById('telecharger-bulletin').addEventListener('click', functi
   doc.line(marginX, y, pageWidth - marginX, y);
   y += 8;
 
+  // Calculs et affichages des moyennes & mentions
   const moyenneGenerale = sommeCoeff > 0 ? sommePoints / sommeCoeff : 0;
   const mentionSemestre = getMention(moyenneGenerale);
 
