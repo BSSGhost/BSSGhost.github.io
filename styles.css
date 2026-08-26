@@ -2254,3 +2254,19 @@ html.dark-mode .quote-of-day {
   background: rgba(78, 170, 126, 0.09);
   color: #dce8e2;
 }
+/* Assurer que l'effet "cadre" du bouton principal et pseudo-éléments restent discrets en dark-mode */
+html.dark-mode button,
+html.dark-mode .device-change-btn,
+html.dark-mode .secondary-button,
+html.dark-mode .ghost-button,
+html.dark-mode .pdf-button,
+html.dark-mode .primary-button {
+  background: linear-gradient(160deg, #162b23 0%, #0e1a15 100%) !important;
+  color: #eef5f1 !important;
+  border-color: rgba(160, 196, 177, 0.18) !important;
+}
+
+/* limiter la brillance du ::before du bouton principal en dark-mode */
+html.dark-mode .primary-button::before {
+  background: linear-gradient(120deg, rgba(210,168,74,0.04), transparent 40%, transparent 60%, rgba(210,168,74,0.04)) !important;
+}
