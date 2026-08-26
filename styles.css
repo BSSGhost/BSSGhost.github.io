@@ -2293,3 +2293,20 @@ html.dark-mode .quote-of-day-text {
 html.dark-mode .subtitle {
   color: #a3b8ad;
 }
+/* Styles pour le Mode Sombre */
+html.dark-mode, 
+body.dark-mode {
+  background-color: #121212 !important;
+  color: #f1f1f1 !important;
+}
+
+/* Adapter les cartes, formulaires et tableaux en mode sombre */
+.dark-mode .card,
+.dark-mode .modal-content,
+.dark-mode table,
+.dark-mode input,
+.dark-mode select {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+  border-color: #333333 !important;
+}
