@@ -1448,7 +1448,11 @@ tableBody.addEventListener('click', function (event) {
   if (!classe || !note) return;
 
   if (actionButton.dataset.action === 'delete') {
-    if (!window.confirm(`Supprimer la matière « ${matiere} » ?`)) return;
+    const lang = window.sunuMoyenneI18n?.getLanguage?.() || 'fr';
+    const confirmMessage = lang === 'en'
+      ? `Delete the subject "${window.sunuMoyenneI18n?.translateDynamic?.(matiere) || matiere}"?`
+      : `Supprimer la matière « ${matiere} » ?`;
+    if (!window.confirm(confirmMessage)) return;
     delete notes[matiere];
     localStorage.setItem(getClassStorageKey(classe), JSON.stringify(notes));
     renderTableMatiere();
@@ -1501,352 +1505,311 @@ updateMatieres();
 renderTableMatiere();
 restoreFaviconBadgeFromStorage();
 
-/* ---------- Traduction multilingue complète & robuste ---------- */
+/* =========================================================
+   INTERNATIONALISATION + MODE CLAIR/SOMBRE
+   ========================================================= */
+(() => {
+  const LANGUAGE_KEY = 'sunu_moyenne_language';
+  const THEME_KEY = 'sunu_moyenne_theme';
 
-const TRANSLATIONS = {
-  fr: {
-    metaDesc: "Calculateur de moyenne pour élèves du LYNAQE.",
-    brandSubtitle: "Fait par Ahmadou Bamba Bousso SANKHARE",
-    eyebrow: "Calculateur de moyenne • LYNAQE SÉDHIOU",
-    heroTitle: "Calculez votre moyenne en quelques clics.",
-    heroSubtitle: "Un outil sur-mesure pour les élèves du LYNAQE de Sédhiou. Saisissez vos notes et obtenez un aperçu direct de vos résultats.",
-    statExcellence: "Excellence",
-    statExcellenceLabel: "Visée constante",
-    statSimplicity: "100% Simple",
-    statSimplicityLabel: "Saisie rapide",
-    statPrecision: "Précision",
-    statPrecisionLabel: "Calcul officiel",
-    quoteLabel: "Citation du jour",
-    quoteText: "« L'éducation est l'arme la plus puissante qu'on puisse utiliser pour changer le monde. » — Nelson Mandela",
-    calcTitle: "Saisir une matière",
-    step1: "1. Profil",
-    step2: "2. Notes",
-    step3: "3. Bilan",
-    labelNom: "Nom :",
-    labelPrenom: "Prénom :",
-    labelClasse: "Classe :",
-    selectClasseDefault: "-- Choisir votre classe --",
-    labelMatiere: "Matière :",
-    selectMatiereDefault: "-- Sélectionner la matière --",
-    labelDevoir: "Note de Devoir (ex: 14) :",
-    labelComposition: "Note de Composition (ex: 13) :",
-    labelLangue: "Option de langue :",
-    btnEnregistrer: "Enregistrer cette matière",
-    btnMoyenneGenerale: "Calculer la moyenne générale",
-    btnTelechargerPdf: "Télécharger mon bulletin PDF",
-    btnReset: "Réinitialiser toutes les données",
-    deviceModalEyebrow: "Bienvenue sur SUNU MOYENNE",
-    deviceModalTitle: "Quel appareil utilisez-vous ?",
-    deviceModalSubtitle: "Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.",
-    devicePhone: "Téléphone",
-    deviceTablette: "Tablette",
-    deviceComputer: "Ordinateur",
-    changeDeviceBtn: "Changer d'affichage",
-    themeBtnLight: "☀️ Mode clair",
-    themeBtnDark: "🌙 Mode sombre",
-    langBtn: "🇬🇧 English",
-    tableHeaderMatiere: "Matière",
-    tableHeaderMoyenne: "Moyenne",
-    tableHeaderCoef: "Coefficient",
-    tableHeaderPoints: "Points",
-    tableHeaderActions: "Actions",
-    emptyState: "Aucune matière enregistrée pour le moment."
-  },
-  en: {
-    metaDesc: "Grade point average calculator for LYNAQE students.",
-    brandSubtitle: "Made by Ahmadou Bamba Bousso SANKHARE",
-    eyebrow: "GPA Calculator • LYNAQE SEDHIOU",
-    heroTitle: "Calculate your average grade in a few clicks.",
-    heroSubtitle: "A tailored tool for students of LYNAQE Sédhiou. Enter your grades and get an instant overview of your results.",
-    statExcellence: "Excellence",
-    statExcellenceLabel: "Constant goal",
-    statSimplicity: "100% Simple",
-    statSimplicityLabel: "Fast entry",
-    statPrecision: "Precision",
-    statPrecisionLabel: "Official formula",
-    quoteLabel: "Quote of the day",
-    quoteText: "“Education is the most powerful weapon which you can use to change the world.” — Nelson Mandela",
-    calcTitle: "Enter a subject",
-    step1: "1. Profile",
-    step2: "2. Grades",
-    step3: "3. Summary",
-    labelNom: "Last Name:",
-    labelPrenom: "First Name:",
-    labelClasse: "Grade Level / Class:",
-    selectClasseDefault: "-- Select your class --",
-    labelMatiere: "Subject:",
-    selectMatiereDefault: "-- Select a subject --",
-    labelDevoir: "Coursework Grade (e.g. 14):",
-    labelComposition: "Exam Grade (e.g. 13):",
-    labelLangue: "Language Track:",
-    btnEnregistrer: "Save this subject",
-    btnMoyenneGenerale: "Calculate overall GPA",
-    btnTelechargerPdf: "Download PDF Report Card",
-    btnReset: "Reset all data",
-    deviceModalEyebrow: "Welcome to SUNU MOYENNE",
-    deviceModalTitle: "Which device are you using?",
-    deviceModalSubtitle: "This choice automatically adjusts the layout to fit your screen.",
-    devicePhone: "Phone",
-    deviceTablette: "Tablet",
-    deviceComputer: "Computer",
-    changeDeviceBtn: "Change view mode",
-    themeBtnLight: "☀️ Light Mode",
-    themeBtnDark: "🌙 Dark Mode",
-    langBtn: "🇫🇷 Français",
-    tableHeaderMatiere: "Subject",
-    tableHeaderMoyenne: "Average",
-    tableHeaderCoef: "Coefficient",
-    tableHeaderPoints: "Points",
-    tableHeaderActions: "Actions",
-    emptyState: "No subject recorded yet."
+  const translations = {
+    en: {
+      'Bienvenue sur SUNU MOYENNE': 'Welcome to SUNU MOYENNE',
+      'Quel appareil utilisez-vous ?': 'Which device are you using?',
+      "Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.": 'This choice automatically adapts the website display to your screen.',
+      'Téléphone': 'Phone', 'Tablette': 'Tablet', 'Ordinateur': 'Computer',
+      "Changer d'appareil": 'Change device',
+      'Mode sombre': 'Dark mode', 'Mode clair': 'Light mode',
+      'Outil scolaire officiel': 'Official school tool',
+      'Calculez votre moyenne de matière et semestrielle en quelques secondes': 'Calculate your subject and semester average in seconds',
+      'LYNAQE SENEGAL | Calcul de moyenne': 'LYNAQE SENEGAL | Average Calculator',
+      'LYNAQE SENEGAL': 'LYNAQE SENEGAL',
+      'Fait par Ahmadou Bamba Bousso SANKHARE': 'Made by Ahmadou Bamba Bousso SANKHARE',
+      'SN': 'SN',
+      'Son activé': 'Sound on', 'Son désactivé': 'Sound off',
+      'Changer la langue': 'Change language',
+      'Sunu moyenne est une plateforme simple, rapide et pratique destinée aux élèves pour faciliter le calcul de leurs moyennes scolaires. L’utilisateur peut renseigner ses matières, ses notes et leurs coefficients afin d’obtenir automatiquement sa moyenne générale. Le site permet également de générer et de télécharger un bulletin scolaire de manière claire et organisée. Pensé pour être facile à utiliser sur ordinateur comme sur téléphone, cet outil aide les élèves à suivre leurs résultats scolaires, à gagner du temps et à mieux comprendre leur progression. Un outil simple, moderne et accessible pour calculer, suivre et organiser ses résultats scolaires.': 'Sunu Moyenne is a simple, fast and practical platform designed for students to make calculating their school averages easier. Users can enter their subjects, grades and coefficients to automatically obtain their overall average. The site also allows users to generate and download a clear and organized report card. Designed to be easy to use on both computers and phones, this tool helps students track their academic results, save time and better understand their progress. A simple, modern and accessible tool for calculating, tracking and organizing school results.',
+      'Coeff.': 'Coeff.',
+      'Classe': 'Class',
+      'Quelle langue choisissez-vous ?': 'Which language do you choose?',
+      'La matière comporte-t-elle une composition ?': 'Does the subject include an exam?',
+      'Matières enregistrées': 'Recorded subjects',
+      'Graphique radar des moyennes par matière': 'Radar chart of averages by subject',
+      'En savoir plus sur le LYNAQE': 'Learn more about LYNAQE',
+      'Logo du LYNAQE de Sédhiou': 'LYNAQE Sédhiou logo',
+      'Emblème des forces armées du Sénégal': 'Emblem of the Senegalese Armed Forces',
+      "Logo du Ministère de l'Éducation nationale du Sénégal": 'Logo of the Senegalese Ministry of National Education',
+      'Emblème du Sénégal': 'Emblem of Senegal',
+      'Devoirs': 'Assignments', 'Composition': 'Exam', 'Personnalisé': 'Custom',
+      'Conseil du jour': 'Tip of the day',
+      'Formulaire': 'Form',
+      'Renseigner les infos': 'Enter information',
+      'Ajouter les matières': 'Add subjects',
+      'Télécharger le bulletin': 'Download report card',
+      '0 / 0 matières renseignées': '0 / 0 subjects entered',
+      'Nom': 'Last name', 'Prénom': 'First name', 'Classe': 'Class',
+      '-- Sélectionner votre classe --': '-- Select your class --',
+      'Semestre': 'Semester', 'Semestre 1': 'Semester 1', 'Semestre 2': 'Semester 2',
+      'Quelle langue choisissez-vous ?': 'Which language do you choose?',
+      'Matière': 'Subject', '-- Sélectionner une matière --': '-- Select a subject --',
+      'Coefficient': 'Coefficient', 'Note de devoir 1': 'Assignment 1 grade',
+      'Note de devoir 2': 'Assignment 2 grade', 'La matière comporte-t-elle une composition ?': 'Does the subject include an exam?',
+      'Oui': 'Yes', 'Non': 'No', 'Note de composition': 'Exam grade',
+      'Calculer la moyenne de la matière': 'Calculate subject average',
+      'Calculer ma moyenne du semestre': 'Calculate my semester average',
+      'Calculer ma moyenne annuelle': 'Calculate my annual average',
+      'Télécharger mon bulletin (PDF)': 'Download my report card (PDF)',
+      'Réinitialiser les données': 'Reset data',
+      'Résultat': 'Result', 'Votre moyenne apparaîtra ici.': 'Your average will appear here.',
+      'Conseiller scolaire': 'School advisor',
+      'Matières enregistrées': 'Recorded subjects',
+      'Aucune classe sélectionnée': 'No class selected',
+      'Moyenne': 'Average', 'Points': 'Points', 'Actions': 'Actions',
+      'Aucune matière enregistrée pour le moment.': 'No subject recorded yet.',
+      'Modifier': 'Edit', 'Supprimer': 'Delete',
+      'Son activé': 'Sound on', 'Son désactivé': 'Sound off',
+      'Mathématiques': 'Mathematics', 'Français': 'French',
+      'Histoire Géographie': 'History & Geography', 'Sciences Physiques': 'Physical Sciences',
+      'Education au Civisme et à la Citoyenneté': 'Civic Education',
+      'Economie Familiale et Sociale': 'Family & Social Economics',
+      'Informatique': 'Computer Science', 'Anglais': 'English',
+      'Espagnol': 'Spanish', 'Arabe': 'Arabic',
+      'Excellent travail': 'Excellent work', 'Très bon travail': 'Very good work',
+      'Bon travail': 'Good work', 'Peux mieux faire': 'Can do better', 'Insuffisant': 'Insufficient',
+      'La réussite est la somme de petits efforts répétés jour après jour.': 'Success is the sum of small efforts repeated day after day.',
+      'Un examen ne mesure pas ton intelligence, seulement ta préparation du moment.': 'An exam does not measure your intelligence, only your preparation at that moment.',
+      'Relis tes cours le soir même : c’est le moment où la mémoire retient le mieux.': 'Review your lessons the same evening: that is when memory retains them best.',
+      'Une bonne moyenne se construit devoir après devoir, pas la veille de la composition.': 'A good average is built assignment by assignment, not the night before the exam.',
+      'Un planning de révision simple vaut mieux qu’un plan parfait jamais suivi.': 'A simple revision plan is better than a perfect plan you never follow.',
+      'Le sommeil avant un examen compte autant que les révisions.': 'Sleep before an exam matters as much as revision.',
+      'Comprendre un exercice vaut mieux que le mémoriser sans le comprendre.': 'Understanding an exercise is better than memorizing it without understanding it.',
+      'Chaque matière compte : ne néglige pas celles qui te semblent moins importantes.': 'Every subject matters: do not neglect the ones that seem less important.',
+      'Fixe-toi un petit objectif clair pour chaque séance de révision.': 'Set yourself a small, clear goal for each revision session.',
+      'Les erreurs corrigées sont les meilleures leçons pour le prochain devoir.': 'Corrected mistakes are the best lessons for the next assignment.',
+      'Travailler un peu chaque jour vaut mieux que tout réviser en une nuit.': 'Working a little every day is better than revising everything in one night.',
+      'Note tes points faibles après chaque devoir pour savoir où progresser.': 'Write down your weak points after each assignment to know where to improve.',
+      'La régularité bat le talent quand le talent ne travaille pas régulièrement.': 'Consistency beats talent when talent does not work consistently.',
+      'Un bon élève n’est pas celui qui ne se trompe jamais, mais celui qui persévère.': 'A good student is not one who never makes mistakes, but one who perseveres.',
+      'Prends soin de ta concentration : coupe les distractions pendant que tu révises.': 'Protect your concentration: remove distractions while you study.',
+      'Explique un cours à quelqu’un d’autre : c’est la meilleure façon de vérifier que tu l’as compris.': 'Explain a lesson to someone else: it is the best way to check that you understood it.',
+      'Chaque semestre est une nouvelle chance de progresser, quel que soit le précédent.': 'Each semester is a new chance to improve, regardless of the previous one.',
+      'Ne te compare pas aux autres : compare-toi à toi-même et à tes progrès.': 'Do not compare yourself to others: compare yourself to your own progress.',
+      'La confiance en soi se construit par la préparation et la pratique, pas par la chance.': 'Self-confidence is built through preparation and practice, not luck.',
+      'Même un petit progrès chaque jour finit par faire une grande différence sur le long terme.': 'Even a small daily improvement eventually makes a big difference in the long run.',
+      'Les révisions actives (exercices, questions) sont plus efficaces que la simple lecture.': 'Active revision (exercises, questions) is more effective than simply reading.',
+      'Un esprit reposé retient mieux : n’oublie pas de faire des pauses pendant tes révisions.': 'A rested mind remembers better: do not forget to take breaks while studying.',
+      'Veuillez renseigner votre nom, prénom, classe et matière.': 'Please enter your last name, first name, class and subject.',
+      'Les notes doivent être comprises entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.': 'Grades must be between 0 and 20 and use only ,25, ,50 or ,75.',
+      'La composition doit être comprise entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.': 'The exam grade must be between 0 and 20 and use only ,25, ,50 or ,75.',
+      'Continue tes efforts, aucune matière ne se démarque encore nettement.': 'Keep up your efforts; no subject stands out clearly yet.',
+      'Aucune matière en difficulté particulière, bravo pour cet équilibre !': 'No subject is particularly difficult, well done for this balance!',
+      'Veuillez d’abord sélectionner une classe pour calculer votre moyenne du semestre.': 'Please select a class first to calculate your semester average.',
+      'Veuillez d’abord sélectionner une classe pour calculer votre moyenne annuelle.': 'Please select a class first to calculate your annual average.',
+      'Très Bien': 'Very Good',
+      'Appréciation': 'Assessment',
+      'Calculateur de moyenne pour élèves du LYNAQE.': 'Average calculator for LYNAQE students.',
+      'Veuillez entrer un coefficient valide entre 1 et 8.': 'Please enter a valid coefficient between 1 and 8.',
+      'Veuillez choisir votre langue pour cette classe avant de calculer la moyenne du semestre.': 'Please choose your language for this class before calculating the semester average.',
+      'Veuillez choisir votre langue pour cette classe avant de calculer la moyenne annuelle.': 'Please choose your language for this class before calculating the annual average.',
+      'Aucun coefficient disponible pour calculer la moyenne du semestre.': 'No coefficient available to calculate the semester average.',
+      'Les données ont été réinitialisées avec succès.': 'Data has been successfully reset.',
+      'Moyenne du Semestre 1': 'Semester 1 average',
+      'Moyenne du Semestre 2': 'Semester 2 average',
+      'Moyenne annuelle': 'Annual average',
+    },
+    fr: {}
+  };
+
+  function getLanguage() {
+    try { return localStorage.getItem(LANGUAGE_KEY) === 'en' ? 'en' : 'fr'; } catch { return 'fr'; }
   }
-};
-
-function translatePage() {
-  const lang = getLanguage();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
-
-  // Actualisation de la balise HTML et Meta Description
-  document.documentElement.lang = lang;
-  const metaDesc = document.querySelector('meta[name="description"]');
-  if (metaDesc) metaDesc.content = t.metaDesc;
-
-  // En-tête / Brand
-  const brandSub = document.querySelector('.brand small');
-  if (brandSub) brandSub.textContent = t.brandSubtitle;
-
-  // Boutons Topbar
-  const themeBtn = document.getElementById('toggle-theme-btn');
-  if (themeBtn) {
-    const isDark = getTheme() === 'dark';
-    const themeLabelEl = themeBtn.querySelector('.theme-label');
-    if (themeLabelEl) themeLabelEl.textContent = isDark ? t.themeBtnLight : t.themeBtnDark;
+  function getTheme() {
+    try { return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'; } catch { return 'light'; }
   }
+  function save(key, value) { try { localStorage.setItem(key, value); } catch {} }
 
-  const langBtn = document.getElementById('toggle-language-btn');
-  if (langBtn) {
-    const langLabelEl = langBtn.querySelector('.language-label');
-    if (langLabelEl) langLabelEl.textContent = t.langBtn;
-  }
-
-  const changeDeviceBtn = document.getElementById('change-device-btn');
-  if (changeDeviceBtn) {
-    const labelSpan = changeDeviceBtn.querySelector('span:last-child');
-    if (labelSpan) labelSpan.textContent = t.changeDeviceBtn;
-  }
-
-  // Hero Section
-  const eyebrow = document.querySelector('.info-panel .eyebrow');
-  if (eyebrow) eyebrow.textContent = t.eyebrow;
-
-  const heroTitle = document.querySelector('.hero-title');
-  if (heroTitle) heroTitle.textContent = t.heroTitle;
-
-  const subtitle = document.querySelector('.info-panel .subtitle');
-  if (subtitle) subtitle.textContent = t.heroSubtitle;
-
-  // Stats
-  const stats = document.querySelectorAll('.stats div');
-  if (stats.length >= 3) {
-    stats[0].querySelector('strong').textContent = t.statExcellence;
-    stats[0].querySelector('span').textContent = t.statExcellenceLabel;
-    stats[1].querySelector('strong').textContent = t.statSimplicity;
-    stats[1].querySelector('span').textContent = t.statSimplicityLabel;
-    stats[2].querySelector('strong').textContent = t.statPrecision;
-    stats[2].querySelector('span').textContent = t.statPrecisionLabel;
+  const originalFrench = new Map();
+  function collectFrenchNodes() {
+    document.querySelectorAll('body *').forEach(el => {
+      if (el.id === 'toggle-language-btn' || el.id === 'toggle-theme-btn') return;
+      [...el.childNodes].forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.nodeValue.trim();
+          if (text && !originalFrench.has(node)) originalFrench.set(node, text);
+        }
+      });
+      ['placeholder','title','aria-label'].forEach(attr => {
+        if (el.hasAttribute(attr) && !originalFrench.has(attr+'::'+el)) {
+          originalFrench.set(attr+'::'+el, el.getAttribute(attr));
+        }
+      });
+    });
   }
 
-  // Quote
-  const quoteLabel = document.querySelector('.quote-of-day-label');
-  if (quoteLabel) quoteLabel.textContent = t.quoteLabel;
-  const quoteText = document.querySelector('.quote-of-day-text');
-  if (quoteText) quoteText.textContent = t.quoteText;
+  function translateDynamic(text) {
+    const lang = getLanguage();
+    if (lang === 'fr') return text;
+    const direct = translations.en[text];
+    if (direct) return direct;
 
-  // Formulaire & Calculateur
-  const calcTitle = document.querySelector('.calculator-card h2');
-  if (calcTitle) calcTitle.textContent = t.calcTitle;
+    let m = text.match(/^(\d+) \/ (\d+) matières renseignées$/);
+    if (m) return `${m[1]} / ${m[2]} subjects entered`;
+    m = text.match(/^(\d+) \/ (\d+) matières • Bulletin prêt !$/);
+    if (m) return `${m[1]} / ${m[2]} subjects • Report card ready!`;
+    m = text.match(/^Classe : (.+) • (.+)$/);
+    if (m) return `Class: ${m[1]} • ${m[2].replace('Semestre', 'Semester')}`;
+    if (text === '2ème Semestre') return '2nd Semester';
+    if (text === '1er Semestre') return '1st Semester';
+    if (text.startsWith('Excellent niveau (')) return text.replace('Excellent niveau', 'Excellent level').replace('continue sur cette lancée pour viser', 'keep it up to aim for');
+    if (text.startsWith('À améliorer :')) return text.replace('À améliorer :', 'To improve:');
+    if (text.startsWith('augmente principalement tes résultats en')) return text.replace('augmente principalement tes résultats en', 'mainly improve your results in');
+    if (text.startsWith('Continue à consolider')) return text.replace('Continue à consolider', 'Keep strengthening');
 
-  const steps = document.querySelectorAll('.step-item span:last-child');
-  if (steps.length >= 3) {
-    steps[0].textContent = t.step1;
-    steps[1].textContent = t.step2;
-    steps[2].textContent = t.step3;
+    m = text.match(/^Vous devez d’abord calculer toutes les matières de la classe\. Matières manquantes : (.+)\.$/);
+    if (m) {
+      const list = m[1].split(', ').map(s => translations.en[s] || s).join(', ');
+      return `You must first calculate all subjects for the class. Missing subjects: ${list}.`;
+    }
+    m = text.match(/^Il manque des notes au (semestre 1|semestre 2) pour toutes les matières de la classe\. Complétez les deux semestres avant de calculer la moyenne annuelle\.$/);
+    if (m) {
+      const semestreEn = m[1] === 'semestre 1' ? 'semester 1' : 'semester 2';
+      return `Grades are missing for ${semestreEn} for all subjects in the class. Complete both semesters before calculating the annual average.`;
+    }
+    m = text.match(/^La matière (.+) a été supprimée\.$/);
+    if (m) return `The subject ${translations.en[m[1]] || m[1]} has been deleted.`;
+    m = text.match(/^Les données de (.+) sont prêtes à être modifiées\.$/);
+    if (m) return `${translations.en[m[1]] || m[1]} data is ready to be edited.`;
+
+    return text;
   }
 
-  const labelNom = document.querySelector('label[for="nom"]');
-  if (labelNom) labelNom.textContent = t.labelNom;
-
-  const labelPrenom = document.querySelector('label[for="prenom"]');
-  if (labelPrenom) labelPrenom.textContent = t.labelPrenom;
-
-  const labelClasse = document.getElementById('classe-label');
-  if (labelClasse) labelClasse.textContent = t.labelClasse;
-
-  const optClasseDefault = document.querySelector('#classe option[value=""]');
-  if (optClasseDefault) optClasseDefault.textContent = t.selectClasseDefault;
-
-  const labelMatiere = document.querySelector('label[for="matiere"]');
-  if (labelMatiere) labelMatiere.textContent = t.labelMatiere;
-
-  const optMatiereDefault = document.querySelector('#matiere option[value=""]');
-  if (optMatiereDefault) optMatiereDefault.textContent = t.selectMatiereDefault;
-
-  const labelDevoir = document.querySelector('label[for="devoir"]');
-  if (labelDevoir) labelDevoir.textContent = t.labelDevoir;
-
-  const labelComp = document.querySelector('label[for="composition"]');
-  if (labelComp) labelComp.textContent = t.labelComposition;
-
-  const labelLang = document.querySelector('#langue-group legend');
-  if (labelLang) labelLang.textContent = t.labelLangue;
-
-  const btnSubmit = document.querySelector('#moyenne-form button[type="submit"]');
-  if (btnSubmit) btnSubmit.textContent = t.btnEnregistrer;
-
-  if (boutonSemestre) boutonSemestre.textContent = t.btnMoyenneGenerale;
-  if (boutonTelechargerPdf) boutonTelechargerPdf.textContent = t.btnTelechargerPdf;
-  if (boutonReset) boutonReset.textContent = t.btnReset;
-
-  // Modal Appareil
-  const modalEyebrow = document.querySelector('.device-modal-card .eyebrow');
-  if (modalEyebrow) modalEyebrow.textContent = t.deviceModalEyebrow;
-
-  const modalTitle = document.getElementById('device-modal-title');
-  if (modalTitle) modalTitle.textContent = t.deviceModalTitle;
-
-  const modalSub = document.querySelector('.device-modal-subtitle');
-  if (modalSub) modalSub.textContent = t.deviceModalSubtitle;
-
-  const devPhone = document.querySelector('.device-option[data-device="phone"] span');
-  if (devPhone) devPhone.textContent = t.devicePhone;
-
-  const devTab = document.querySelector('.device-option[data-device="tablette"] span');
-  if (devTab) devTab.textContent = t.deviceTablette;
-
-  const devComp = document.querySelector('.device-option[data-device="ordinateur"] span');
-  if (devComp) devComp.textContent = t.deviceComputer;
-
-  // Tableau
-  const ths = document.querySelectorAll('.table-wrap th');
-  if (ths.length >= 5) {
-    ths[0].textContent = t.tableHeaderMatiere;
-    ths[1].textContent = t.tableHeaderMoyenne;
-    ths[2].textContent = t.tableHeaderCoef;
-    ths[3].textContent = t.tableHeaderPoints;
-    ths[4].textContent = t.tableHeaderActions;
+  function translateElement(el) {
+    if (!el) return;
+    if (getLanguage() === 'fr') {
+      originalFrench.forEach((value, key) => {
+        if (typeof key === 'string' && key.includes('::')) {
+          const [attr, id] = key.split('::');
+          if (id === el) el.setAttribute(attr, value);
+        } else if (key && key.nodeType === Node.TEXT_NODE && key.parentNode) {
+          // restored below in translatePage
+        }
+      });
+    }
   }
 
-  const emptyCell = document.querySelector('.empty-state');
-  if (emptyCell) emptyCell.textContent = t.emptyState;
-}
+  function translatePage() {
+    pauseTranslationObserver();
+    collectFrenchNodes();
+    const lang = getLanguage();
+    document.documentElement.lang = lang;
+    document.title = lang === 'en' ? 'LYNAQE SENEGAL | Average calculator' : 'LYNAQE SENEGAL | Calcul de moyenne';
 
-function applyTheme() {
-  const dark = getTheme() === 'dark';
-  document.documentElement.classList.toggle('dark-mode', dark);
-  const btn = document.getElementById('toggle-theme-btn');
-  if (btn) btn.setAttribute('aria-pressed', String(dark));
-  translatePage();
-}
-/* ---------- Gestion du Mode Sombre (Dark Mode) ---------- */
-const toggleThemeBtn = document.getElementById('toggle-theme-btn');
+    originalFrench.forEach((value, key) => {
+      if (key && key.nodeType === Node.TEXT_NODE && key.parentNode) {
+        key.nodeValue = lang === 'en' ? translateDynamic(value) : value;
+      } else if (typeof key === 'string' && key.includes('::')) {
+        const [attr, elId] = key.split('::');
+        if (elId && elId.startsWith('#')) return;
+      }
+    });
 
-function initTheme() {
-  const savedTheme = localStorage.getItem('lynaqe_theme');
-  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    document.documentElement.classList.add('dark-mode');
-    if (toggleThemeBtn) toggleThemeBtn.setAttribute('aria-pressed', 'true');
-  } else {
-    document.documentElement.classList.remove('dark-mode');
-    if (toggleThemeBtn) toggleThemeBtn.setAttribute('aria-pressed', 'false');
-  }
-}
+    // Attributes are easier to handle separately.
+    document.querySelectorAll('[placeholder],[title],[aria-label]').forEach(el => {
+      const attrs = ['placeholder','title','aria-label'];
+      attrs.forEach(attr => {
+        const key = attr+'::'+el;
+        const original = originalFrench.get(key);
+        if (original) el.setAttribute(attr, lang === 'en' ? translateDynamic(original) : original);
+      });
+    });
 
-toggleThemeBtn?.addEventListener('click', () => {
-  const isDark = document.documentElement.classList.toggle('dark-mode');
-  localStorage.setItem('lynaqe_theme', isDark ? 'dark' : 'light');
-  toggleThemeBtn.setAttribute('aria-pressed', String(isDark));
-});
+    // La balise <meta name="description"> est en dehors du <body>,
+    // donc collectFrenchNodes() ne la voit jamais : on la traduit à part.
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      if (!metaDescription.dataset.originalContent) {
+        metaDescription.dataset.originalContent = metaDescription.getAttribute('content') || '';
+      }
+      const originalContent = metaDescription.dataset.originalContent;
+      metaDescription.setAttribute('content', lang === 'en' ? translateDynamic(originalContent) : originalContent);
+    }
 
-initTheme();
-
-
-/* ---------- Gestion du Changement de Langue ---------- */
-const toggleLangBtn = document.getElementById('toggle-lang-btn'); // ou vos radios langue
-
-const translations = {
-  fr: {
-    deviceModalEyebrow: "Bienvenue sur SUNU MOYENNE",
-    deviceModalTitle: "Quel appareil utilisez-vous ?",
-    deviceModalSubtitle: "Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.",
-    devicePhone: "Téléphone",
-    deviceTablette: "Tablette",
-    deviceComputer: "Ordinateur",
-    tableHeaderMatiere: "Matière",
-    tableHeaderMoyenne: "Moyenne",
-    tableHeaderCoef: "Coefficient",
-    tableHeaderPoints: "Points",
-    tableHeaderActions: "Actions",
-    emptyState: "Aucune matière enregistrée pour le moment."
-  },
-  wo: { // Exemple pour le Wolof ou une autre langue
-    deviceModalEyebrow: "Dalal ak jamm ci SUNU MOYENNE",
-    deviceModalTitle: "Loo koy jandee ?",
-    deviceModalSubtitle: "Taanal li nga yor ngir mu gënë rafet ci sa ekran.",
-    devicePhone: "Téléphone",
-    deviceTablette: "Tablette",
-    deviceComputer: "Ordinateur",
-    tableHeaderMatiere: "Matière",
-    tableHeaderMoyenne: "Moyenne",
-    tableHeaderCoef: "Coefficient",
-    tableHeaderPoints: "Points",
-    tableHeaderActions: "Jëf",
-    emptyState: "Amul benn matière bu ci nekk tay."
-  }
-};
-
-let currentLang = localStorage.getItem('lynaqe_lang') || 'fr';
-
-function applyTranslations(lang) {
-  const t = translations[lang] || translations.fr;
-  
-  // Mise à jour de l'interface avec les clés de traduction 't'
-  const modalEyebrow = document.querySelector('.device-modal .eyebrow');
-  if (modalEyebrow) modalEyebrow.textContent = t.deviceModalEyebrow;
-
-  const modalTitle = document.getElementById('device-modal-title');
-  if (modalTitle) modalTitle.textContent = t.deviceModalTitle;
-
-  const modalSub = document.querySelector('.device-modal-subtitle');
-  if (modalSub) modalSub.textContent = t.deviceModalSubtitle;
-
-  const ths = document.querySelectorAll('.table-wrap th');
-  if (ths.length >= 5) {
-    ths[0].textContent = t.tableHeaderMatiere;
-    ths[1].textContent = t.tableHeaderMoyenne;
-    ths[2].textContent = t.tableHeaderCoef;
-    ths[3].textContent = t.tableHeaderPoints;
-    ths[4].textContent = t.tableHeaderActions;
+    const themeBtn = document.getElementById('toggle-theme-btn');
+    const langBtn = document.getElementById('toggle-language-btn');
+    if (themeBtn) {
+      const dark = document.documentElement.classList.contains('dark-mode');
+      themeBtn.querySelector('.theme-label').textContent = dark
+        ? (lang === 'en' ? 'Light mode' : 'Mode clair')
+        : (lang === 'en' ? 'Dark mode' : 'Mode sombre');
+      themeBtn.querySelector('.theme-icon').textContent = dark ? '☀️' : '🌙';
+    }
+    if (langBtn) langBtn.querySelector('.language-label').textContent = lang === 'fr' ? '🇬🇧 English' : '🇫🇷 Français';
+    document.documentElement.lang = lang;
+    const title = document.querySelector('title');
+    if (title) title.textContent = lang === 'en'
+      ? 'LYNAQE SENEGAL | Average Calculator'
+      : 'LYNAQE SENEGAL | Calcul de moyenne';
+    resumeTranslationObserver();
   }
 
-  const emptyCell = document.querySelector('.empty-state');
-  if (emptyCell) emptyCell.textContent = t.emptyState;
-}
+  function applyTheme() {
+    const dark = getTheme() === 'dark';
+    document.documentElement.classList.toggle('dark-mode', dark);
+    const btn = document.getElementById('toggle-theme-btn');
+    if (btn) btn.setAttribute('aria-pressed', String(dark));
+  }
 
-// Déclenchement au clic sur le bouton de langue ou changement radio
-toggleLangBtn?.addEventListener('click', () => {
-  currentLang = currentLang === 'fr' ? 'wo' : 'fr';
-  localStorage.setItem('lynaqe_lang', currentLang);
-  applyTranslations(currentLang);
-});
+  applyTheme();
 
-// Également pour les boutons radios de langue dans le formulaire si présents
-document.querySelectorAll('input[name="langue"]').forEach((radio) => {
-  radio.addEventListener('change', (e) => {
-    currentLang = e.target.value;
-    localStorage.setItem('lynaqe_lang', currentLang);
-    applyTranslations(currentLang);
+  document.addEventListener('DOMContentLoaded', () => {
+    collectFrenchNodes();
+    translatePage();
+
+    document.getElementById('toggle-theme-btn')?.addEventListener('click', () => {
+      save(THEME_KEY, getTheme() === 'dark' ? 'light' : 'dark');
+      applyTheme();
+      translatePage();
+    });
+
+    document.getElementById('toggle-language-btn')?.addEventListener('click', () => {
+      save(LANGUAGE_KEY, getLanguage() === 'fr' ? 'en' : 'fr');
+      translatePage();
+    });
+
+    // Le contenu généré après le chargement (résultat, tableau des matières,
+    // conseiller scolaire, citation du jour, etc.) est traduit automatiquement
+    // dès qu'il apparaît, grâce à l'observateur ci-dessous. On le met en pause
+    // pendant que translatePage() modifie elle-même le texte, pour ne pas créer
+    // de boucle infinie.
+    startTranslationObserver();
   });
-});
 
-// Application au chargement
-applyTranslations(currentLang);
+  let translationObserver = null;
+
+  function startTranslationObserver() {
+    if (translationObserver || !window.MutationObserver) return;
+    translationObserver = new MutationObserver(() => {
+      translatePage();
+    });
+    resumeTranslationObserver();
+  }
+
+  function pauseTranslationObserver() {
+    if (translationObserver) translationObserver.disconnect();
+  }
+
+  function resumeTranslationObserver() {
+    if (!translationObserver) return;
+    translationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['placeholder', 'title', 'aria-label'],
+    });
+  }
+
+  // Exposé pour permettre aux boîtes de dialogue natives (confirm/alert),
+  // qui ne font pas partie du DOM, d'être traduites elles aussi.
+  window.sunuMoyenneI18n = { getLanguage, translateDynamic };
+})();

@@ -2142,124 +2142,84 @@ html.dark-mode .site-footer {
 }
 
 
-/* ==========================================================================
-   MODE SOMBRE - APPARENCE ÉLÉGANTE ET UNIFORME
-   ========================================================================== */
-
-html.dark-mode {
-  color-scheme: dark;
+/* =========================================================
+   MODE SOMBRE COMPLET — éléments qui restaient clairs
+   ========================================================= */
+html.dark-mode .info-panel {
+  background: linear-gradient(145deg, #162d25 0%, #111d18 65%, #0d1713 100%);
+  color: #eaf3ee;
 }
 
-html.dark-mode body {
-  background: 
-    linear-gradient(rgba(41, 128, 100, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(41, 128, 100, 0.05) 1px, transparent 1px),
-    linear-gradient(135deg, #09120e 0%, #0d1a15 50%, #060e0a 100%);
-  color: #e2ebe6;
+html.dark-mode .info-panel h1,
+html.dark-mode .info-panel .subtitle,
+html.dark-mode .info-panel .eyebrow {
+  color: #eaf3ee;
 }
 
-/* Typographies et titres en mode sombre */
-html.dark-mode strong,
-html.dark-mode h1,
-html.dark-mode h2,
-html.dark-mode h3,
-html.dark-mode label,
-html.dark-mode legend,
-html.dark-mode .brand-name,
-html.dark-mode .stats span,
-html.dark-mode th {
-  color: #f0f7f3;
-}
-
-/* Cartes et Panneaux */
-html.dark-mode .topbar,
-html.dark-mode .info-panel,
 html.dark-mode .calculator-card,
-html.dark-mode .result-card,
+html.dark-mode .advisor-card,
 html.dark-mode .subjects-card,
-html.dark-mode .device-modal-card {
-  background: rgba(18, 30, 25, 0.92);
-  border-color: rgba(78, 170, 126, 0.18);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+html.dark-mode .site-footer {
+  background: #121d18;
+  color: #e6eee9;
+  border-color: rgba(160, 196, 177, 0.14);
 }
 
-/* Topbar & Boutons de contrôle */
-html.dark-mode .device-change-btn,
-html.dark-mode .device-option {
-  background: #14241d;
-  color: #e2ebe6;
-  border-color: rgba(78, 170, 126, 0.22);
+html.dark-mode .advisor-card {
+  background: linear-gradient(150deg, #182c24 0%, #121d18 70%);
 }
 
-html.dark-mode .device-change-btn:hover,
-html.dark-mode .device-option:hover {
-  background: #1c3329;
-  border-color: #4eaa7e;
-  color: #ffffff;
+html.dark-mode .subjects-card {
+  background: #101a16;
 }
 
-/* Inputs, Selects et Textareas */
-html.dark-mode input[type="text"],
-html.dark-mode input[type="number"],
-html.dark-mode select,
-html.dark-mode textarea {
-  background-color: #0d1713;
-  color: #f0f7f3;
-  border-color: rgba(78, 170, 126, 0.28);
-}
-
-html.dark-mode input:focus,
-html.dark-mode select:focus {
-  border-color: #4eaa7e;
-  box-shadow: 0 0 0 3px rgba(78, 170, 126, 0.25);
-}
-
-html.dark-mode select option {
-  background-color: #0d1713;
-  color: #f0f7f3;
-}
-
-/* Boutons principaux et d'actions */
-html.dark-mode button,
-html.dark-mode .primary-button,
-html.dark-mode .pdf-button,
-html.dark-mode .reset-button {
-  background: linear-gradient(145deg, #1d6a52 0%, #124535 100%);
-  color: #ffffff;
-  border: 1px solid rgba(134, 200, 157, 0.3);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-
-html.dark-mode button:hover,
-html.dark-mode .primary-button:hover,
-html.dark-mode .pdf-button:hover {
-  background: linear-gradient(145deg, #258567 0%, #185944 100%);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.45);
-}
-
-html.dark-mode .reset-button {
-  background: rgba(217, 60, 60, 0.15);
-  color: #ff9e9e;
-  border-color: rgba(217, 60, 60, 0.3);
-}
-
-html.dark-mode .reset-button:hover {
-  background: rgba(217, 60, 60, 0.3);
-  color: #ffffff;
-}
-
-/* Tableaux */
 html.dark-mode table {
-  border-color: rgba(78, 170, 126, 0.15);
+  background: #0e1713;
+  color: #e6eee9;
+  border: 1px solid rgba(160, 196, 177, 0.12);
 }
 
 html.dark-mode th {
-  background: #14241d;
+  background: #1b3028;
+  color: #f0f7f3;
+  border-color: rgba(160, 196, 177, 0.16);
 }
 
 html.dark-mode td {
-  border-bottom-color: rgba(78, 170, 126, 0.1);
-  color: #d1ded7;
+  background: #101a16;
+  color: #dce8e2;
+  border-color: rgba(160, 196, 177, 0.12);
+}
+
+html.dark-mode #matiere-table-body tr:hover {
+  background: #172821;
+}
+
+html.dark-mode .empty-state {
+  background: #101a16;
+  color: #9fb2a9;
+}
+
+/* Tous les boutons deviennent visiblement sombres dans le thème sombre. */
+html.dark-mode button,
+html.dark-mode .device-change-btn,
+html.dark-mode .secondary-button,
+html.dark-mode .ghost-button,
+html.dark-mode .pdf-button,
+html.dark-mode .primary-button {
+  background: linear-gradient(160deg, #1b3028 0%, #0f1c16 100%);
+  color: #eef5f1;
+  border-color: rgba(160, 196, 177, 0.2);
+}
+
+html.dark-mode button:hover,
+html.dark-mode .device-change-btn:hover,
+html.dark-mode .secondary-button:hover,
+html.dark-mode .ghost-button:hover,
+html.dark-mode .pdf-button:hover,
+html.dark-mode .primary-button:hover {
+  background: linear-gradient(160deg, #264538 0%, #14251d 100%);
+  color: #ffffff;
 }
 
 html.dark-mode .table-action.edit-action {
@@ -2268,45 +2228,71 @@ html.dark-mode .table-action.edit-action {
 }
 
 html.dark-mode .table-action.delete-action {
-  background: rgba(217, 60, 60, 0.2);
+  background: rgba(217, 60, 60, 0.16);
   color: #ffb0b0;
   border-color: rgba(255, 130, 130, 0.25);
 }
 
-/* Éléments divers */
+html.dark-mode input,
+html.dark-mode select,
+html.dark-mode textarea {
+  background-color: #111d18;
+  color: #eef5f1;
+}
+
+html.dark-mode select option {
+  background: #111d18;
+  color: #eef5f1;
+}
+
 html.dark-mode .stats div,
 html.dark-mode .partner-visual {
-  background: #12211a;
-  border-color: rgba(78, 170, 126, 0.2);
+  background: #182821;
 }
 
 html.dark-mode .quote-of-day {
-  background: rgba(78, 170, 126, 0.1);
-  border-color: rgba(78, 170, 126, 0.25);
-  border-left-color: #4eaa7e;
+  background: rgba(78, 170, 126, 0.09);
+  color: #dce8e2;
 }
 
-html.dark-mode .quote-of-day-text {
-  color: #d8e5df;
+/* =========================================================
+   MODE SOMBRE — compléments : éléments restés clairs
+   (choix Oui/Non, étapes, barre de progression, conseiller)
+   ========================================================= */
+html.dark-mode .choice-option {
+  background: rgba(31, 45, 39, 0.92);
+  border-color: rgba(160, 196, 177, 0.18);
 }
 
-html.dark-mode .subtitle {
-  color: #a3b8ad;
-}
-/* Styles pour le Mode Sombre */
-html.dark-mode, 
-body.dark-mode {
-  background-color: #121212 !important;
-  color: #f1f1f1 !important;
+html.dark-mode .choice-option input[type="radio"],
+html.dark-mode .choice-option input[type="checkbox"] {
+  accent-color: var(--green-500);
 }
 
-/* Adapter les cartes, formulaires et tableaux en mode sombre */
-.dark-mode .card,
-.dark-mode .modal-content,
-.dark-mode table,
-.dark-mode input,
-.dark-mode select {
-  background-color: #1e1e1e !important;
-  color: #ffffff !important;
-  border-color: #333333 !important;
+html.dark-mode .step-number {
+  background: #1c2e26;
+  border-color: rgba(160, 196, 177, 0.22);
+}
+
+html.dark-mode .progress-tracker-bar {
+  background: #1c2e26;
+  border-color: rgba(160, 196, 177, 0.22);
+}
+
+html.dark-mode .advisor-line {
+  background: rgba(24, 35, 30, 0.85);
+  border-color: rgba(160, 196, 177, 0.12);
+  color: #dce8e2;
+}
+
+html.dark-mode .advisor-goal {
+  background: rgba(46, 90, 74, 0.3);
+}
+
+html.dark-mode .advisor-text strong {
+  color: #f0f5f2;
+}
+
+html.dark-mode .eyebrow {
+  color: var(--yellow-400);
 }
