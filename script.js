@@ -1747,3 +1747,106 @@ function applyTheme() {
   if (btn) btn.setAttribute('aria-pressed', String(dark));
   translatePage();
 }
+/* ---------- Gestion du Mode Sombre (Dark Mode) ---------- */
+const toggleThemeBtn = document.getElementById('toggle-theme-btn');
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('lynaqe_theme');
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark-mode');
+    if (toggleThemeBtn) toggleThemeBtn.setAttribute('aria-pressed', 'true');
+  } else {
+    document.documentElement.classList.remove('dark-mode');
+    if (toggleThemeBtn) toggleThemeBtn.setAttribute('aria-pressed', 'false');
+  }
+}
+
+toggleThemeBtn?.addEventListener('click', () => {
+  const isDark = document.documentElement.classList.toggle('dark-mode');
+  localStorage.setItem('lynaqe_theme', isDark ? 'dark' : 'light');
+  toggleThemeBtn.setAttribute('aria-pressed', String(isDark));
+});
+
+initTheme();
+
+
+/* ---------- Gestion du Changement de Langue ---------- */
+const toggleLangBtn = document.getElementById('toggle-lang-btn'); // ou vos radios langue
+
+const translations = {
+  fr: {
+    deviceModalEyebrow: "Bienvenue sur SUNU MOYENNE",
+    deviceModalTitle: "Quel appareil utilisez-vous ?",
+    deviceModalSubtitle: "Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.",
+    devicePhone: "Téléphone",
+    deviceTablette: "Tablette",
+    deviceComputer: "Ordinateur",
+    tableHeaderMatiere: "Matière",
+    tableHeaderMoyenne: "Moyenne",
+    tableHeaderCoef: "Coefficient",
+    tableHeaderPoints: "Points",
+    tableHeaderActions: "Actions",
+    emptyState: "Aucune matière enregistrée pour le moment."
+  },
+  wo: { // Exemple pour le Wolof ou une autre langue
+    deviceModalEyebrow: "Dalal ak jamm ci SUNU MOYENNE",
+    deviceModalTitle: "Loo koy jandee ?",
+    deviceModalSubtitle: "Taanal li nga yor ngir mu gënë rafet ci sa ekran.",
+    devicePhone: "Téléphone",
+    deviceTablette: "Tablette",
+    deviceComputer: "Ordinateur",
+    tableHeaderMatiere: "Matière",
+    tableHeaderMoyenne: "Moyenne",
+    tableHeaderCoef: "Coefficient",
+    tableHeaderPoints: "Points",
+    tableHeaderActions: "Jëf",
+    emptyState: "Amul benn matière bu ci nekk tay."
+  }
+};
+
+let currentLang = localStorage.getItem('lynaqe_lang') || 'fr';
+
+function applyTranslations(lang) {
+  const t = translations[lang] || translations.fr;
+  
+  // Mise à jour de l'interface avec les clés de traduction 't'
+  const modalEyebrow = document.querySelector('.device-modal .eyebrow');
+  if (modalEyebrow) modalEyebrow.textContent = t.deviceModalEyebrow;
+
+  const modalTitle = document.getElementById('device-modal-title');
+  if (modalTitle) modalTitle.textContent = t.deviceModalTitle;
+
+  const modalSub = document.querySelector('.device-modal-subtitle');
+  if (modalSub) modalSub.textContent = t.deviceModalSubtitle;
+
+  const ths = document.querySelectorAll('.table-wrap th');
+  if (ths.length >= 5) {
+    ths[0].textContent = t.tableHeaderMatiere;
+    ths[1].textContent = t.tableHeaderMoyenne;
+    ths[2].textContent = t.tableHeaderCoef;
+    ths[3].textContent = t.tableHeaderPoints;
+    ths[4].textContent = t.tableHeaderActions;
+  }
+
+  const emptyCell = document.querySelector('.empty-state');
+  if (emptyCell) emptyCell.textContent = t.emptyState;
+}
+
+// Déclenchement au clic sur le bouton de langue ou changement radio
+toggleLangBtn?.addEventListener('click', () => {
+  currentLang = currentLang === 'fr' ? 'wo' : 'fr';
+  localStorage.setItem('lynaqe_lang', currentLang);
+  applyTranslations(currentLang);
+});
+
+// Également pour les boutons radios de langue dans le formulaire si présents
+document.querySelectorAll('input[name="langue"]').forEach((radio) => {
+  radio.addEventListener('change', (e) => {
+    currentLang = e.target.value;
+    localStorage.setItem('lynaqe_lang', currentLang);
+    applyTranslations(currentLang);
+  });
+});
+
+// Application au chargement
+applyTranslations(currentLang);
