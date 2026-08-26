@@ -16,8 +16,8 @@
   --card-strong: rgba(255, 253, 248, 0.97);
   --shadow: 0 18px 45px rgba(28, 55, 43, 0.1);
   --soft-border: rgba(27, 66, 52, 0.13);
-  --font-main: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'DM Serif Display', Georgia, serif;
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Fraunces', Georgia, serif;
   /* vos autres variables existantes */
 }
 
@@ -37,6 +37,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  font-family: var(--font-main);
   color: var(--text);
   background:
     linear-gradient(rgba(29, 106, 82, 0.035) 1px, transparent 1px),
@@ -251,6 +252,10 @@ th {
   transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
+.device-option::after {
+  content: none;
+}
+
 .device-option svg {
   width: 34px;
   height: 34px;
@@ -307,6 +312,10 @@ th {
   transition: transform 0.2s ease, background 0.2s ease;
 }
 
+.device-change-btn::after {
+  content: none;
+}
+
 .device-change-btn svg {
   width: 18px;
   height: 18px;
@@ -328,10 +337,10 @@ th {
   width: 58px;
   height: 58px;
   border-radius: 12px;
-  overflow: hidden;
-  background: #e8f0e8;
-  border: 1px solid rgba(29, 106, 82, 0.14);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+  overflow: visible;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -340,7 +349,7 @@ th {
 .brand-logo {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -477,7 +486,7 @@ th {
 h1 {
   margin: 0;
   max-width: 680px;
-  font-family: "DM Serif Display", Georgia, serif;
+  font-family: "Fraunces", Georgia, serif;
   font-size: clamp(2.7rem, 4.3vw, 4.7rem);
   font-weight: 400;
   line-height: 0.99;
@@ -870,7 +879,7 @@ select {
   background: #fffdf8;
   padding: 13px 14px;
   font-size: 0.92rem;
-  font-family: "Manrope", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   color: var(--dark);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -916,23 +925,42 @@ select option {
 }
 
 button {
-  border: none;
-  border-radius: 9px;
-  background: var(--green-800);
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: linear-gradient(160deg, var(--green-700) 0%, var(--green-900) 100%);
   color: #f8fff9;
-  font-family: "Manrope", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 0.86rem;
   font-weight: 700;
-  padding: 14px 18px;
+  letter-spacing: 0.01em;
+  padding: 15px 20px;
   cursor: pointer;
   flex: 1 1 180px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  box-shadow: 0 10px 18px rgba(23, 75, 61, 0.18);
+  isolation: isolate;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, filter 0.2s ease;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 10px 22px rgba(16, 47, 40, 0.24);
+}
+
+button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 55%);
+  opacity: 0.9;
+  pointer-events: none;
 }
 
 button:hover {
-  transform: translateY(-2px);
-  background: var(--green-700);
+  transform: translateY(-3px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 16px 30px rgba(16, 47, 40, 0.3);
 }
 
 button:focus-visible,
@@ -944,19 +972,24 @@ select:focus-visible {
 }
 
 button:active {
-  transform: translateY(0);
+  transform: translateY(-1px) scale(0.99);
+  filter: brightness(0.97);
 }
 
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
   transform: none;
+  filter: none;
 }
 
 .secondary-button {
-  background: #d2a84a;
-  color: #211b0d;
-  box-shadow: 0 10px 18px rgba(160, 119, 35, 0.18);
+  background: linear-gradient(160deg, var(--yellow-400) 0%, var(--yellow-500) 100%);
+  color: #2b220c;
+  border-color: rgba(43, 34, 12, 0.08);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 10px 22px rgba(160, 119, 35, 0.26);
 }
 
 /* ---------- Bouton principal : accent doré pour créer un point focal ---------- */
@@ -964,8 +997,11 @@ button:disabled {
 .primary-button {
   position: relative;
   flex: 1 1 240px;
-  background: linear-gradient(135deg, var(--green-700) 0%, var(--green-600) 100%);
-  box-shadow: 0 10px 20px rgba(23, 75, 61, 0.22), 0 0 0 0 rgba(232, 200, 117, 0.45);
+  background: linear-gradient(160deg, var(--green-600) 0%, var(--green-800) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 12px 26px rgba(23, 75, 61, 0.3),
+    0 0 0 0 rgba(232, 200, 117, 0.45);
   animation: primary-glow 2.6s ease-in-out infinite;
 }
 
@@ -981,16 +1017,20 @@ button:disabled {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+  z-index: 1;
 }
 
 .primary-button:hover {
-  background: linear-gradient(135deg, var(--green-600) 0%, var(--green-500) 100%);
-  box-shadow: 0 14px 26px rgba(23, 75, 61, 0.24), 0 0 0 6px rgba(232, 200, 117, 0.14);
+  background: linear-gradient(160deg, var(--green-500) 0%, var(--green-700) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 18px 32px rgba(23, 75, 61, 0.32),
+    0 0 0 6px rgba(232, 200, 117, 0.14);
 }
 
 @keyframes primary-glow {
-  0%, 100% { box-shadow: 0 10px 20px rgba(23, 75, 61, 0.22), 0 0 0 0 rgba(232, 200, 117, 0.35); }
-  50% { box-shadow: 0 10px 20px rgba(23, 75, 61, 0.22), 0 0 0 8px rgba(232, 200, 117, 0); }
+  0%, 100% { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 12px 26px rgba(23, 75, 61, 0.3), 0 0 0 0 rgba(232, 200, 117, 0.35); }
+  50% { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 12px 26px rgba(23, 75, 61, 0.3), 0 0 0 8px rgba(232, 200, 117, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1003,17 +1043,29 @@ button:disabled {
   background: transparent;
   color: var(--dark);
   box-shadow: none;
-  border: 1px solid var(--soft-border);
+  border: 1.5px solid var(--soft-border);
+}
+
+.ghost-button::after {
+  content: none;
+}
+
+.ghost-button:hover {
+  background: rgba(29, 106, 82, 0.06);
+  border-color: rgba(29, 106, 82, 0.28);
+  box-shadow: none;
 }
 
 .pdf-button {
-  background: var(--green-700);
+  background: linear-gradient(160deg, var(--green-700) 0%, var(--green-900) 100%);
   color: #f8fff9;
-  box-shadow: 0 10px 18px rgba(23, 75, 61, 0.18);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 10px 22px rgba(23, 75, 61, 0.26);
 }
 
 .pdf-button:hover {
-  background: var(--green-800);
+  background: linear-gradient(160deg, var(--green-600) 0%, var(--green-800) 100%);
 }
 
 .pdf-button:disabled {
@@ -1347,7 +1399,7 @@ button:disabled {
 .radar-label {
   font-size: 9px;
   fill: var(--muted);
-  font-family: "Manrope", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
 }
 
 .table-wrap {

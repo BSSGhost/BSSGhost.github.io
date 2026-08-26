@@ -1096,11 +1096,23 @@ function generatePDFBulletin() {
     angle: 35
   });
 
-  // Logo Intégré
+  // Logo Intégré (taille normale, proportions respectées)
   const logoImg = document.querySelector('.brand-logo') || document.querySelector('.official-site-logo');
   if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
     try {
-      doc.addImage(logoImg, 'PNG', 14, 13, 22, 28);
+      const logoMaxHeight = 24; // hauteur de référence, en mm
+      const logoMaxWidth = 22; // largeur maximale disponible, en mm
+      const ratio = logoImg.naturalWidth / logoImg.naturalHeight;
+
+      let logoHeight = logoMaxHeight;
+      let logoWidth = logoHeight * ratio;
+
+      if (logoWidth > logoMaxWidth) {
+        logoWidth = logoMaxWidth;
+        logoHeight = logoWidth / ratio;
+      }
+
+      doc.addImage(logoImg, 'PNG', 14, 13, logoWidth, logoHeight);
     } catch(e) {
       console.log("Erreur lors de l'intégration du logo :", e);
     }
