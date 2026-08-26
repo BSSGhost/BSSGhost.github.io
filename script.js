@@ -698,6 +698,8 @@ function setResult(message, isError = false) {
     void resultat.offsetWidth;
     resultat.classList.add('shake');
   }
+
+  masquerConseillerScolaire();
 }
 
 classeSelect.addEventListener('change', function () {
@@ -816,6 +818,7 @@ function calculerMoyenneDeMatiere() {
     coefficientText: `Coefficient ${coefficient}`,
     mention: true
   });
+  masquerConseillerScolaire();
   pulseCard();
   return { moyenneMatiere, coefficient };
 }
@@ -964,7 +967,113 @@ function computeMoyennePonderee(matieres, notes) {
     return { complete: false, matieresManquantes: [] };
   }
 
-  return { complete: true, value: sommePoints / sommeCoefficients };
+  return { complete: true, value: sommePoints / sommeCoefficients, matieresCalculees };
+}
+
+const advisorSection = document.getElementById('conseiller-scolaire');
+const advisorPointsFortsEl = document.getElementById('advisor-points-forts');
+const advisorAAmeliorerEl = document.getElementById('advisor-a-ameliorer');
+const advisorObjectifEl = document.getElementById('advisor-objectif');
+
+function combineMatieresAnnuelles(resultS1, resultS2) {
+  const map = new Map();
+
+  (resultS1.matieresCalculees || []).forEach((item) => {
+    map.set(item.matiere, {
+      matiere: item.matiere,
+      note: { moyenne: Number(item.note.moyenne), coefficient: Number(item.note.coefficient) }
+    });
+  });
+
+  (resultS2.matieresCalculees || []).forEach((item) => {
+    const existing = map.get(item.matiere);
+    if (existing) {
+      existing.note.moyenne = (existing.note.moyenne + Number(item.note.moyenne)) / 2;
+    } else {
+      map.set(item.matiere, {
+        matiere: item.matiere,
+        note: { moyenne: Number(item.note.moyenne), coefficient: Number(item.note.coefficient) }
+      });
+    }
+  });
+
+  return Array.from(map.values());
+}
+
+function getConseilScolaire(matieresCalculees, moyenneGenerale) {
+  const sorted = [...matieresCalculees].sort((a, b) => Number(b.note.moyenne) - Number(a.note.moyenne));
+
+  let pointsForts = sorted.filter((item) => Number(item.note.moyenne) >= 14).slice(0, 3);
+  if (pointsForts.length === 0) {
+    pointsForts = sorted.slice(0, Math.min(2, sorted.length));
+  }
+
+  let aAmeliorer = [...sorted].reverse().filter((item) => Number(item.note.moyenne) < 10).slice(0, 3);
+  if (aAmeliorer.length === 0) {
+    const faibles = [...sorted]
+      .reverse()
+      .filter((item) => Number(item.note.moyenne) < moyenneGenerale - 1);
+    aAmeliorer = faibles.slice(0, 2);
+  }
+
+  let objectifText;
+
+  if (moyenneGenerale >= 18) {
+    objectifText = `Excellent niveau (${moyenneGenerale.toFixed(2)}/20) : continue sur cette lancée pour viser l'excellence.`;
+  } else {
+    let objectif = Math.ceil((moyenneGenerale + 1.5) * 2) / 2;
+    objectif = Math.min(objectif, 20);
+
+    const leviers = [...matieresCalculees]
+      .filter((item) => Number(item.note.moyenne) < objectif)
+      .sort((a, b) => {
+        const coeffDiff = Number(b.note.coefficient) - Number(a.note.coefficient);
+        if (coeffDiff !== 0) return coeffDiff;
+        return Number(a.note.moyenne) - Number(b.note.moyenne);
+      })
+      .slice(0, 2)
+      .map((item) => item.matiere);
+
+    const leviersText = leviers.length
+      ? `augmente principalement tes résultats en ${leviers.join(' et ')}.`
+      : `continue à consolider l'ensemble de tes matières.`;
+
+    objectifText = `Pour atteindre ${objectif}/20 : ${leviersText}`;
+  }
+
+  return {
+    pointsForts: pointsForts.map((item) => item.matiere),
+    aAmeliorer: aAmeliorer.map((item) => item.matiere),
+    objectifText
+  };
+}
+
+function afficherConseillerScolaire(matieresCalculees, moyenneGenerale) {
+  if (!advisorSection || !matieresCalculees || matieresCalculees.length < 2) {
+    masquerConseillerScolaire();
+    return;
+  }
+
+  const conseil = getConseilScolaire(matieresCalculees, moyenneGenerale);
+
+  advisorPointsFortsEl.querySelector('.advisor-text').textContent = conseil.pointsForts.length
+    ? `Tes points forts : ${conseil.pointsForts.join(', ')}`
+    : `Continue tes efforts, aucune matière ne se démarque encore nettement.`;
+
+  advisorAAmeliorerEl.querySelector('.advisor-text').textContent = conseil.aAmeliorer.length
+    ? `À améliorer : ${conseil.aAmeliorer.join(', ')}`
+    : `Aucune matière en difficulté particulière, bravo pour cet équilibre !`;
+
+  advisorObjectifEl.querySelector('.advisor-text').textContent = conseil.objectifText;
+
+  advisorSection.hidden = false;
+  advisorSection.classList.remove('is-revealing');
+  void advisorSection.offsetWidth;
+  advisorSection.classList.add('is-revealing');
+}
+
+function masquerConseillerScolaire() {
+  if (advisorSection) advisorSection.hidden = true;
 }
 
 boutonSemestre.addEventListener('click', function () {
@@ -1006,6 +1115,8 @@ boutonSemestre.addEventListener('click', function () {
     subtitleText: `${prenom} ${nom} • ${classe}`,
     mention: true
   });
+
+  afficherConseillerScolaire(result.matieresCalculees, result.value);
 });
 
 document.getElementById('calculer-annee').addEventListener('click', function () {
@@ -1046,6 +1157,8 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
     subtitleText: `${prenom} ${nom} • ${classe}`,
     mention: true
   });
+
+  afficherConseillerScolaire(combineMatieresAnnuelles(resultS1, resultS2), moyenneAnnuelle);
 });
 
 // PDF Premium Generation Function
