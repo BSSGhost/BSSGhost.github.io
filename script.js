@@ -1304,7 +1304,7 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(120, 120, 120);
-  doc.text("Document officiel généré par DEGG NOTES - Lycée National de Qualification et d'Excellence de Sédhiou", pageWidth / 2, pageHeight - 12, { align: "center" });
+  doc.text("Document officiel généré par SUNU MOYENNE - Lycée Nation-Armée pour la Qualité et l'Equité", pageWidth / 2, pageHeight - 12, { align: "center" });
 
   doc.save(`Bulletin_${prenom}_${nom}_${classe}_${semestreVal}.pdf`);
 }
