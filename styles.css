@@ -2024,3 +2024,119 @@ body.device-phone .topbar {
     margin-top: 20px;
   }
 }
+
+/* ---------- Thème sombre & sélecteur de langue ---------- */
+.site-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.site-controls .device-change-btn {
+  white-space: nowrap;
+}
+
+.theme-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+html.dark-mode {
+  color-scheme: dark;
+}
+
+html.dark-mode body {
+  --light: #101915;
+  --card: rgba(25, 36, 31, 0.94);
+  --card-strong: rgba(25, 36, 31, 0.97);
+  --text: #e6eee9;
+  --muted: #a7b5ae;
+  --dark: #f0f5f2;
+  --soft-border: rgba(160, 196, 177, 0.16);
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.32);
+  background:
+    linear-gradient(rgba(134, 200, 157, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(134, 200, 157, 0.025) 1px, transparent 1px),
+    linear-gradient(135deg, #0d1512 0%, #121d18 48%, #17251f 100%);
+  background-size: 34px 34px, 34px 34px, auto;
+}
+
+html.dark-mode strong,
+html.dark-mode h1,
+html.dark-mode h2,
+html.dark-mode h3,
+html.dark-mode label,
+html.dark-mode legend,
+html.dark-mode button,
+html.dark-mode .brand-name,
+html.dark-mode .stats span,
+html.dark-mode th {
+  color: #eef5f1;
+}
+
+html.dark-mode .topbar {
+  background: rgba(24, 35, 30, 0.84);
+  border-color: rgba(255,255,255,0.08);
+}
+
+html.dark-mode .info-panel {
+  background: linear-gradient(145deg, rgba(26, 58, 47, 0.92), rgba(25, 36, 31, 0.96) 62%);
+}
+
+html.dark-mode .stats div,
+html.dark-mode .partner-visual,
+html.dark-mode .device-option,
+html.dark-mode .device-change-btn {
+  background: rgba(31, 45, 39, 0.92);
+  color: #eef5f1;
+  border-color: rgba(160, 196, 177, 0.16);
+}
+
+html.dark-mode .device-option:hover,
+html.dark-mode .device-option:focus-visible,
+html.dark-mode .device-change-btn:hover {
+  background: rgba(46, 67, 57, 0.96);
+}
+
+html.dark-mode input,
+html.dark-mode select,
+html.dark-mode textarea {
+  background: #17231e;
+  color: #eef5f1;
+  border-color: rgba(160, 196, 177, 0.2);
+}
+
+html.dark-mode input::placeholder {
+  color: #80918a;
+}
+
+html.dark-mode .device-modal {
+  background: linear-gradient(135deg, rgba(4, 14, 10, 0.78), rgba(8, 16, 13, 0.9));
+}
+
+html.dark-mode .quote-of-day {
+  background: rgba(78, 170, 126, 0.12);
+}
+
+html.dark-mode table {
+  background: rgba(20, 30, 26, 0.8);
+}
+
+html.dark-mode td {
+  color: #dce8e2;
+  border-color: rgba(160, 196, 177, 0.1);
+}
+
+html.dark-mode .site-footer {
+  color: #a7b5ae;
+}
+
+@media (max-width: 900px) {
+  .site-controls {
+    order: 3;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

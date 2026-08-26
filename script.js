@@ -1488,3 +1488,224 @@ afficherCitationDuJour();
 updateMatieres();
 renderTableMatiere();
 restoreFaviconBadgeFromStorage();
+
+/* =========================================================
+   INTERNATIONALISATION + MODE CLAIR/SOMBRE
+   ========================================================= */
+(() => {
+  const LANGUAGE_KEY = 'sunu_moyenne_language';
+  const THEME_KEY = 'sunu_moyenne_theme';
+
+  const translations = {
+    en: {
+      'Bienvenue sur SUNU MOYENNE': 'Welcome to SUNU MOYENNE',
+      'Quel appareil utilisez-vous ?': 'Which device are you using?',
+      "Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.": 'This choice automatically adapts the website display to your screen.',
+      'Téléphone': 'Phone', 'Tablette': 'Tablet', 'Ordinateur': 'Computer',
+      "Changer d'appareil": 'Change device',
+      'Mode sombre': 'Dark mode', 'Mode clair': 'Light mode',
+      'Outil scolaire officiel': 'Official school tool',
+      'Calculez votre moyenne de matière et semestrielle en quelques secondes': 'Calculate your subject and semester average in seconds',
+      'Devoirs': 'Assignments', 'Composition': 'Exam', 'Personnalisé': 'Custom',
+      'Conseil du jour': 'Tip of the day',
+      'Formulaire': 'Form',
+      'Renseigner les infos': 'Enter information',
+      'Ajouter les matières': 'Add subjects',
+      'Télécharger le bulletin': 'Download report card',
+      '0 / 0 matières renseignées': '0 / 0 subjects entered',
+      'Nom': 'Last name', 'Prénom': 'First name', 'Classe': 'Class',
+      '-- Sélectionner votre classe --': '-- Select your class --',
+      'Semestre': 'Semester', 'Semestre 1': 'Semester 1', 'Semestre 2': 'Semester 2',
+      'Quelle langue choisissez-vous ?': 'Which language do you choose?',
+      'Matière': 'Subject', '-- Sélectionner une matière --': '-- Select a subject --',
+      'Coefficient': 'Coefficient', 'Note de devoir 1': 'Assignment 1 grade',
+      'Note de devoir 2': 'Assignment 2 grade', 'La matière comporte-t-elle une composition ?': 'Does the subject include an exam?',
+      'Oui': 'Yes', 'Non': 'No', 'Note de composition': 'Exam grade',
+      'Calculer la moyenne de la matière': 'Calculate subject average',
+      'Calculer ma moyenne du semestre': 'Calculate my semester average',
+      'Calculer ma moyenne annuelle': 'Calculate my annual average',
+      'Télécharger mon bulletin (PDF)': 'Download my report card (PDF)',
+      'Réinitialiser les données': 'Reset data',
+      'Résultat': 'Result', 'Votre moyenne apparaîtra ici.': 'Your average will appear here.',
+      'Conseiller scolaire': 'School advisor',
+      'Matières enregistrées': 'Recorded subjects',
+      'Aucune classe sélectionnée': 'No class selected',
+      'Moyenne': 'Average', 'Points': 'Points', 'Actions': 'Actions',
+      'Aucune matière enregistrée pour le moment.': 'No subject recorded yet.',
+      'Modifier': 'Edit', 'Supprimer': 'Delete',
+      'Son activé': 'Sound on', 'Son désactivé': 'Sound off',
+      'Mathématiques': 'Mathematics', 'Français': 'French',
+      'Histoire Géographie': 'History & Geography', 'Sciences Physiques': 'Physical Sciences',
+      'Education au Civisme et à la Citoyenneté': 'Civic Education',
+      'Economie Familiale et Sociale': 'Family & Social Economics',
+      'Informatique': 'Computer Science', 'Anglais': 'English',
+      'Espagnol': 'Spanish', 'Arabe': 'Arabic',
+      'Excellent travail': 'Excellent work', 'Très bon travail': 'Very good work',
+      'Bon travail': 'Good work', 'Peux mieux faire': 'Can do better', 'Insuffisant': 'Insufficient',
+      'La réussite est la somme de petits efforts répétés jour après jour.': 'Success is the sum of small efforts repeated day after day.',
+      'Un examen ne mesure pas ton intelligence, seulement ta préparation du moment.': 'An exam does not measure your intelligence, only your preparation at that moment.',
+      'Relis tes cours le soir même : c’est le moment où la mémoire retient le mieux.': 'Review your lessons the same evening: that is when memory retains them best.',
+      'Une bonne moyenne se construit devoir après devoir, pas la veille de la composition.': 'A good average is built assignment by assignment, not the night before the exam.',
+      'Un planning de révision simple vaut mieux qu’un plan parfait jamais suivi.': 'A simple revision plan is better than a perfect plan you never follow.',
+      'Le sommeil avant un examen compte autant que les révisions.': 'Sleep before an exam matters as much as revision.',
+      'Comprendre un exercice vaut mieux que le mémoriser sans le comprendre.': 'Understanding an exercise is better than memorizing it without understanding it.',
+      'Chaque matière compte : ne néglige pas celles qui te semblent moins importantes.': 'Every subject matters: do not neglect the ones that seem less important.',
+      'Fixe-toi un petit objectif clair pour chaque séance de révision.': 'Set yourself a small, clear goal for each revision session.',
+      'Les erreurs corrigées sont les meilleures leçons pour le prochain devoir.': 'Corrected mistakes are the best lessons for the next assignment.',
+      'Travailler un peu chaque jour vaut mieux que tout réviser en une nuit.': 'Working a little every day is better than revising everything in one night.',
+      'Note tes points faibles après chaque devoir pour savoir où progresser.': 'Write down your weak points after each assignment to know where to improve.',
+      'La régularité bat le talent quand le talent ne travaille pas régulièrement.': 'Consistency beats talent when talent does not work consistently.',
+      'Un bon élève n’est pas celui qui ne se trompe jamais, mais celui qui persévère.': 'A good student is not one who never makes mistakes, but one who perseveres.',
+      'Prends soin de ta concentration : coupe les distractions pendant que tu révises.': 'Protect your concentration: remove distractions while you study.',
+      'Explique un cours à quelqu’un d’autre : c’est la meilleure façon de vérifier que tu l’as compris.': 'Explain a lesson to someone else: it is the best way to check that you understood it.',
+      'Chaque semestre est une nouvelle chance de progresser, quel que soit le précédent.': 'Each semester is a new chance to improve, regardless of the previous one.',
+      'Ne te compare pas aux autres : compare-toi à toi-même et à tes progrès.': 'Do not compare yourself to others: compare yourself to your own progress.',
+      'La confiance en soi se construit par la préparation et la pratique, pas par la chance.': 'Self-confidence is built through preparation and practice, not luck.',
+      'Même un petit progrès chaque jour finit par faire une grande différence sur le long terme.': 'Even a small daily improvement eventually makes a big difference in the long run.',
+      'Les révisions actives (exercices, questions) sont plus efficaces que la simple lecture.': 'Active revision (exercises, questions) is more effective than simply reading.',
+      'Un esprit reposé retient mieux : n’oublie pas de faire des pauses pendant tes révisions.': 'A rested mind remembers better: do not forget to take breaks while studying.',
+      'Veuillez renseigner votre nom, prénom, classe et matière.': 'Please enter your last name, first name, class and subject.',
+      'Les notes doivent être comprises entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.': 'Grades must be between 0 and 20 and use only ,25, ,50 or ,75.',
+      'La composition doit être comprise entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.': 'The exam grade must be between 0 and 20 and use only ,25, ,50 or ,75.',
+      'Continue tes efforts, aucune matière ne se démarque encore nettement.': 'Keep up your efforts; no subject stands out clearly yet.',
+      'Aucune matière en difficulté particulière, bravo pour cet équilibre !': 'No subject is particularly difficult, well done for this balance!',
+      'Veuillez d’abord sélectionner une classe pour calculer votre moyenne du semestre.': 'Please select a class first to calculate your semester average.',
+      'Veuillez d’abord sélectionner une classe pour calculer votre moyenne annuelle.': 'Please select a class first to calculate your annual average.',
+      'Très Bien': 'Very Good',
+      'Appréciation': 'Assessment',
+    },
+    fr: {}
+  };
+
+  function getLanguage() {
+    try { return localStorage.getItem(LANGUAGE_KEY) === 'en' ? 'en' : 'fr'; } catch { return 'fr'; }
+  }
+  function getTheme() {
+    try { return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'; } catch { return 'light'; }
+  }
+  function save(key, value) { try { localStorage.setItem(key, value); } catch {} }
+
+  const originalFrench = new Map();
+  function collectFrenchNodes() {
+    document.querySelectorAll('body *').forEach(el => {
+      if (el.id === 'toggle-language-btn' || el.id === 'toggle-theme-btn') return;
+      [...el.childNodes].forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.nodeValue.trim();
+          if (text && !originalFrench.has(node)) originalFrench.set(node, text);
+        }
+      });
+      ['placeholder','title','aria-label'].forEach(attr => {
+        if (el.hasAttribute(attr) && !originalFrench.has(attr+'::'+el)) {
+          originalFrench.set(attr+'::'+el, el.getAttribute(attr));
+        }
+      });
+    });
+  }
+
+  function translateDynamic(text) {
+    const lang = getLanguage();
+    if (lang === 'fr') return text;
+    const direct = translations.en[text];
+    if (direct) return direct;
+
+    let m = text.match(/^(\d+) \/ (\d+) matières renseignées$/);
+    if (m) return `${m[1]} / ${m[2]} subjects entered`;
+    m = text.match(/^(\d+) \/ (\d+) matières • Bulletin prêt !$/);
+    if (m) return `${m[1]} / ${m[2]} subjects • Report card ready!`;
+    m = text.match(/^Classe : (.+) • (.+)$/);
+    if (m) return `Class: ${m[1]} • ${m[2].replace('Semestre', 'Semester')}`;
+    if (text === '2ème Semestre') return '2nd Semester';
+    if (text === '1er Semestre') return '1st Semester';
+    if (text.startsWith('Excellent niveau (')) return text.replace('Excellent niveau', 'Excellent level').replace('continue sur cette lancée pour viser', 'keep it up to aim for');
+    if (text.startsWith('À améliorer :')) return text.replace('À améliorer :', 'To improve:');
+    if (text.startsWith('augmente principalement tes résultats en')) return text.replace('augmente principalement tes résultats en', 'mainly improve your results in');
+    if (text.startsWith('Continue à consolider')) return text.replace('Continue à consolider', 'Keep strengthening');
+    return text;
+  }
+
+  function translateElement(el) {
+    if (!el) return;
+    if (getLanguage() === 'fr') {
+      originalFrench.forEach((value, key) => {
+        if (typeof key === 'string' && key.includes('::')) {
+          const [attr, id] = key.split('::');
+          if (id === el) el.setAttribute(attr, value);
+        } else if (key && key.nodeType === Node.TEXT_NODE && key.parentNode) {
+          // restored below in translatePage
+        }
+      });
+    }
+  }
+
+  function translatePage() {
+    collectFrenchNodes();
+    const lang = getLanguage();
+    document.documentElement.lang = lang;
+    document.title = lang === 'en' ? 'LYNAQE SENEGAL | Average calculator' : 'LYNAQE SENEGAL | Calcul de moyenne';
+
+    originalFrench.forEach((value, key) => {
+      if (key && key.nodeType === Node.TEXT_NODE && key.parentNode) {
+        key.nodeValue = lang === 'en' ? translateDynamic(value) : value;
+      } else if (typeof key === 'string' && key.includes('::')) {
+        const [attr, elId] = key.split('::');
+        if (elId && elId.startsWith('#')) return;
+      }
+    });
+
+    // Attributes are easier to handle separately.
+    document.querySelectorAll('[placeholder],[title],[aria-label]').forEach(el => {
+      const attrs = ['placeholder','title','aria-label'];
+      attrs.forEach(attr => {
+        const key = attr+'::'+el;
+        const original = originalFrench.get(key);
+        if (original) el.setAttribute(attr, lang === 'en' ? translateDynamic(original) : original);
+      });
+    });
+
+    const themeBtn = document.getElementById('toggle-theme-btn');
+    const langBtn = document.getElementById('toggle-language-btn');
+    if (themeBtn) {
+      const dark = document.documentElement.classList.contains('dark-mode');
+      themeBtn.querySelector('.theme-label').textContent = dark
+        ? (lang === 'en' ? 'Light mode' : 'Mode clair')
+        : (lang === 'en' ? 'Dark mode' : 'Mode sombre');
+      themeBtn.querySelector('.theme-icon').textContent = dark ? '☀️' : '🌙';
+    }
+    if (langBtn) langBtn.querySelector('.language-label').textContent = lang === 'fr' ? '🇬🇧 English' : '🇫🇷 Français';
+  }
+
+  function applyTheme() {
+    const dark = getTheme() === 'dark';
+    document.documentElement.classList.toggle('dark-mode', dark);
+    const btn = document.getElementById('toggle-theme-btn');
+    if (btn) btn.setAttribute('aria-pressed', String(dark));
+  }
+
+  applyTheme();
+
+  document.addEventListener('DOMContentLoaded', () => {
+    collectFrenchNodes();
+    translatePage();
+
+    document.getElementById('toggle-theme-btn')?.addEventListener('click', () => {
+      save(THEME_KEY, getTheme() === 'dark' ? 'light' : 'dark');
+      applyTheme();
+      translatePage();
+    });
+
+    document.getElementById('toggle-language-btn')?.addEventListener('click', () => {
+      save(LANGUAGE_KEY, getLanguage() === 'fr' ? 'en' : 'fr');
+      translatePage();
+    });
+
+    // Observe dynamic results, table rows and progress messages generated by the calculator.
+    const observer = new MutationObserver(() => {
+      if (getLanguage() === 'en') {
+        collectFrenchNodes();
+        translatePage();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  });
+})();
