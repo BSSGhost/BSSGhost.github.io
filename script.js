@@ -1605,9 +1605,14 @@ restoreFaviconBadgeFromStorage();
     });
   }
 
+  let translationObserver = null;
+
   function translatePage() {
     if (translating) return;
     translating = true;
+    // Suspendre l'observateur pendant la traduction évite une boucle infinie :
+    // traduction -> mutation du DOM -> retraduction -> mutation...
+    translationObserver?.disconnect();
     try {
       collectFrenchNodes();
       const lang = getLanguage();
@@ -1638,6 +1643,9 @@ restoreFaviconBadgeFromStorage();
       }
     } finally {
       translating = false;
+      if (translationObserver) {
+        translationObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+      }
     }
   }
 
@@ -1665,9 +1673,9 @@ restoreFaviconBadgeFromStorage();
       translatePage();
     });
 
-    const observer = new MutationObserver(() => {
+    translationObserver = new MutationObserver(() => {
       if (!translating && getLanguage() === 'en') translatePage();
     });
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    translationObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
   });
 })();
