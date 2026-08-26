@@ -2025,7 +2025,7 @@ body.device-phone .topbar {
   }
 }
 
-/* ---------- Préférences : thème et langue ---------- */
+/* ---------- Thème sombre & sélecteur de langue ---------- */
 .site-controls {
   display: flex;
   align-items: center;
@@ -2034,50 +2034,13 @@ body.device-phone .topbar {
   flex-wrap: wrap;
 }
 
-#toggle-theme-btn,
-#toggle-language-btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 40px;
-  padding: 8px 12px;
-  border: 1px solid var(--soft-border);
-  border-radius: 999px;
-  background: var(--card-strong);
-  color: var(--text);
-  box-shadow: 0 6px 18px rgba(20, 55, 42, 0.08);
-  font: 700 0.78rem/1 var(--font-main);
-  cursor: pointer;
-  transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
-}
-
-#toggle-theme-btn:hover,
-#toggle-language-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 9px 22px rgba(20, 55, 42, 0.12);
-}
-
-#toggle-theme-btn:focus-visible,
-#toggle-language-btn:focus-visible {
-  outline: 3px solid rgba(78, 170, 126, .28);
-  outline-offset: 2px;
-}
-
-#toggle-theme-btn .theme-icon {
-  display: inline-grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--light);
-  color: var(--green-800);
-  font-size: 1.05rem;
-}
-
-#toggle-language-btn .language-label {
+.site-controls .device-change-btn {
   white-space: nowrap;
+}
+
+.theme-icon {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 html.dark-mode {
@@ -2085,75 +2048,89 @@ html.dark-mode {
 }
 
 html.dark-mode body {
-  --light: #18221e;
-  --card: rgba(25, 34, 30, 0.94);
-  --card-strong: rgba(29, 40, 35, 0.98);
-  --text: #e8f0eb;
-  --muted: #a9b8b0;
-  --dark: #f2f7f4;
-  --soft-border: rgba(190, 220, 204, 0.16);
-  --shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-  background: #0d1411;
-}
-
-html.dark-mode body {
-  color: var(--text);
+  --light: #101915;
+  --card: rgba(25, 36, 31, 0.94);
+  --card-strong: rgba(25, 36, 31, 0.97);
+  --text: #e6eee9;
+  --muted: #a7b5ae;
+  --dark: #f0f5f2;
+  --soft-border: rgba(160, 196, 177, 0.16);
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.32);
   background:
-    radial-gradient(circle at 15% 0%, rgba(78, 170, 126, .09), transparent 32%),
-    radial-gradient(circle at 90% 20%, rgba(210, 168, 74, .05), transparent 28%),
-    #0d1411;
+    linear-gradient(rgba(134, 200, 157, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(134, 200, 157, 0.025) 1px, transparent 1px),
+    linear-gradient(135deg, #0d1512 0%, #121d18 48%, #17251f 100%);
+  background-size: 34px 34px, 34px 34px, auto;
 }
 
-html.dark-mode .topbar,
-html.dark-mode .calculator-card,
-html.dark-mode .result-card,
-html.dark-mode .info-panel,
-html.dark-mode .quote-of-day,
+html.dark-mode strong,
+html.dark-mode h1,
+html.dark-mode h2,
+html.dark-mode h3,
+html.dark-mode label,
+html.dark-mode legend,
+html.dark-mode button,
+html.dark-mode .brand-name,
+html.dark-mode .stats span,
+html.dark-mode th {
+  color: #eef5f1;
+}
+
+html.dark-mode .topbar {
+  background: rgba(24, 35, 30, 0.84);
+  border-color: rgba(255,255,255,0.08);
+}
+
+html.dark-mode .info-panel {
+  background: linear-gradient(145deg, rgba(26, 58, 47, 0.92), rgba(25, 36, 31, 0.96) 62%);
+}
+
 html.dark-mode .stats div,
 html.dark-mode .partner-visual,
-html.dark-mode .device-modal-card {
-  background-color: var(--card);
-  border-color: var(--soft-border);
-  box-shadow: var(--shadow);
+html.dark-mode .device-option,
+html.dark-mode .device-change-btn {
+  background: rgba(31, 45, 39, 0.92);
+  color: #eef5f1;
+  border-color: rgba(160, 196, 177, 0.16);
 }
 
-html.dark-mode .device-change-btn,
-html.dark-mode #toggle-theme-btn,
-html.dark-mode #toggle-language-btn {
-  color: var(--text);
-  background: rgba(29, 40, 35, .96);
-  border-color: var(--soft-border);
-}
-
-html.dark-mode #toggle-theme-btn .theme-icon {
-  background: #27372f;
-  color: #f0cf72;
+html.dark-mode .device-option:hover,
+html.dark-mode .device-option:focus-visible,
+html.dark-mode .device-change-btn:hover {
+  background: rgba(46, 67, 57, 0.96);
 }
 
 html.dark-mode input,
 html.dark-mode select,
 html.dark-mode textarea {
-  background: #151f1b;
-  color: #edf5f0;
-  border-color: var(--soft-border);
+  background: #17231e;
+  color: #eef5f1;
+  border-color: rgba(160, 196, 177, 0.2);
 }
 
-html.dark-mode input::placeholder,
-html.dark-mode textarea::placeholder {
-  color: #82938a;
+html.dark-mode input::placeholder {
+  color: #80918a;
+}
+
+html.dark-mode .device-modal {
+  background: linear-gradient(135deg, rgba(4, 14, 10, 0.78), rgba(8, 16, 13, 0.9));
+}
+
+html.dark-mode .quote-of-day {
+  background: rgba(78, 170, 126, 0.12);
+}
+
+html.dark-mode table {
+  background: rgba(20, 30, 26, 0.8);
 }
 
 html.dark-mode td {
-  color: #dce8e1;
-  border-color: var(--soft-border);
-}
-
-html.dark-mode th {
-  color: #f0f6f2;
+  color: #dce8e2;
+  border-color: rgba(160, 196, 177, 0.1);
 }
 
 html.dark-mode .site-footer {
-  color: var(--muted);
+  color: #a7b5ae;
 }
 
 @media (max-width: 900px) {
@@ -2164,14 +2141,116 @@ html.dark-mode .site-footer {
   }
 }
 
-@media (max-width: 560px) {
-  .site-controls {
-    justify-content: stretch;
-  }
 
-  #toggle-theme-btn,
-  #toggle-language-btn {
-    flex: 1 1 0;
-    min-width: 0;
-  }
+/* =========================================================
+   MODE SOMBRE COMPLET — éléments qui restaient clairs
+   ========================================================= */
+html.dark-mode .info-panel {
+  background: linear-gradient(145deg, #162d25 0%, #111d18 65%, #0d1713 100%);
+  color: #eaf3ee;
+}
+
+html.dark-mode .info-panel h1,
+html.dark-mode .info-panel .subtitle,
+html.dark-mode .info-panel .eyebrow {
+  color: #eaf3ee;
+}
+
+html.dark-mode .calculator-card,
+html.dark-mode .advisor-card,
+html.dark-mode .subjects-card,
+html.dark-mode .site-footer {
+  background: #121d18;
+  color: #e6eee9;
+  border-color: rgba(160, 196, 177, 0.14);
+}
+
+html.dark-mode .advisor-card {
+  background: linear-gradient(150deg, #182c24 0%, #121d18 70%);
+}
+
+html.dark-mode .subjects-card {
+  background: #101a16;
+}
+
+html.dark-mode table {
+  background: #0e1713;
+  color: #e6eee9;
+  border: 1px solid rgba(160, 196, 177, 0.12);
+}
+
+html.dark-mode th {
+  background: #1b3028;
+  color: #f0f7f3;
+  border-color: rgba(160, 196, 177, 0.16);
+}
+
+html.dark-mode td {
+  background: #101a16;
+  color: #dce8e2;
+  border-color: rgba(160, 196, 177, 0.12);
+}
+
+html.dark-mode #matiere-table-body tr:hover {
+  background: #172821;
+}
+
+html.dark-mode .empty-state {
+  background: #101a16;
+  color: #9fb2a9;
+}
+
+/* Tous les boutons deviennent visiblement sombres dans le thème sombre. */
+html.dark-mode button,
+html.dark-mode .device-change-btn,
+html.dark-mode .secondary-button,
+html.dark-mode .ghost-button,
+html.dark-mode .pdf-button,
+html.dark-mode .primary-button {
+  background: linear-gradient(160deg, #1b3028 0%, #0f1c16 100%);
+  color: #eef5f1;
+  border-color: rgba(160, 196, 177, 0.2);
+}
+
+html.dark-mode button:hover,
+html.dark-mode .device-change-btn:hover,
+html.dark-mode .secondary-button:hover,
+html.dark-mode .ghost-button:hover,
+html.dark-mode .pdf-button:hover,
+html.dark-mode .primary-button:hover {
+  background: linear-gradient(160deg, #264538 0%, #14251d 100%);
+  color: #ffffff;
+}
+
+html.dark-mode .table-action.edit-action {
+  background: #1d6a52;
+  color: #ffffff;
+}
+
+html.dark-mode .table-action.delete-action {
+  background: rgba(217, 60, 60, 0.16);
+  color: #ffb0b0;
+  border-color: rgba(255, 130, 130, 0.25);
+}
+
+html.dark-mode input,
+html.dark-mode select,
+html.dark-mode textarea {
+  background-color: #111d18;
+  color: #eef5f1;
+}
+
+html.dark-mode select option {
+  background: #111d18;
+  color: #eef5f1;
+}
+
+html.dark-mode .stats div,
+html.dark-mode .partner-visual {
+  background: #182821;
+}
+
+html.dark-mode .quote-of-day {
+  background: rgba(78, 170, 126, 0.09);
+  color: #dce8e2;
 }
