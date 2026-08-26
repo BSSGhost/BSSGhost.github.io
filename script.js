@@ -1502,7 +1502,7 @@ renderTableMatiere();
 restoreFaviconBadgeFromStorage();
 
 /* =========================================================
-   INTERNATIONALISATION + MODE CLAIR/SOMBRE - VERSION ROBUSTE
+   INTERNATIONALISATION + MODE CLAIR/SOMBRE - VERSION CORRIGÉE
    ========================================================= */
 (() => {
   const LANGUAGE_KEY = 'sunu_moyenne_language';
@@ -1510,16 +1510,16 @@ restoreFaviconBadgeFromStorage();
 
   const translations = {
     en: {
-      /* (conservez ici votre objet de traductions EN tel qu'il existe déjà) */
+      /* Conservez ici votre objet de traductions EN complet (copiez celui que vous aviez). */
     },
     fr: {}
   };
 
-  // stocke les noeuds texte originaux (WeakMap évite les fuites mémoire)
-  const originalTextNodes = new WeakMap();
-  // stocke pour chaque élément ses attributs originaux (placeholder/title/aria-label)
-  const originalAttrs = new WeakMap();
-  // stocke title + meta description originaux
+  // liste de nœuds texte originaux (itérable)
+  const originalTextNodes = [];
+  // map des attributs originaux par élément
+  const originalAttrs = new Map();
+  // title + meta description originaux
   let originalTitle = document.title || '';
   let originalMetaDescription = '';
   const metaDescEl = document.querySelector('meta[name="description"]');
@@ -1536,10 +1536,9 @@ restoreFaviconBadgeFromStorage();
   function translateDynamic(text) {
     const lang = getLanguage();
     if (lang === 'fr') return text;
-    const direct = translations.en[text];
+    const direct = translations.en && translations.en[text];
     if (direct) return direct;
 
-    // quelques transformations simples utiles
     let m = text.match(/^(\d+) \/ (\d+) matières renseignées$/);
     if (m) return `${m[1]} / ${m[2]} subjects entered`;
     m = text.match(/^(\d+) \/ (\d+) matières • Bulletin prêt !$/);
@@ -1557,18 +1556,20 @@ restoreFaviconBadgeFromStorage();
 
   // collecte systématique et fiable des textes et attributs originaux
   function collectOriginals() {
-    // textes : itérer sur tous les noeuds texte du body
+    // textes : itérer sur tous les nœuds texte du body
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         const txt = node.nodeValue && node.nodeValue.trim();
         if (!txt) return NodeFilter.FILTER_REJECT;
-        // ignorer les labels des boutons de contrôle (on les gère séparément si besoin)
         return NodeFilter.FILTER_ACCEPT;
       }
     });
     let node;
     while ((node = walker.nextNode())) {
-      if (!originalTextNodes.has(node)) originalTextNodes.set(node, node.nodeValue);
+      // éviter d'enregistrer des textes très courts et utilitaires si souhaité (optionnel)
+      if (!originalTextNodes.some(item => item.node === node)) {
+        originalTextNodes.push({ node, text: node.nodeValue });
+      }
     }
 
     // attributs : placeholder, title, aria-label pour chaque élément
@@ -1591,9 +1592,11 @@ restoreFaviconBadgeFromStorage();
 
     // title & meta description
     if (lang === 'en') {
-      document.title = translations.en[originalTitle] || translateDynamic(originalTitle) || originalTitle;
+      document.title = (translations.en && translations.en[originalTitle]) || translateDynamic(originalTitle) || originalTitle;
       if (metaDescEl) {
-        metaDescEl.setAttribute('content', translations.en[originalMetaDescription] || translateDynamic(originalMetaDescription) || originalMetaDescription);
+        metaDescEl.setAttribute('content',
+          (translations.en && translations.en[originalMetaDescription]) || translateDynamic(originalMetaDescription) || originalMetaDescription
+        );
       }
     } else {
       document.title = originalTitle;
@@ -1601,37 +1604,41 @@ restoreFaviconBadgeFromStorage();
     }
 
     // textes
-    originalTextNodes.forEach((origText, node) => {
-      if (!node || !node.parentNode) return;
-      node.nodeValue = (lang === 'en') ? (translations.en[origText] || translateDynamic(origText) || origText) : origText;
-    });
+    for (const item of originalTextNodes) {
+      const { node, text } = item;
+      if (!node || !node.parentNode) continue;
+      node.nodeValue = (lang === 'en') ? ((translations.en && translations.en[text]) || translateDynamic(text) || text) : text;
+    }
 
     // attributs
-    originalAttrs.forEach((attrs, el) => {
-      if (!el) return;
+    for (const [el, attrs] of originalAttrs.entries()) {
+      if (!el) continue;
       ['placeholder','title','aria-label'].forEach(attr => {
         if (attrs[attr] !== undefined) {
           if (lang === 'en') {
-            el.setAttribute(attr, translations.en[attrs[attr]] || translateDynamic(attrs[attr]) || attrs[attr]);
+            el.setAttribute(attr, (translations.en && translations.en[attrs[attr]]) || translateDynamic(attrs[attr]) || attrs[attr]);
           } else {
             el.setAttribute(attr, attrs[attr]);
           }
         }
       });
-    });
+    }
 
-    // Mettre à jour le libellé des boutons de contrôle (thème / langue / son) pour rester cohérent
+    // Mettre à jour le libellé des boutons de contrôle (thème / langue / son)
     const themeBtn = document.getElementById('toggle-theme-btn');
     const langBtn = document.getElementById('toggle-language-btn');
     if (themeBtn) {
       const dark = document.documentElement.classList.contains('dark-mode');
-      themeBtn.querySelector('.theme-label').textContent = dark
-        ? (lang === 'en' ? 'Light mode' : 'Mode clair')
-        : (lang === 'en' ? 'Dark mode' : 'Mode sombre');
-      themeBtn.querySelector('.theme-icon').textContent = dark ? '☀️' : '🌙';
+      const label = dark ? (lang === 'en' ? 'Light mode' : 'Mode clair') : (lang === 'en' ? 'Dark mode' : 'Mode sombre');
+      const icon = dark ? '☀️' : '🌙';
+      const themeLabelEl = themeBtn.querySelector('.theme-label');
+      const themeIconEl = themeBtn.querySelector('.theme-icon');
+      if (themeLabelEl) themeLabelEl.textContent = label;
+      if (themeIconEl) themeIconEl.textContent = icon;
     }
     if (langBtn) {
-      langBtn.querySelector('.language-label').textContent = lang === 'fr' ? '🇬🇧 English' : '🇫🇷 Français';
+      const langLabelEl = langBtn.querySelector('.language-label');
+      if (langLabelEl) langLabelEl.textContent = lang === 'fr' ? '🇬🇧 English' : '🇫🇷 Français';
     }
   }
 
@@ -1640,11 +1647,11 @@ restoreFaviconBadgeFromStorage();
     document.documentElement.classList.toggle('dark-mode', dark);
     const btn = document.getElementById('toggle-theme-btn');
     if (btn) btn.setAttribute('aria-pressed', String(dark));
-    // après changement de thème, mettre à jour le libellé en tenant compte de la langue active
+    // après changement de thème, mettre à jour textes/buttons pour respecter la langue active
     translatePage();
   }
 
-  // initialisation sûre : si DOM déjà prêt, on collec/translate tout de suite
+  // initialisation sûre
   function init() {
     collectOriginals();
     applyTheme();
@@ -1667,7 +1674,6 @@ restoreFaviconBadgeFromStorage();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
-    // DOM déjà chargé (script placé en bas de body) -> init imméditament
     init();
   }
 })();
