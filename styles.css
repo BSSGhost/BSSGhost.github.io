@@ -2142,84 +2142,124 @@ html.dark-mode .site-footer {
 }
 
 
-/* =========================================================
-   MODE SOMBRE COMPLET — éléments qui restaient clairs
-   ========================================================= */
-html.dark-mode .info-panel {
-  background: linear-gradient(145deg, #162d25 0%, #111d18 65%, #0d1713 100%);
-  color: #eaf3ee;
+/* ==========================================================================
+   MODE SOMBRE - APPARENCE ÉLÉGANTE ET UNIFORME
+   ========================================================================== */
+
+html.dark-mode {
+  color-scheme: dark;
 }
 
-html.dark-mode .info-panel h1,
-html.dark-mode .info-panel .subtitle,
-html.dark-mode .info-panel .eyebrow {
-  color: #eaf3ee;
+html.dark-mode body {
+  background: 
+    linear-gradient(rgba(41, 128, 100, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(41, 128, 100, 0.05) 1px, transparent 1px),
+    linear-gradient(135deg, #09120e 0%, #0d1a15 50%, #060e0a 100%);
+  color: #e2ebe6;
 }
 
-html.dark-mode .calculator-card,
-html.dark-mode .advisor-card,
-html.dark-mode .subjects-card,
-html.dark-mode .site-footer {
-  background: #121d18;
-  color: #e6eee9;
-  border-color: rgba(160, 196, 177, 0.14);
-}
-
-html.dark-mode .advisor-card {
-  background: linear-gradient(150deg, #182c24 0%, #121d18 70%);
-}
-
-html.dark-mode .subjects-card {
-  background: #101a16;
-}
-
-html.dark-mode table {
-  background: #0e1713;
-  color: #e6eee9;
-  border: 1px solid rgba(160, 196, 177, 0.12);
-}
-
+/* Typographies et titres en mode sombre */
+html.dark-mode strong,
+html.dark-mode h1,
+html.dark-mode h2,
+html.dark-mode h3,
+html.dark-mode label,
+html.dark-mode legend,
+html.dark-mode .brand-name,
+html.dark-mode .stats span,
 html.dark-mode th {
-  background: #1b3028;
   color: #f0f7f3;
-  border-color: rgba(160, 196, 177, 0.16);
 }
 
-html.dark-mode td {
-  background: #101a16;
-  color: #dce8e2;
-  border-color: rgba(160, 196, 177, 0.12);
+/* Cartes et Panneaux */
+html.dark-mode .topbar,
+html.dark-mode .info-panel,
+html.dark-mode .calculator-card,
+html.dark-mode .result-card,
+html.dark-mode .subjects-card,
+html.dark-mode .device-modal-card {
+  background: rgba(18, 30, 25, 0.92);
+  border-color: rgba(78, 170, 126, 0.18);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
-html.dark-mode #matiere-table-body tr:hover {
-  background: #172821;
-}
-
-html.dark-mode .empty-state {
-  background: #101a16;
-  color: #9fb2a9;
-}
-
-/* Tous les boutons deviennent visiblement sombres dans le thème sombre. */
-html.dark-mode button,
+/* Topbar & Boutons de contrôle */
 html.dark-mode .device-change-btn,
-html.dark-mode .secondary-button,
-html.dark-mode .ghost-button,
+html.dark-mode .device-option {
+  background: #14241d;
+  color: #e2ebe6;
+  border-color: rgba(78, 170, 126, 0.22);
+}
+
+html.dark-mode .device-change-btn:hover,
+html.dark-mode .device-option:hover {
+  background: #1c3329;
+  border-color: #4eaa7e;
+  color: #ffffff;
+}
+
+/* Inputs, Selects et Textareas */
+html.dark-mode input[type="text"],
+html.dark-mode input[type="number"],
+html.dark-mode select,
+html.dark-mode textarea {
+  background-color: #0d1713;
+  color: #f0f7f3;
+  border-color: rgba(78, 170, 126, 0.28);
+}
+
+html.dark-mode input:focus,
+html.dark-mode select:focus {
+  border-color: #4eaa7e;
+  box-shadow: 0 0 0 3px rgba(78, 170, 126, 0.25);
+}
+
+html.dark-mode select option {
+  background-color: #0d1713;
+  color: #f0f7f3;
+}
+
+/* Boutons principaux et d'actions */
+html.dark-mode button,
+html.dark-mode .primary-button,
 html.dark-mode .pdf-button,
-html.dark-mode .primary-button {
-  background: linear-gradient(160deg, #1b3028 0%, #0f1c16 100%);
-  color: #eef5f1;
-  border-color: rgba(160, 196, 177, 0.2);
+html.dark-mode .reset-button {
+  background: linear-gradient(145deg, #1d6a52 0%, #124535 100%);
+  color: #ffffff;
+  border: 1px solid rgba(134, 200, 157, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 html.dark-mode button:hover,
-html.dark-mode .device-change-btn:hover,
-html.dark-mode .secondary-button:hover,
-html.dark-mode .ghost-button:hover,
-html.dark-mode .pdf-button:hover,
-html.dark-mode .primary-button:hover {
-  background: linear-gradient(160deg, #264538 0%, #14251d 100%);
+html.dark-mode .primary-button:hover,
+html.dark-mode .pdf-button:hover {
+  background: linear-gradient(145deg, #258567 0%, #185944 100%);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .reset-button {
+  background: rgba(217, 60, 60, 0.15);
+  color: #ff9e9e;
+  border-color: rgba(217, 60, 60, 0.3);
+}
+
+html.dark-mode .reset-button:hover {
+  background: rgba(217, 60, 60, 0.3);
   color: #ffffff;
+}
+
+/* Tableaux */
+html.dark-mode table {
+  border-color: rgba(78, 170, 126, 0.15);
+}
+
+html.dark-mode th {
+  background: #14241d;
+}
+
+html.dark-mode td {
+  border-bottom-color: rgba(78, 170, 126, 0.1);
+  color: #d1ded7;
 }
 
 html.dark-mode .table-action.edit-action {
@@ -2228,45 +2268,28 @@ html.dark-mode .table-action.edit-action {
 }
 
 html.dark-mode .table-action.delete-action {
-  background: rgba(217, 60, 60, 0.16);
+  background: rgba(217, 60, 60, 0.2);
   color: #ffb0b0;
   border-color: rgba(255, 130, 130, 0.25);
 }
 
-html.dark-mode input,
-html.dark-mode select,
-html.dark-mode textarea {
-  background-color: #111d18;
-  color: #eef5f1;
-}
-
-html.dark-mode select option {
-  background: #111d18;
-  color: #eef5f1;
-}
-
+/* Éléments divers */
 html.dark-mode .stats div,
 html.dark-mode .partner-visual {
-  background: #182821;
+  background: #12211a;
+  border-color: rgba(78, 170, 126, 0.2);
 }
 
 html.dark-mode .quote-of-day {
-  background: rgba(78, 170, 126, 0.09);
-  color: #dce8e2;
-}
-/* Assurer que l'effet "cadre" du bouton principal et pseudo-éléments restent discrets en dark-mode */
-html.dark-mode button,
-html.dark-mode .device-change-btn,
-html.dark-mode .secondary-button,
-html.dark-mode .ghost-button,
-html.dark-mode .pdf-button,
-html.dark-mode .primary-button {
-  background: linear-gradient(160deg, #162b23 0%, #0e1a15 100%) !important;
-  color: #eef5f1 !important;
-  border-color: rgba(160, 196, 177, 0.18) !important;
+  background: rgba(78, 170, 126, 0.1);
+  border-color: rgba(78, 170, 126, 0.25);
+  border-left-color: #4eaa7e;
 }
 
-/* limiter la brillance du ::before du bouton principal en dark-mode */
-html.dark-mode .primary-button::before {
-  background: linear-gradient(120deg, rgba(210,168,74,0.04), transparent 40%, transparent 60%, rgba(210,168,74,0.04)) !important;
+html.dark-mode .quote-of-day-text {
+  color: #d8e5df;
+}
+
+html.dark-mode .subtitle {
+  color: #a3b8ad;
 }

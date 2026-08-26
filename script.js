@@ -1501,179 +1501,249 @@ updateMatieres();
 renderTableMatiere();
 restoreFaviconBadgeFromStorage();
 
-/* =========================================================
-   INTERNATIONALISATION + MODE CLAIR/SOMBRE - VERSION CORRIGÉE
-   ========================================================= */
-(() => {
-  const LANGUAGE_KEY = 'sunu_moyenne_language';
-  const THEME_KEY = 'sunu_moyenne_theme';
+/* ---------- Traduction multilingue complète & robuste ---------- */
 
-  const translations = {
-    en: {
-      /* Conservez ici votre objet de traductions EN complet (copiez celui que vous aviez). */
-    },
-    fr: {}
-  };
-
-  // liste de nœuds texte originaux (itérable)
-  const originalTextNodes = [];
-  // map des attributs originaux par élément
-  const originalAttrs = new Map();
-  // title + meta description originaux
-  let originalTitle = document.title || '';
-  let originalMetaDescription = '';
-  const metaDescEl = document.querySelector('meta[name="description"]');
-  if (metaDescEl) originalMetaDescription = metaDescEl.getAttribute('content') || '';
-
-  function getLanguage() {
-    try { return localStorage.getItem(LANGUAGE_KEY) === 'en' ? 'en' : 'fr'; } catch { return 'fr'; }
+const TRANSLATIONS = {
+  fr: {
+    metaDesc: "Calculateur de moyenne pour élèves du LYNAQE.",
+    brandSubtitle: "Fait par Ahmadou Bamba Bousso SANKHARE",
+    eyebrow: "Calculateur de moyenne • LYNAQE SÉDHIOU",
+    heroTitle: "Calculez votre moyenne en quelques clics.",
+    heroSubtitle: "Un outil sur-mesure pour les élèves du LYNAQE de Sédhiou. Saisissez vos notes et obtenez un aperçu direct de vos résultats.",
+    statExcellence: "Excellence",
+    statExcellenceLabel: "Visée constante",
+    statSimplicity: "100% Simple",
+    statSimplicityLabel: "Saisie rapide",
+    statPrecision: "Précision",
+    statPrecisionLabel: "Calcul officiel",
+    quoteLabel: "Citation du jour",
+    quoteText: "« L'éducation est l'arme la plus puissante qu'on puisse utiliser pour changer le monde. » — Nelson Mandela",
+    calcTitle: "Saisir une matière",
+    step1: "1. Profil",
+    step2: "2. Notes",
+    step3: "3. Bilan",
+    labelNom: "Nom :",
+    labelPrenom: "Prénom :",
+    labelClasse: "Classe :",
+    selectClasseDefault: "-- Choisir votre classe --",
+    labelMatiere: "Matière :",
+    selectMatiereDefault: "-- Sélectionner la matière --",
+    labelDevoir: "Note de Devoir (ex: 14) :",
+    labelComposition: "Note de Composition (ex: 13) :",
+    labelLangue: "Option de langue :",
+    btnEnregistrer: "Enregistrer cette matière",
+    btnMoyenneGenerale: "Calculer la moyenne générale",
+    btnTelechargerPdf: "Télécharger mon bulletin PDF",
+    btnReset: "Réinitialiser toutes les données",
+    deviceModalEyebrow: "Bienvenue sur SUNU MOYENNE",
+    deviceModalTitle: "Quel appareil utilisez-vous ?",
+    deviceModalSubtitle: "Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.",
+    devicePhone: "Téléphone",
+    deviceTablette: "Tablette",
+    deviceComputer: "Ordinateur",
+    changeDeviceBtn: "Changer d'affichage",
+    themeBtnLight: "☀️ Mode clair",
+    themeBtnDark: "🌙 Mode sombre",
+    langBtn: "🇬🇧 English",
+    tableHeaderMatiere: "Matière",
+    tableHeaderMoyenne: "Moyenne",
+    tableHeaderCoef: "Coefficient",
+    tableHeaderPoints: "Points",
+    tableHeaderActions: "Actions",
+    emptyState: "Aucune matière enregistrée pour le moment."
+  },
+  en: {
+    metaDesc: "Grade point average calculator for LYNAQE students.",
+    brandSubtitle: "Made by Ahmadou Bamba Bousso SANKHARE",
+    eyebrow: "GPA Calculator • LYNAQE SEDHIOU",
+    heroTitle: "Calculate your average grade in a few clicks.",
+    heroSubtitle: "A tailored tool for students of LYNAQE Sédhiou. Enter your grades and get an instant overview of your results.",
+    statExcellence: "Excellence",
+    statExcellenceLabel: "Constant goal",
+    statSimplicity: "100% Simple",
+    statSimplicityLabel: "Fast entry",
+    statPrecision: "Precision",
+    statPrecisionLabel: "Official formula",
+    quoteLabel: "Quote of the day",
+    quoteText: "“Education is the most powerful weapon which you can use to change the world.” — Nelson Mandela",
+    calcTitle: "Enter a subject",
+    step1: "1. Profile",
+    step2: "2. Grades",
+    step3: "3. Summary",
+    labelNom: "Last Name:",
+    labelPrenom: "First Name:",
+    labelClasse: "Grade Level / Class:",
+    selectClasseDefault: "-- Select your class --",
+    labelMatiere: "Subject:",
+    selectMatiereDefault: "-- Select a subject --",
+    labelDevoir: "Coursework Grade (e.g. 14):",
+    labelComposition: "Exam Grade (e.g. 13):",
+    labelLangue: "Language Track:",
+    btnEnregistrer: "Save this subject",
+    btnMoyenneGenerale: "Calculate overall GPA",
+    btnTelechargerPdf: "Download PDF Report Card",
+    btnReset: "Reset all data",
+    deviceModalEyebrow: "Welcome to SUNU MOYENNE",
+    deviceModalTitle: "Which device are you using?",
+    deviceModalSubtitle: "This choice automatically adjusts the layout to fit your screen.",
+    devicePhone: "Phone",
+    deviceTablette: "Tablet",
+    deviceComputer: "Computer",
+    changeDeviceBtn: "Change view mode",
+    themeBtnLight: "☀️ Light Mode",
+    themeBtnDark: "🌙 Dark Mode",
+    langBtn: "🇫🇷 Français",
+    tableHeaderMatiere: "Subject",
+    tableHeaderMoyenne: "Average",
+    tableHeaderCoef: "Coefficient",
+    tableHeaderPoints: "Points",
+    tableHeaderActions: "Actions",
+    emptyState: "No subject recorded yet."
   }
-  function getTheme() {
-    try { return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'; } catch { return 'light'; }
-  }
-  function save(key, value) { try { localStorage.setItem(key, value); } catch {} }
+};
 
-  function translateDynamic(text) {
-    const lang = getLanguage();
-    if (lang === 'fr') return text;
-    const direct = translations.en && translations.en[text];
-    if (direct) return direct;
+function translatePage() {
+  const lang = getLanguage();
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
 
-    let m = text.match(/^(\d+) \/ (\d+) matières renseignées$/);
-    if (m) return `${m[1]} / ${m[2]} subjects entered`;
-    m = text.match(/^(\d+) \/ (\d+) matières • Bulletin prêt !$/);
-    if (m) return `${m[1]} / ${m[2]} subjects • Report card ready!`;
-    m = text.match(/^Classe : (.+) • (.+)$/);
-    if (m) return `Class: ${m[1]} • ${m[2].replace('Semestre', 'Semester')}`;
-    if (text === '2ème Semestre') return '2nd Semester';
-    if (text === '1er Semestre') return '1st Semester';
-    if (text.startsWith('Excellent niveau (')) return text.replace('Excellent niveau', 'Excellent level').replace('continue sur cette lancée pour viser', 'keep it up to aim for');
-    if (text.startsWith('À améliorer :')) return text.replace('À améliorer :', 'To improve:');
-    if (text.startsWith('augmente principalement tes résultats en')) return text.replace('augmente principalement tes résultats en', 'mainly improve your results in');
-    if (text.startsWith('Continue à consolider')) return text.replace('Continue à consolider', 'Keep strengthening');
-    return text;
-  }
+  // Actualisation de la balise HTML et Meta Description
+  document.documentElement.lang = lang;
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.content = t.metaDesc;
 
-  // collecte systématique et fiable des textes et attributs originaux
-  function collectOriginals() {
-    // textes : itérer sur tous les nœuds texte du body
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
-      acceptNode(node) {
-        const txt = node.nodeValue && node.nodeValue.trim();
-        if (!txt) return NodeFilter.FILTER_REJECT;
-        return NodeFilter.FILTER_ACCEPT;
-      }
-    });
-    let node;
-    while ((node = walker.nextNode())) {
-      // éviter d'enregistrer des textes très courts et utilitaires si souhaité (optionnel)
-      if (!originalTextNodes.some(item => item.node === node)) {
-        originalTextNodes.push({ node, text: node.nodeValue });
-      }
-    }
+  // En-tête / Brand
+  const brandSub = document.querySelector('.brand small');
+  if (brandSub) brandSub.textContent = t.brandSubtitle;
 
-    // attributs : placeholder, title, aria-label pour chaque élément
-    document.querySelectorAll('[placeholder],[title],[aria-label]').forEach(el => {
-      const data = {};
-      if (el.hasAttribute('placeholder')) data.placeholder = el.getAttribute('placeholder');
-      if (el.hasAttribute('title')) data.title = el.getAttribute('title');
-      if (el.hasAttribute('aria-label')) data['aria-label'] = el.getAttribute('aria-label');
-      if (Object.keys(data).length) originalAttrs.set(el, data);
-    });
-
-    // title + meta description
-    originalTitle = document.title || originalTitle;
-    if (metaDescEl) originalMetaDescription = metaDescEl.getAttribute('content') || originalMetaDescription;
-  }
-
-  function translatePage() {
-    const lang = getLanguage();
-    document.documentElement.lang = lang;
-
-    // title & meta description
-    if (lang === 'en') {
-      document.title = (translations.en && translations.en[originalTitle]) || translateDynamic(originalTitle) || originalTitle;
-      if (metaDescEl) {
-        metaDescEl.setAttribute('content',
-          (translations.en && translations.en[originalMetaDescription]) || translateDynamic(originalMetaDescription) || originalMetaDescription
-        );
-      }
-    } else {
-      document.title = originalTitle;
-      if (metaDescEl) metaDescEl.setAttribute('content', originalMetaDescription);
-    }
-
-    // textes
-    for (const item of originalTextNodes) {
-      const { node, text } = item;
-      if (!node || !node.parentNode) continue;
-      node.nodeValue = (lang === 'en') ? ((translations.en && translations.en[text]) || translateDynamic(text) || text) : text;
-    }
-
-    // attributs
-    for (const [el, attrs] of originalAttrs.entries()) {
-      if (!el) continue;
-      ['placeholder','title','aria-label'].forEach(attr => {
-        if (attrs[attr] !== undefined) {
-          if (lang === 'en') {
-            el.setAttribute(attr, (translations.en && translations.en[attrs[attr]]) || translateDynamic(attrs[attr]) || attrs[attr]);
-          } else {
-            el.setAttribute(attr, attrs[attr]);
-          }
-        }
-      });
-    }
-
-    // Mettre à jour le libellé des boutons de contrôle (thème / langue / son)
-    const themeBtn = document.getElementById('toggle-theme-btn');
-    const langBtn = document.getElementById('toggle-language-btn');
-    if (themeBtn) {
-      const dark = document.documentElement.classList.contains('dark-mode');
-      const label = dark ? (lang === 'en' ? 'Light mode' : 'Mode clair') : (lang === 'en' ? 'Dark mode' : 'Mode sombre');
-      const icon = dark ? '☀️' : '🌙';
-      const themeLabelEl = themeBtn.querySelector('.theme-label');
-      const themeIconEl = themeBtn.querySelector('.theme-icon');
-      if (themeLabelEl) themeLabelEl.textContent = label;
-      if (themeIconEl) themeIconEl.textContent = icon;
-    }
-    if (langBtn) {
-      const langLabelEl = langBtn.querySelector('.language-label');
-      if (langLabelEl) langLabelEl.textContent = lang === 'fr' ? '🇬🇧 English' : '🇫🇷 Français';
-    }
+  // Boutons Topbar
+  const themeBtn = document.getElementById('toggle-theme-btn');
+  if (themeBtn) {
+    const isDark = getTheme() === 'dark';
+    const themeLabelEl = themeBtn.querySelector('.theme-label');
+    if (themeLabelEl) themeLabelEl.textContent = isDark ? t.themeBtnLight : t.themeBtnDark;
   }
 
-  function applyTheme() {
-    const dark = getTheme() === 'dark';
-    document.documentElement.classList.toggle('dark-mode', dark);
-    const btn = document.getElementById('toggle-theme-btn');
-    if (btn) btn.setAttribute('aria-pressed', String(dark));
-    // après changement de thème, mettre à jour textes/buttons pour respecter la langue active
-    translatePage();
+  const langBtn = document.getElementById('toggle-language-btn');
+  if (langBtn) {
+    const langLabelEl = langBtn.querySelector('.language-label');
+    if (langLabelEl) langLabelEl.textContent = t.langBtn;
   }
 
-  // initialisation sûre
-  function init() {
-    collectOriginals();
-    applyTheme();
-    translatePage();
-
-    // events
-    document.getElementById('toggle-theme-btn')?.addEventListener('click', () => {
-      const next = getTheme() === 'dark' ? 'light' : 'dark';
-      save(THEME_KEY, next);
-      applyTheme();
-    });
-
-    document.getElementById('toggle-language-btn')?.addEventListener('click', () => {
-      const next = getLanguage() === 'fr' ? 'en' : 'fr';
-      save(LANGUAGE_KEY, next);
-      translatePage();
-    });
+  const changeDeviceBtn = document.getElementById('change-device-btn');
+  if (changeDeviceBtn) {
+    const labelSpan = changeDeviceBtn.querySelector('span:last-child');
+    if (labelSpan) labelSpan.textContent = t.changeDeviceBtn;
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  // Hero Section
+  const eyebrow = document.querySelector('.info-panel .eyebrow');
+  if (eyebrow) eyebrow.textContent = t.eyebrow;
+
+  const heroTitle = document.querySelector('.hero-title');
+  if (heroTitle) heroTitle.textContent = t.heroTitle;
+
+  const subtitle = document.querySelector('.info-panel .subtitle');
+  if (subtitle) subtitle.textContent = t.heroSubtitle;
+
+  // Stats
+  const stats = document.querySelectorAll('.stats div');
+  if (stats.length >= 3) {
+    stats[0].querySelector('strong').textContent = t.statExcellence;
+    stats[0].querySelector('span').textContent = t.statExcellenceLabel;
+    stats[1].querySelector('strong').textContent = t.statSimplicity;
+    stats[1].querySelector('span').textContent = t.statSimplicityLabel;
+    stats[2].querySelector('strong').textContent = t.statPrecision;
+    stats[2].querySelector('span').textContent = t.statPrecisionLabel;
   }
-})();
+
+  // Quote
+  const quoteLabel = document.querySelector('.quote-of-day-label');
+  if (quoteLabel) quoteLabel.textContent = t.quoteLabel;
+  const quoteText = document.querySelector('.quote-of-day-text');
+  if (quoteText) quoteText.textContent = t.quoteText;
+
+  // Formulaire & Calculateur
+  const calcTitle = document.querySelector('.calculator-card h2');
+  if (calcTitle) calcTitle.textContent = t.calcTitle;
+
+  const steps = document.querySelectorAll('.step-item span:last-child');
+  if (steps.length >= 3) {
+    steps[0].textContent = t.step1;
+    steps[1].textContent = t.step2;
+    steps[2].textContent = t.step3;
+  }
+
+  const labelNom = document.querySelector('label[for="nom"]');
+  if (labelNom) labelNom.textContent = t.labelNom;
+
+  const labelPrenom = document.querySelector('label[for="prenom"]');
+  if (labelPrenom) labelPrenom.textContent = t.labelPrenom;
+
+  const labelClasse = document.getElementById('classe-label');
+  if (labelClasse) labelClasse.textContent = t.labelClasse;
+
+  const optClasseDefault = document.querySelector('#classe option[value=""]');
+  if (optClasseDefault) optClasseDefault.textContent = t.selectClasseDefault;
+
+  const labelMatiere = document.querySelector('label[for="matiere"]');
+  if (labelMatiere) labelMatiere.textContent = t.labelMatiere;
+
+  const optMatiereDefault = document.querySelector('#matiere option[value=""]');
+  if (optMatiereDefault) optMatiereDefault.textContent = t.selectMatiereDefault;
+
+  const labelDevoir = document.querySelector('label[for="devoir"]');
+  if (labelDevoir) labelDevoir.textContent = t.labelDevoir;
+
+  const labelComp = document.querySelector('label[for="composition"]');
+  if (labelComp) labelComp.textContent = t.labelComposition;
+
+  const labelLang = document.querySelector('#langue-group legend');
+  if (labelLang) labelLang.textContent = t.labelLangue;
+
+  const btnSubmit = document.querySelector('#moyenne-form button[type="submit"]');
+  if (btnSubmit) btnSubmit.textContent = t.btnEnregistrer;
+
+  if (boutonSemestre) boutonSemestre.textContent = t.btnMoyenneGenerale;
+  if (boutonTelechargerPdf) boutonTelechargerPdf.textContent = t.btnTelechargerPdf;
+  if (boutonReset) boutonReset.textContent = t.btnReset;
+
+  // Modal Appareil
+  const modalEyebrow = document.querySelector('.device-modal-card .eyebrow');
+  if (modalEyebrow) modalEyebrow.textContent = t.deviceModalEyebrow;
+
+  const modalTitle = document.getElementById('device-modal-title');
+  if (modalTitle) modalTitle.textContent = t.deviceModalTitle;
+
+  const modalSub = document.querySelector('.device-modal-subtitle');
+  if (modalSub) modalSub.textContent = t.deviceModalSubtitle;
+
+  const devPhone = document.querySelector('.device-option[data-device="phone"] span');
+  if (devPhone) devPhone.textContent = t.devicePhone;
+
+  const devTab = document.querySelector('.device-option[data-device="tablette"] span');
+  if (devTab) devTab.textContent = t.deviceTablette;
+
+  const devComp = document.querySelector('.device-option[data-device="ordinateur"] span');
+  if (devComp) devComp.textContent = t.deviceComputer;
+
+  // Tableau
+  const ths = document.querySelectorAll('.table-wrap th');
+  if (ths.length >= 5) {
+    ths[0].textContent = t.tableHeaderMatiere;
+    ths[1].textContent = t.tableHeaderMoyenne;
+    ths[2].textContent = t.tableHeaderCoef;
+    ths[3].textContent = t.tableHeaderPoints;
+    ths[4].textContent = t.tableHeaderActions;
+  }
+
+  const emptyCell = document.querySelector('.empty-state');
+  if (emptyCell) emptyCell.textContent = t.emptyState;
+}
+
+function applyTheme() {
+  const dark = getTheme() === 'dark';
+  document.documentElement.classList.toggle('dark-mode', dark);
+  const btn = document.getElementById('toggle-theme-btn');
+  if (btn) btn.setAttribute('aria-pressed', String(dark));
+  translatePage();
+}
