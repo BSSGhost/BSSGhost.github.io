@@ -44,6 +44,22 @@ const boutonSemestre = document.getElementById('calculer-semestre');
 const boutonReset = document.getElementById('reset-donnees');
 const boutonTelechargerPdf = document.getElementById('telecharger-bulletin');
 const tableBody = document.getElementById('matiere-table-body');
+
+/* Icône + message plus engageant pour le tableau de matières vide,
+   réutilisé ici et identique au contenu statique présent dans le HTML au chargement. */
+const EMPTY_SUBJECTS_ROW_HTML = `
+  <tr>
+    <td colspan="5" class="empty-state">
+      <svg class="empty-state-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 14a3 3 0 0 1 3-3h9l3 4h18a3 3 0 0 1 3 3v20a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V14Z"></path>
+        <path d="M18 27l4 4 8-9"></path>
+      </svg>
+      <p class="empty-state-title">Aucune matière enregistrée pour le moment</p>
+      <p class="empty-state-subtitle">Ajoutez votre première matière ci-dessus pour voir apparaître votre tableau.</p>
+    </td>
+  </tr>
+`;
+
 const classeLabel = document.getElementById('classe-label');
 const partnerVisuals = document.querySelectorAll('.partner-visual');
 const progressTracker = document.getElementById('progress-tracker');
@@ -480,6 +496,31 @@ function updateStepsTimeline() {
 document.getElementById('nom')?.addEventListener('input', updateStepsTimeline);
 document.getElementById('prenom')?.addEventListener('input', updateStepsTimeline);
 
+/* ---------- Validation en temps réel des champs de notes ---------- */
+/* Donne un retour visuel (bordure verte/rouge) dès la saisie, plutôt que
+   d'attendre la soumission du formulaire pour signaler une erreur. */
+
+function updateNoteInputValidity(input) {
+  const value = input.value.trim();
+
+  if (!value) {
+    // Champ vide : on n'affiche ni erreur ni validation, pour ne pas
+    // décourager l'utilisateur avant même qu'il ait commencé à taper.
+    input.classList.remove('is-valid', 'is-invalid');
+    return;
+  }
+
+  const isValid = input.checkValidity();
+  input.classList.toggle('is-valid', isValid);
+  input.classList.toggle('is-invalid', !isValid);
+}
+
+document.querySelectorAll('.note-input').forEach((input) => {
+  input.addEventListener('input', () => updateNoteInputValidity(input));
+  input.addEventListener('blur', () => updateNoteInputValidity(input));
+});
+
+
 function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, mention = false }) {
   resultat.classList.remove('error', 'shake');
   const resultContent = resultat.querySelector('.result-content');
@@ -661,7 +702,7 @@ function renderTableMatiere() {
   updateCompareToggleVisibility();
 
   if (!entries.length) {
-    tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">Aucune matière enregistrée pour le moment.</td></tr>';
+    tableBody.innerHTML = EMPTY_SUBJECTS_ROW_HTML;
     renderRadarChart([]);
     return;
   }
@@ -1680,6 +1721,7 @@ tableBody.addEventListener('click', function (event) {
   compositionInput.value = note.composition ?? '';
   document.getElementById('nom').value = note.nom ?? '';
   document.getElementById('prenom').value = note.prenom ?? '';
+  document.querySelectorAll('.note-input').forEach((input) => updateNoteInputValidity(input));
 
   const compositionRadio = document.querySelector(
     `input[name="hasComposition"][value="${note.hasComposition === false ? 'non' : 'oui'}"]`
@@ -1703,6 +1745,9 @@ boutonReset.addEventListener('click', function () {
   }
 
   form.reset();
+  document.querySelectorAll('.note-input').forEach((input) => {
+    input.classList.remove('is-valid', 'is-invalid');
+  });
   toggleCompositionField();
   renderTableMatiere();
   setResult('Les données ont été réinitialisées avec succès.', false);
