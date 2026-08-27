@@ -309,7 +309,7 @@ th {
   cursor: pointer;
   flex: 0 0 auto;
   box-shadow: none;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .device-change-btn::after {
@@ -322,9 +322,16 @@ th {
   flex: 0 0 auto;
 }
 
-.device-change-btn:hover {
+.device-change-btn:hover,
+.device-change-btn:focus-visible {
   transform: translateY(-2px);
   background: #f2f6f1;
+  box-shadow: 0 10px 22px rgba(28, 55, 43, 0.14);
+}
+
+.device-change-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .brand {
@@ -415,7 +422,7 @@ th {
 .hero {
   display: grid;
   grid-template-columns: 1.08fr 1fr;
-  gap: 22px;
+  gap: 28px;
   margin-top: 22px;
   align-items: stretch;
 }
@@ -1079,6 +1086,44 @@ button:disabled {
 
 .pdf-button:disabled {
   opacity: 0.5;
+}
+
+.pdf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.pdf-button-spinner {
+  display: none;
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  border: 2.2px solid rgba(248, 255, 249, 0.35);
+  border-top-color: #f8fff9;
+  border-radius: 50%;
+  animation: pdf-spinner-spin 0.7s linear infinite;
+}
+
+.pdf-button.is-loading .pdf-button-spinner {
+  display: inline-block;
+}
+
+.pdf-button.is-loading {
+  cursor: progress;
+}
+
+@keyframes pdf-spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdf-button-spinner {
+    animation: none;
+  }
 }
 
 .result-card {
@@ -1864,6 +1909,7 @@ th {
 body.device-phone .hero,
 body.device-tablette .hero {
   grid-template-columns: 1fr;
+  row-gap: 40px;
 }
 
 body.device-ordinateur .hero {
@@ -2072,6 +2118,7 @@ body.device-phone .topbar {
 @media (max-width: 860px) {
   .hero {
     grid-template-columns: 1fr;
+    row-gap: 40px;
   }
 
   .topbar {
@@ -2482,6 +2529,11 @@ html.dark-mode .pdf-button:hover,
 html.dark-mode .primary-button:hover {
   background: linear-gradient(160deg, #264538 0%, #14251d 100%);
   color: #ffffff;
+}
+
+html.dark-mode .device-change-btn:hover,
+html.dark-mode .device-change-btn:focus-visible {
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.4);
 }
 
 html.dark-mode .table-action.edit-action {

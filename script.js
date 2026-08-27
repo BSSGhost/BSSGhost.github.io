@@ -1555,7 +1555,34 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   doc.save(`Bulletin_${prenom}_${nom}_${classe}_${semestreVal}.pdf`);
 }
 
-boutonTelechargerPdf?.addEventListener('click', generatePDFBulletin);
+function handleTelechargerBulletinClick() {
+  if (!boutonTelechargerPdf || boutonTelechargerPdf.classList.contains('is-loading')) return;
+
+  boutonTelechargerPdf.classList.add('is-loading');
+  boutonTelechargerPdf.disabled = true;
+  boutonTelechargerPdf.setAttribute('aria-busy', 'true');
+
+  const finishLoading = () => {
+    boutonTelechargerPdf.classList.remove('is-loading');
+    boutonTelechargerPdf.disabled = false;
+    boutonTelechargerPdf.removeAttribute('aria-busy');
+  };
+
+  // On laisse le navigateur peindre le spinner avant de lancer la génération
+  // (synchrone et potentiellement lourde) du PDF, sinon l'UI resterait figée sans retour visuel.
+  window.setTimeout(() => {
+    try {
+      generatePDFBulletin();
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF :', error);
+      setResult('Une erreur est survenue pendant la génération du bulletin. Veuillez réessayer.', true);
+    } finally {
+      finishLoading();
+    }
+  }, 30);
+}
+
+boutonTelechargerPdf?.addEventListener('click', handleTelechargerBulletinClick);
 
 tableBody.addEventListener('click', function (event) {
   const actionButton = event.target.closest('button[data-action]');
