@@ -7,6 +7,12 @@
   --green-400: #86c89d;
   --yellow-500: #d2a84a;
   --yellow-400: #e8c875;
+  /* Accent rare, réservé à la moyenne finale et au CTA principal */
+  --copper-300: #e3ac6b;
+  --copper-400: #cf8a45;
+  --copper-500: #b8752f;
+  --copper-600: #8f5820;
+  --copper-glow: rgba(184, 117, 47, 0.4);
   --red-600: #d93c3c;
   --dark: #17251f;
   --text: #33443c;
@@ -1017,7 +1023,7 @@ button:disabled {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.16) inset,
     0 12px 26px rgba(23, 75, 61, 0.3),
-    0 0 0 0 rgba(232, 200, 117, 0.45);
+    0 0 0 0 var(--copper-glow);
   animation: primary-glow 2.6s ease-in-out infinite;
 }
 
@@ -1027,7 +1033,7 @@ button:disabled {
   inset: 0;
   border-radius: inherit;
   padding: 1.5px;
-  background: linear-gradient(120deg, var(--yellow-400), transparent 40%, transparent 60%, var(--yellow-500));
+  background: linear-gradient(120deg, var(--copper-300), transparent 40%, transparent 60%, var(--copper-500));
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -1041,12 +1047,12 @@ button:disabled {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.18) inset,
     0 18px 32px rgba(23, 75, 61, 0.32),
-    0 0 0 6px rgba(232, 200, 117, 0.14);
+    0 0 0 6px rgba(184, 117, 47, 0.18);
 }
 
 @keyframes primary-glow {
-  0%, 100% { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 12px 26px rgba(23, 75, 61, 0.3), 0 0 0 0 rgba(232, 200, 117, 0.35); }
-  50% { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 12px 26px rgba(23, 75, 61, 0.3), 0 0 0 8px rgba(232, 200, 117, 0); }
+  0%, 100% { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 12px 26px rgba(23, 75, 61, 0.3), 0 0 0 0 var(--copper-glow); }
+  50% { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 12px 26px rgba(23, 75, 61, 0.3), 0 0 0 8px rgba(184, 117, 47, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1126,6 +1132,105 @@ button:disabled {
   }
 }
 
+/* Barre de progression indéterminée : donne une impression de travail réel
+   plutôt qu'un simple spinner suspendu. */
+.pdf-button-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.pdf-button.is-loading .pdf-button-progress {
+  opacity: 1;
+}
+
+.pdf-button-progress-fill {
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--copper-300), transparent);
+  animation: pdf-progress-sweep 1.1s ease-in-out infinite;
+}
+
+@keyframes pdf-progress-sweep {
+  0% {
+    left: -40%;
+  }
+
+  100% {
+    left: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdf-button-progress-fill {
+    animation: none;
+    left: 0;
+    width: 100%;
+    opacity: 0.5;
+  }
+}
+
+/* État de succès bref après génération : coche animée + flash vert */
+.pdf-button-check {
+  display: none;
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  color: #f8fff9;
+}
+
+.pdf-button.is-success .pdf-button-spinner {
+  display: none;
+}
+
+.pdf-button.is-success .pdf-button-check {
+  display: inline-block;
+  animation: pdf-check-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.pdf-button.is-success {
+  background: linear-gradient(160deg, var(--green-500) 0%, var(--green-700) 100%);
+}
+
+.pdf-button.is-success .pdf-button-progress {
+  opacity: 1;
+}
+
+.pdf-button.is-success .pdf-button-progress-fill {
+  left: 0;
+  width: 100%;
+  animation: none;
+  background: linear-gradient(90deg, var(--green-400), var(--copper-300));
+}
+
+@keyframes pdf-check-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdf-button.is-success .pdf-button-check {
+    animation: none;
+  }
+}
+
 .result-card {
   margin-top: 26px;
   padding: 36px 24px;
@@ -1156,6 +1261,57 @@ button:disabled {
   transform: translateX(-50%);
   background: radial-gradient(circle, rgba(232, 200, 117, 0.16) 0%, transparent 62%);
   pointer-events: none;
+  transition: background 0.4s ease;
+}
+
+/* Halo intensifié et animé pour les moyennes excellentes (>= 16) : effet "moment de fierté" */
+.result-card.is-exceptional::after {
+  background: radial-gradient(circle, var(--copper-glow) 0%, rgba(232, 200, 117, 0.16) 45%, transparent 68%);
+  animation: halo-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes halo-pulse {
+  0%, 100% {
+    opacity: 0.75;
+    transform: translateX(-50%) scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.14);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-card.is-exceptional::after {
+    animation: none;
+  }
+}
+
+/* Confettis discrets, générés en JS uniquement pour les excellentes moyennes */
+.confetti-piece {
+  position: absolute;
+  top: 14%;
+  left: 50%;
+  width: 6px;
+  height: 9px;
+  border-radius: 1.5px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  animation: confetti-fall 1.15s cubic-bezier(0.15, 0.5, 0.4, 1) forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--confetti-x), var(--confetti-y)) rotate(var(--confetti-rot));
+  }
 }
 
 /* Dégradé de fond différent selon le niveau atteint */
@@ -1235,8 +1391,30 @@ button:disabled {
   animation: result-reveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.result-card.is-exceptional.is-revealing {
+  animation-name: result-reveal-exceptional;
+}
+
+@keyframes result-reveal-exceptional {
+  0% {
+    opacity: 0;
+    transform: scale(0.88) translateY(18px);
+  }
+
+  55% {
+    opacity: 1;
+    transform: scale(1.06) translateY(-4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .result-card.is-revealing {
+  .result-card.is-revealing,
+  .result-card.is-exceptional.is-revealing {
     animation: none;
   }
 }
@@ -1265,7 +1443,12 @@ button:disabled {
   display: block;
   font-size: clamp(2.1rem, 4vw, 3.2rem);
   line-height: 1;
-  color: #fffaf0;
+  background: linear-gradient(160deg, var(--copper-300) 0%, var(--copper-500) 55%, var(--copper-600) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--copper-400);
+  filter: drop-shadow(0 2px 10px rgba(184, 117, 47, 0.25));
 }
 
 .mention-icon-wrap {
@@ -2529,6 +2712,10 @@ html.dark-mode .pdf-button:hover,
 html.dark-mode .primary-button:hover {
   background: linear-gradient(160deg, #264538 0%, #14251d 100%);
   color: #ffffff;
+}
+
+html.dark-mode .pdf-button.is-success {
+  background: linear-gradient(160deg, #2a4a3b 0%, #17251f 100%);
 }
 
 html.dark-mode .device-change-btn:hover,

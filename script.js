@@ -205,6 +205,40 @@ function animateValue(el, from, to, duration = 900) {
   requestAnimationFrame(tick);
 }
 
+/* Confettis discrets, déclenchés uniquement pour une moyenne excellente (>= 16).
+   Respecte prefers-reduced-motion et se nettoie automatiquement du DOM. */
+const CONFETTI_COLORS = ['#e8c875', '#cf8a45', '#4eaa7e', '#fffaf0', '#b8752f'];
+
+function launchConfetti(container) {
+  if (prefersReducedMotion || !container) return;
+
+  const fragment = document.createDocumentFragment();
+  const pieceCount = 18;
+
+  for (let i = 0; i < pieceCount; i += 1) {
+    const piece = document.createElement('span');
+    piece.className = 'confetti-piece';
+    const x = (Math.random() - 0.5) * 220;
+    const y = 90 + Math.random() * 100;
+    const rot = (Math.random() - 0.5) * 540;
+    const delay = Math.random() * 150;
+
+    piece.style.setProperty('--confetti-x', `${x}px`);
+    piece.style.setProperty('--confetti-y', `${y}px`);
+    piece.style.setProperty('--confetti-rot', `${rot}deg`);
+    piece.style.animationDelay = `${delay}ms`;
+    piece.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+
+    fragment.appendChild(piece);
+  }
+
+  container.appendChild(fragment);
+
+  window.setTimeout(() => {
+    container.querySelectorAll('.confetti-piece').forEach((el) => el.remove());
+  }, 1500);
+}
+
 function pulseCard() {
   if (prefersReducedMotion || !calculatorCard) return;
   calculatorCard.classList.remove('just-saved');
@@ -513,10 +547,18 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, m
   resultat.classList.remove('error');
 
   /* Dégradé de fond + effet d'apparition "récompense" cohérents avec la note */
-  resultat.classList.remove('grade-faible', 'grade-moyen', 'grade-bien', 'is-revealing');
+  resultat.classList.remove('grade-faible', 'grade-moyen', 'grade-bien', 'is-revealing', 'is-exceptional');
   resultat.classList.add(grade);
+  const isExceptional = value >= 16;
+  if (isExceptional) {
+    resultat.classList.add('is-exceptional');
+  }
   void resultat.offsetWidth;
   resultat.classList.add('is-revealing');
+
+  if (isExceptional) {
+    launchConfetti(resultat);
+  }
 
   updateFaviconBadge(value);
   playResultSound(value);
@@ -1555,29 +1597,56 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   doc.save(`Bulletin_${prenom}_${nom}_${classe}_${semestreVal}.pdf`);
 }
 
+const PDF_BUTTON_DEFAULT_LABEL = 'Télécharger mon bulletin (PDF)';
+const PDF_BUTTON_SUCCESS_LABEL = 'Bulletin téléchargé';
+
+function setPdfButtonLabel(text) {
+  const label = boutonTelechargerPdf?.querySelector('.pdf-button-label');
+  if (label) label.textContent = text;
+}
+
 function handleTelechargerBulletinClick() {
   if (!boutonTelechargerPdf || boutonTelechargerPdf.classList.contains('is-loading')) return;
 
+  boutonTelechargerPdf.classList.remove('is-success');
   boutonTelechargerPdf.classList.add('is-loading');
   boutonTelechargerPdf.disabled = true;
   boutonTelechargerPdf.setAttribute('aria-busy', 'true');
+  setPdfButtonLabel('Génération en cours…');
 
-  const finishLoading = () => {
+  const finishLoading = (success) => {
     boutonTelechargerPdf.classList.remove('is-loading');
-    boutonTelechargerPdf.disabled = false;
-    boutonTelechargerPdf.removeAttribute('aria-busy');
+
+    if (success) {
+      // Bref état de succès (coche + barre pleine) avant de revenir à l'état initial :
+      // donne une confirmation claire que le bulletin a bien été généré.
+      boutonTelechargerPdf.classList.add('is-success');
+      setPdfButtonLabel(PDF_BUTTON_SUCCESS_LABEL);
+
+      window.setTimeout(() => {
+        boutonTelechargerPdf.classList.remove('is-success');
+        boutonTelechargerPdf.disabled = false;
+        boutonTelechargerPdf.removeAttribute('aria-busy');
+        setPdfButtonLabel(PDF_BUTTON_DEFAULT_LABEL);
+      }, 1300);
+    } else {
+      boutonTelechargerPdf.disabled = false;
+      boutonTelechargerPdf.removeAttribute('aria-busy');
+      setPdfButtonLabel(PDF_BUTTON_DEFAULT_LABEL);
+    }
   };
 
-  // On laisse le navigateur peindre le spinner avant de lancer la génération
-  // (synchrone et potentiellement lourde) du PDF, sinon l'UI resterait figée sans retour visuel.
+  // On laisse le navigateur peindre le spinner et la barre de progression avant de lancer
+  // la génération (synchrone et potentiellement lourde) du PDF, sinon l'UI resterait figée
+  // sans retour visuel.
   window.setTimeout(() => {
     try {
       generatePDFBulletin();
+      finishLoading(true);
     } catch (error) {
       console.error('Erreur lors de la génération du PDF :', error);
       setResult('Une erreur est survenue pendant la génération du bulletin. Veuillez réessayer.', true);
-    } finally {
-      finishLoading();
+      finishLoading(false);
     }
   }, 30);
 }
