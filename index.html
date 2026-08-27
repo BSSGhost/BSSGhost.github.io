@@ -363,7 +363,12 @@
       <section id="tableau-matieres" class="subjects-card" aria-live="polite">
         <div class="subjects-header">
           <h3>Matières enregistrées</h3>
-          <span id="classe-label">Aucune classe sélectionnée</span>
+          <div class="subjects-header-right">
+            <span id="classe-label">Aucune classe sélectionnée</span>
+            <button type="button" id="toggle-comparaison-btn" class="compare-toggle-btn" hidden>
+              <span aria-hidden="true">⇄</span> Comparer S1 / S2
+            </button>
+          </div>
         </div>
 
         <div class="radar-wrap" id="radar-wrap" hidden>
@@ -388,6 +393,17 @@
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section id="comparaison-panel" class="comparison-card" aria-live="polite" hidden>
+        <div class="comparison-header">
+          <span class="comparison-icon" aria-hidden="true">📊</span>
+          <div>
+            <h3>Comparaison Semestre 1 / Semestre 2</h3>
+            <span class="comparison-subtitle" id="comparaison-subtitle"></span>
+          </div>
+        </div>
+        <div class="comparison-list" id="comparaison-list"></div>
       </section>
 
       <footer class="site-footer">

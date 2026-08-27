@@ -625,8 +625,13 @@ h1 {
 }
 
 .calculator-card {
+  position: relative;
   padding: 30px 28px;
-  background: rgba(255, 253, 248, 0.95);
+  background-color: rgba(255, 253, 248, 0.95);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58' viewBox='0 0 58 58'%3E%3Cg fill='none' stroke='%231d6a52' stroke-opacity='0.065' stroke-width='1.3'%3E%3Cpath d='M29 5 L53 29 L29 53 L5 29 Z'/%3E%3C/g%3E%3Ccircle cx='29' cy='29' r='2.1' fill='%23d2a84a' fill-opacity='0.16'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 58px 58px;
+  background-position: center;
 }
 
 .calculator-card h2 {
@@ -1469,6 +1474,47 @@ button:disabled {
   font-size: 0.8rem;
 }
 
+.subjects-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.compare-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border: 1px solid rgba(29, 106, 82, 0.22);
+  border-radius: 999px;
+  background: rgba(78, 170, 126, 0.1);
+  color: var(--green-700);
+  font-family: var(--font-main);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.compare-toggle-btn span {
+  color: inherit;
+  font-size: 0.85rem;
+}
+
+.compare-toggle-btn:hover {
+  background: var(--green-600);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.compare-toggle-btn.is-active {
+  background: var(--green-700);
+  color: #fff;
+  border-color: var(--green-700);
+}
+
 .radar-wrap {
   display: flex;
   justify-content: center;
@@ -1555,6 +1601,14 @@ th {
   background: rgba(41, 128, 100, 0.05);
 }
 
+#matiere-table-body tr:nth-child(even) td {
+  background: rgba(29, 106, 82, 0.045);
+}
+
+#matiere-table-body tr:hover td {
+  background: rgba(41, 128, 100, 0.09);
+}
+
 .table-actions {
   display: flex;
   gap: 8px;
@@ -1597,6 +1651,160 @@ th {
   text-align: center;
   color: var(--muted);
   padding: 18px 12px;
+}
+
+/* =========================================================
+   COMPARAISON SEMESTRE 1 / SEMESTRE 2
+   ========================================================= */
+.comparison-card {
+  margin-top: 28px;
+  padding: 22px 20px;
+  background: var(--card-strong);
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  animation: rise-in 0.45s ease both;
+}
+
+.comparison-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.comparison-icon {
+  flex: 0 0 auto;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.comparison-header h3 {
+  margin: 0 0 4px;
+  color: var(--dark);
+  font-size: 1.1rem;
+}
+
+.comparison-subtitle {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.comparison-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.compare-row {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(41, 128, 100, 0.045);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  animation: row-in 0.35s ease both;
+}
+
+.compare-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.compare-subject {
+  font-weight: 700;
+  color: var(--dark);
+  font-size: 0.92rem;
+}
+
+.compare-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.compare-delta-up {
+  background: rgba(78, 170, 126, 0.16);
+  color: var(--green-700);
+}
+
+.compare-delta-down {
+  background: rgba(217, 60, 60, 0.12);
+  color: var(--red-600);
+}
+
+.compare-delta-stable {
+  background: rgba(113, 128, 120, 0.14);
+  color: var(--muted);
+}
+
+.compare-delta-new {
+  background: rgba(210, 168, 74, 0.16);
+  color: var(--yellow-500);
+}
+
+.compare-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compare-bar-line {
+  display: grid;
+  grid-template-columns: 26px 1fr 46px;
+  align-items: center;
+  gap: 10px;
+}
+
+.compare-bar-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+.compare-bar-track {
+  position: relative;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.07);
+  overflow: hidden;
+}
+
+.compare-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.compare-bar-s1 {
+  background: var(--yellow-500);
+}
+
+.compare-bar-s2 {
+  background: var(--green-600);
+}
+
+.compare-bar-value {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: right;
+}
+
+.compare-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 10px 0;
 }
 
 .site-footer {
@@ -2173,6 +2381,14 @@ html.dark-mode .subjects-card {
   background: #101a16;
 }
 
+html.dark-mode .calculator-card {
+  background-color: #121d18;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58' viewBox='0 0 58 58'%3E%3Cg fill='none' stroke='%234eaa7e' stroke-opacity='0.08' stroke-width='1.3'%3E%3Cpath d='M29 5 L53 29 L29 53 L5 29 Z'/%3E%3C/g%3E%3Ccircle cx='29' cy='29' r='2.1' fill='%23e8c875' fill-opacity='0.2'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 58px 58px;
+  background-position: center;
+}
+
 html.dark-mode table {
   background: #0e1713;
   color: #e6eee9;
@@ -2191,13 +2407,59 @@ html.dark-mode td {
   border-color: rgba(160, 196, 177, 0.12);
 }
 
+html.dark-mode #matiere-table-body tr:nth-child(even) td {
+  background: #152420;
+}
+
 html.dark-mode #matiere-table-body tr:hover {
   background: #172821;
+}
+
+html.dark-mode #matiere-table-body tr:hover td {
+  background: #1a2d26;
 }
 
 html.dark-mode .empty-state {
   background: #101a16;
   color: #9fb2a9;
+}
+
+html.dark-mode .compare-toggle-btn {
+  background: rgba(78, 170, 126, 0.14);
+  border-color: rgba(160, 196, 177, 0.22);
+  color: #bfe3d0;
+}
+
+html.dark-mode .compare-toggle-btn:hover {
+  background: var(--green-600);
+  color: #0d1713;
+}
+
+html.dark-mode .comparison-card {
+  background: #121d18;
+  color: #e6eee9;
+  border-color: rgba(160, 196, 177, 0.14);
+}
+
+html.dark-mode .comparison-header h3 {
+  color: #f0f7f3;
+}
+
+html.dark-mode .compare-row {
+  background: rgba(160, 196, 177, 0.06);
+  border-color: rgba(160, 196, 177, 0.12);
+}
+
+html.dark-mode .compare-subject {
+  color: #f0f7f3;
+}
+
+html.dark-mode .compare-bar-track {
+  background: rgba(160, 196, 177, 0.12);
+}
+
+html.dark-mode .compare-bar-value {
+  color: #dce8e2;
 }
 
 /* Tous les boutons deviennent visiblement sombres dans le thème sombre. */

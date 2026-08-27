@@ -52,6 +52,10 @@ const progressTrackerLabel = document.getElementById('progress-tracker-label');
 const calculatorCard = document.querySelector('.calculator-card');
 const deviceViewportOuter = document.getElementById('device-viewport-outer');
 const deviceViewport = document.getElementById('device-viewport');
+const compareToggleBtn = document.getElementById('toggle-comparaison-btn');
+const comparaisonPanel = document.getElementById('comparaison-panel');
+const comparaisonList = document.getElementById('comparaison-list');
+const comparaisonSubtitle = document.getElementById('comparaison-subtitle');
 
 const DEVICE_REFERENCE_WIDTHS = {
   phone: 430,
@@ -612,6 +616,8 @@ function renderTableMatiere() {
     ? `Classe : ${classe} • ${semestre === 'Semestre1' ? 'Semestre 1' : 'Semestre 2'}`
     : 'Aucune classe sélectionnée';
 
+  updateCompareToggleVisibility();
+
   if (!entries.length) {
     tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">Aucune matière enregistrée pour le moment.</td></tr>';
     renderRadarChart([]);
@@ -658,7 +664,122 @@ function renderTableMatiere() {
 
   renderRadarChart(entries);
   updateStepsTimeline();
+
+  if (comparaisonPanel && !comparaisonPanel.hidden) {
+    renderComparaisonSemestres();
+  }
 }
+
+/* =========================================================
+   COMPARAISON SEMESTRE 1 / SEMESTRE 2
+   ========================================================= */
+function updateCompareToggleVisibility() {
+  if (!compareToggleBtn) return;
+  const classe = classeSelect.value;
+
+  if (!classe) {
+    compareToggleBtn.hidden = true;
+    hideComparaisonPanel();
+    return;
+  }
+
+  const notesS1 = getStoredNotesForClasse(classe, 'Semestre1');
+  const notesS2 = getStoredNotesForClasse(classe, 'Semestre2');
+  const hasBoth = Object.keys(notesS1).length > 0 && Object.keys(notesS2).length > 0;
+
+  compareToggleBtn.hidden = !hasBoth;
+  if (!hasBoth) {
+    hideComparaisonPanel();
+  }
+}
+
+function hideComparaisonPanel() {
+  if (!comparaisonPanel || comparaisonPanel.hidden) return;
+  comparaisonPanel.hidden = true;
+  if (compareToggleBtn) {
+    compareToggleBtn.classList.remove('is-active');
+    compareToggleBtn.innerHTML = '<span aria-hidden="true">⇄</span> Comparer S1 / S2';
+  }
+}
+
+function renderComparaisonSemestres() {
+  if (!comparaisonList) return;
+  const classe = classeSelect.value;
+  if (!classe) return;
+
+  const notesS1 = getStoredNotesForClasse(classe, 'Semestre1');
+  const notesS2 = getStoredNotesForClasse(classe, 'Semestre2');
+  const matieres = [...new Set([...Object.keys(notesS1), ...Object.keys(notesS2)])].sort((a, b) =>
+    a.localeCompare(b)
+  );
+
+  if (comparaisonSubtitle) {
+    comparaisonSubtitle.textContent = `Classe : ${classe} • ${matieres.length} matière${matieres.length > 1 ? 's' : ''} au total`;
+  }
+
+  if (!matieres.length) {
+    comparaisonList.innerHTML = '<p class="compare-empty">Aucune matière à comparer pour le moment.</p>';
+    return;
+  }
+
+  comparaisonList.innerHTML = matieres
+    .map((matiere, index) => {
+      const moyS1 = notesS1[matiere] ? Number(notesS1[matiere].moyenne) : null;
+      const moyS2 = notesS2[matiere] ? Number(notesS2[matiere].moyenne) : null;
+
+      let deltaHtml = '<span class="compare-delta compare-delta-new">Nouveau</span>';
+      if (moyS1 !== null && moyS2 !== null) {
+        const delta = moyS2 - moyS1;
+        if (delta > 0.05) {
+          deltaHtml = `<span class="compare-delta compare-delta-up">▲ +${delta.toFixed(2)}</span>`;
+        } else if (delta < -0.05) {
+          deltaHtml = `<span class="compare-delta compare-delta-down">▼ ${delta.toFixed(2)}</span>`;
+        } else {
+          deltaHtml = '<span class="compare-delta compare-delta-stable">— Stable</span>';
+        }
+      }
+
+      const widthS1 = moyS1 !== null ? Math.min(100, (moyS1 / 20) * 100) : 0;
+      const widthS2 = moyS2 !== null ? Math.min(100, (moyS2 / 20) * 100) : 0;
+      const delay = prefersReducedMotion ? '0s' : `${index * 40}ms`;
+
+      return `
+        <div class="compare-row" style="animation-delay:${delay}">
+          <div class="compare-row-head">
+            <span class="compare-subject">${escapeXml(matiere)}</span>
+            ${deltaHtml}
+          </div>
+          <div class="compare-bars">
+            <div class="compare-bar-line">
+              <span class="compare-bar-label">S1</span>
+              <div class="compare-bar-track"><div class="compare-bar-fill compare-bar-s1" style="width:${widthS1}%"></div></div>
+              <span class="compare-bar-value">${moyS1 !== null ? moyS1.toFixed(2) : '—'}</span>
+            </div>
+            <div class="compare-bar-line">
+              <span class="compare-bar-label">S2</span>
+              <div class="compare-bar-track"><div class="compare-bar-fill compare-bar-s2" style="width:${widthS2}%"></div></div>
+              <span class="compare-bar-value">${moyS2 !== null ? moyS2.toFixed(2) : '—'}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+compareToggleBtn?.addEventListener('click', () => {
+  if (!comparaisonPanel) return;
+
+  if (comparaisonPanel.hidden) {
+    renderComparaisonSemestres();
+    comparaisonPanel.hidden = false;
+    compareToggleBtn.classList.add('is-active');
+    compareToggleBtn.innerHTML = '<span aria-hidden="true">✕</span> Fermer la comparaison';
+    comparaisonPanel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+  } else {
+    hideComparaisonPanel();
+  }
+});
 
 function updateMatieres() {
   const selectedClasse = classeSelect.value;
