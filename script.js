@@ -124,6 +124,9 @@ const translations = {
     confirm_supprimer_matiere: "Supprimer la matière « {matiere} » ?",
     confirm_reset_classe: "Toutes les notes de la classe {classe} (Semestre 1 et 2) seront définitivement supprimées. Voulez-vous continuer ?",
     confirm_reset_all: "Toutes les données enregistrées (toutes les classes et matières) seront définitivement supprimées. Voulez-vous continuer ?",
+    confirm_modal_title: "Êtes-vous sûr ?",
+    confirm_modal_ok: "Confirmer",
+    confirm_modal_cancel: "Annuler",
     msg_erreur_pdf: "Une erreur est survenue pendant la génération du bulletin. Veuillez réessayer.",
     msg_jspdf_manquant: "Erreur: La bibliothèque jsPDF n'est pas chargée.",
     msg_aucune_note_pdf: "Aucune note enregistrée pour cette classe et ce semestre. Veuillez remplir les notes d'abord.",
@@ -302,6 +305,9 @@ const translations = {
     confirm_supprimer_matiere: "Delete the subject \"{matiere}\"?",
     confirm_reset_classe: "All grades for grade level {classe} (Semester 1 and 2) will be permanently deleted. Do you want to continue?",
     confirm_reset_all: "All saved data (all grade levels and subjects) will be permanently deleted. Do you want to continue?",
+    confirm_modal_title: "Are you sure?",
+    confirm_modal_ok: "Confirm",
+    confirm_modal_cancel: "Cancel",
     msg_erreur_pdf: "An error occurred while generating the report card. Please try again.",
     msg_jspdf_manquant: "Error: The jsPDF library is not loaded.",
     msg_aucune_note_pdf: "No grades recorded for this grade level and semester. Please fill in the grades first.",
@@ -2193,11 +2199,15 @@ tableBody.addEventListener('click', function (event) {
   if (!classe || !note) return;
 
   if (actionButton.dataset.action === 'delete') {
-    if (!window.confirm(t('confirm_supprimer_matiere', { matiere: translateMatiere(matiere) }))) return;
-    delete notes[matiere];
-    localStorage.setItem(getClassStorageKey(classe), JSON.stringify(notes));
-    renderTableMatiere();
-    setResult(t('msg_matiere_supprimee', { matiere: translateMatiere(matiere) }));
+    showConfirmDialog({
+      message: t('confirm_supprimer_matiere', { matiere: translateMatiere(matiere) }),
+      onConfirm: () => {
+        delete notes[matiere];
+        localStorage.setItem(getClassStorageKey(classe), JSON.stringify(notes));
+        renderTableMatiere();
+        setResult(t('msg_matiere_supprimee', { matiere: translateMatiere(matiere) }));
+      },
+    });
     return;
   }
 
@@ -2221,34 +2231,37 @@ tableBody.addEventListener('click', function (event) {
 
 boutonReset.addEventListener('click', function () {
   const classe = classeSelect.value.trim();
-
   const confirmMessage = classe
     ? t('confirm_reset_classe', { classe })
     : t('confirm_reset_all');
 
-  if (!window.confirm(confirmMessage)) return;
+  showConfirmDialog({
+    message: confirmMessage,
+    onConfirm: () => {
+      if (classe) {
+        localStorage.removeItem(getClassStorageKey(classe, 'Semestre1'));
+        localStorage.removeItem(getClassStorageKey(classe, 'Semestre2'));
+      } else {
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith(`${STORAGE_PREFIX}_`))
+          .forEach((key) => localStorage.removeItem(key));
+      }
 
-  if (classe) {
-    localStorage.removeItem(getClassStorageKey(classe, 'Semestre1'));
-    localStorage.removeItem(getClassStorageKey(classe, 'Semestre2'));
-  } else {
-    Object.keys(localStorage)
-      .filter((key) => key.startsWith(`${STORAGE_PREFIX}_`))
-      .forEach((key) => localStorage.removeItem(key));
-  }
+      form.reset();
+      document.querySelectorAll('.note-input').forEach((input) => {
+        input.classList.remove('is-valid', 'is-invalid');
+      });
+      toggleCompositionField();
 
-  form.reset();
-  document.querySelectorAll('.note-input').forEach((input) => {
-    input.classList.remove('is-valid', 'is-invalid');
+      renderTableMatiere();
+      setResult(t('msg_donnees_reinitialisees'), false);
+      if (!classe) {
+        matiereSelect.innerHTML = `<option value="">${t('option_matiere_default')}</option>`;
+        classeSelect.value = '';
+        langueGroup.hidden = true;
+      }
+    },
   });
-  toggleCompositionField();
-  renderTableMatiere();
-  setResult(t('msg_donnees_reinitialisees'), false);
-  if (!classe) {
-    matiereSelect.innerHTML = `<option value="">${t('option_matiere_default')}</option>`;
-    classeSelect.value = '';
-    langueGroup.hidden = true;
-  }
 });
 
 afficherCitationDuJour();
@@ -2378,3 +2391,65 @@ restoreFaviconBadgeFromStorage();
     });
   });
 })();
+
+/* =========================================================
+   MODALE DE CONFIRMATION PERSONNALISÉE
+   Remplace window.confirm() par une modale stylée du site.
+   ========================================================= */
+const confirmModal = {
+  el: document.getElementById('confirm-modal'),
+  messageEl: document.getElementById('confirm-modal-message'),
+  okBtn: document.getElementById('confirm-modal-ok'),
+  cancelBtn: document.getElementById('confirm-modal-cancel'),
+  onConfirm: null,
+  closing: false,
+
+  show({ message, onConfirm, danger = true }) {
+    if (!this.el) return;
+    this.onConfirm = onConfirm || null;
+    this.messageEl.textContent = message;
+    this.el.hidden = false;
+    this.closing = false;
+    this.el.classList.remove('is-closing', 'is-danger-soft');
+    if (!danger) this.el.classList.add('is-danger-soft');
+    this.okBtn.focus({ preventScroll: true });
+  },
+
+  hide() {
+    if (this.closing || !this.el) return;
+    this.closing = true;
+    this.el.classList.add('is-closing');
+    const done = () => {
+      this.el.hidden = true;
+      this.el.classList.remove('is-closing');
+      this.closing = false;
+      this.onConfirm = null;
+    };
+    window.setTimeout(done, prefersReducedMotion ? 0 : 250);
+  },
+
+  confirm() {
+    const fn = this.onConfirm;
+    this.onConfirm = null;
+    this.hide();
+    if (fn) fn();
+  },
+};
+
+if (confirmModal.el) {
+  confirmModal.okBtn.addEventListener('click', () => confirmModal.confirm());
+  confirmModal.cancelBtn.addEventListener('click', () => confirmModal.hide());
+
+  confirmModal.el.addEventListener('click', (event) => {
+    if (event.target === confirmModal.el) confirmModal.hide();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (confirmModal.el.hidden) return;
+    if (event.key === 'Escape') confirmModal.hide();
+  });
+}
+
+function showConfirmDialog(options) {
+  confirmModal.show(options);
+}
