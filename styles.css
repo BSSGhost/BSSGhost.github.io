@@ -2779,7 +2779,8 @@ body.device-phone .topbar {
   white-space: nowrap;
 }
 
-.theme-icon {
+.theme-icon,
+.lang-icon {
   font-size: 1rem;
   line-height: 1;
 }

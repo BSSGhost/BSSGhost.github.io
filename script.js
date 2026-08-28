@@ -1,3 +1,461 @@
+/* =========================================================
+   SYSTEME DE TRADUCTION FR / EN
+   ========================================================= */
+const LANG_KEY = 'sunu_moyenne_lang';
+
+function getLang() {
+  try {
+    const stored = localStorage.getItem(LANG_KEY);
+    return stored === 'en' ? 'en' : 'fr';
+  } catch {
+    return 'fr';
+  }
+}
+
+function setLang(lang) {
+  try { localStorage.setItem(LANG_KEY, lang === 'en' ? 'en' : 'fr'); } catch {}
+}
+
+const translations = {
+  fr: {
+    device_modal_eyebrow: "Bienvenue sur SUNU MOYENNE",
+    device_modal_title: "Quel appareil utilisez-vous ?",
+    device_modal_subtitle: "Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.",
+    device_phone: "Téléphone",
+    device_tablet: "Tablette",
+    device_computer: "Ordinateur",
+    change_device_btn: "Changer d'appareil",
+    lang_switch_btn: "English",
+    hero_eyebrow: "Outil scolaire officiel",
+    hero_h1: "Calculez votre moyenne de matière et semestrielle en quelques secondes",
+    hero_subtitle: "Renseignez vos matières, vos notes et leurs coefficients pour obtenir votre moyenne en quelques secondes. Générez ensuite un bulletin scolaire clair, téléchargeable en PDF, aussi bien sur téléphone que sur ordinateur.",
+    stat_devoirs_label: "Devoirs",
+    stat_composition_label: "Composition",
+    stat_coeff_label: "Coeff.",
+    stat_coeff_value: "Personnalisé",
+    quote_of_day_label: "Conseil du jour",
+    calculator_h2: "Formulaire",
+    step1_label: "Renseigner les infos",
+    step2_label: "Ajouter les matières",
+    step3_label: "Télécharger le bulletin",
+    label_nom: "Nom",
+    placeholder_nom: "Ex : Diop",
+    label_prenom: "Prénom",
+    placeholder_prenom: "Ex : Mamadou",
+    label_classe: "Classe",
+    option_classe_default: "-- Sélectionner votre classe --",
+    legend_semestre: "Semestre",
+    radio_semestre1: "Semestre 1",
+    radio_semestre2: "Semestre 2",
+    legend_langue: "Quelle langue choisissez-vous ?",
+    opt_espagnol: "Espagnol",
+    opt_arabe: "Arabe",
+    label_matiere: "Matière",
+    option_matiere_default: "-- Sélectionner une matière --",
+    label_coefficient: "Coefficient",
+    placeholder_coefficient: "Ex : 4",
+    label_devoir1: "Note de devoir 1",
+    placeholder_devoir1: "Ex : 15,25",
+    label_devoir2: "Note de devoir 2",
+    placeholder_devoir2: "Ex : 12,25",
+    legend_composition: "La matière comporte-t-elle une composition ?",
+    radio_oui: "Oui",
+    radio_non: "Non",
+    label_composition: "Note de composition",
+    placeholder_composition: "Ex : 17,25",
+    btn_calculer_matiere: "Calculer la moyenne de la matière",
+    btn_calculer_semestre: "Calculer ma moyenne du semestre",
+    btn_calculer_annee: "Calculer ma moyenne annuelle",
+    btn_reset: "Réinitialiser les données",
+    result_label: "Résultat",
+    result_placeholder_h3: "Votre moyenne apparaîtra ici.",
+    advisor_header_h3: "Conseiller scolaire",
+    subjects_h3: "Matières enregistrées",
+    th_matiere: "Matière",
+    th_moyenne: "Moyenne",
+    th_coefficient: "Coefficient",
+    th_points: "Points",
+    th_actions: "Actions",
+    empty_state_title: "Aucune matière enregistrée pour le moment",
+    empty_state_subtitle: "Ajoutez votre première matière ci-dessus pour voir apparaître votre tableau.",
+    comparison_h3: "Comparaison Semestre 1 / Semestre 2",
+    faq_h3: "Comment ça marche ?",
+    faq_subtitle: "Comprendre le calcul de votre moyenne en quelques points",
+    faq_q1: "Comment est calculée la moyenne d'une matière ?",
+    faq_a1: "Sans composition : la moyenne est la moyenne de vos deux devoirs. Avec composition : la moyenne des deux devoirs est additionnée à la note de composition, puis le tout est divisé par 2 (les devoirs et la composition ont le même poids).",
+    faq_q2: "Qu'est-ce qu'un coefficient et à quoi sert-il ?",
+    faq_a2: "Le coefficient représente l'importance d'une matière dans votre semestre. Une matière à fort coefficient (ex : 4 ou 5) pèse davantage dans votre moyenne générale qu'une matière à faible coefficient (ex : 1 ou 2). Les points d'une matière sont calculés en multipliant sa moyenne par son coefficient.",
+    faq_q3: "Comment est calculée la moyenne du semestre ?",
+    faq_a3: "On additionne les points de toutes les matières de la classe (moyenne × coefficient de chaque matière), puis on divise le total par la somme de tous les coefficients. C'est donc une moyenne pondérée.",
+    faq_q4: "Comment est calculée la moyenne annuelle ?",
+    faq_a4: "La moyenne annuelle est la moyenne simple des moyennes des semestres 1 et 2, calculée sur la base des matières renseignées dans les deux semestres. Pensez à remplir toutes les matières pour les deux semestres pour obtenir un résultat fiable.",
+    faq_q5: "Mes notes sont-elles sauvegardées ?",
+    faq_a5: "Oui, vos notes sont enregistrées automatiquement sur votre appareil (localStorage) pendant que vous les calculez. Elles restent disponibles lors de vos prochaines visites sur ce même appareil. Pensez à télécharger votre bulletin en PDF pour garder une trace de vos résultats.",
+    footer_rights: "Tous droits réservés",
+    footer_credit_label: "Fait par",
+
+    theme_btn_to_light: "Mode clair",
+    theme_btn_to_dark: "Mode sombre",
+    sound_on: "Son activé",
+    sound_off: "Son désactivé",
+
+    mention_insuffisant: "Insuffisant",
+    mention_peux_mieux_faire: "Peux mieux faire",
+    mention_bon_travail: "Bon travail",
+    mention_tres_bon_travail: "Très bon travail",
+    mention_excellent_travail: "Excellent travail",
+
+    msg_champs_manquants: "Veuillez renseigner votre nom, prénom, classe et matière.",
+    msg_notes_invalides: "Les notes doivent être comprises entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.",
+    msg_coefficient_invalide: "Veuillez entrer un coefficient valide entre 1 et 8.",
+    msg_composition_invalide: "La composition doit être comprise entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.",
+    msg_classe_requise_semestre: "Veuillez d'abord sélectionner une classe pour calculer votre moyenne du semestre.",
+    msg_langue_requise_semestre: "Veuillez choisir votre langue pour cette classe avant de calculer la moyenne du semestre.",
+    msg_classe_requise_annee: "Veuillez d'abord sélectionner une classe pour calculer votre moyenne annuelle.",
+    msg_langue_requise_annee: "Veuillez choisir votre langue pour cette classe avant de calculer la moyenne annuelle.",
+    msg_matieres_manquantes: "Vous devez d'abord calculer toutes les matières de la classe. Matières manquantes : {list}.",
+    msg_aucun_coefficient: "Aucun coefficient disponible pour calculer la moyenne du semestre.",
+    msg_semestre_incomplet: "Il manque des notes au {semestre} pour toutes les matières de la classe. Complétez les deux semestres avant de calculer la moyenne annuelle.",
+    msg_semestre1_court: "semestre 1",
+    msg_semestre2_court: "semestre 2",
+    msg_matiere_supprimee: "La matière {matiere} a été supprimée.",
+    msg_matiere_prete_modif: "Les données de {matiere} sont prêtes à être modifiées.",
+    msg_donnees_reinitialisees: "Les données ont été réinitialisées avec succès.",
+    confirm_supprimer_matiere: "Supprimer la matière « {matiere} » ?",
+    confirm_reset_classe: "Toutes les notes de la classe {classe} (Semestre 1 et 2) seront définitivement supprimées. Voulez-vous continuer ?",
+    confirm_reset_all: "Toutes les données enregistrées (toutes les classes et matières) seront définitivement supprimées. Voulez-vous continuer ?",
+    msg_erreur_pdf: "Une erreur est survenue pendant la génération du bulletin. Veuillez réessayer.",
+    msg_jspdf_manquant: "Erreur: La bibliothèque jsPDF n'est pas chargée.",
+    msg_aucune_note_pdf: "Aucune note enregistrée pour cette classe et ce semestre. Veuillez remplir les notes d'abord.",
+
+    table_modifier: "Modifier",
+    table_supprimer: "Supprimer",
+    table_classe_label: "Classe : {classe} • {semestre}",
+    table_aucune_classe: "Aucune classe sélectionnée",
+    table_semestre1_full: "Semestre 1",
+    table_semestre2_full: "Semestre 2",
+
+    progress_label_default: "{done} / {total} matières renseignées",
+    progress_label_complete: "{done} / {total} matières • Bulletin prêt !",
+
+    compare_btn_open: "Comparer S1 / S2",
+    compare_btn_close: "Fermer la comparaison",
+    compare_subtitle: "Classe : {classe} • {n} matière{s} au total",
+    compare_empty: "Aucune matière à comparer pour le moment.",
+    compare_new: "Nouveau",
+    compare_stable: "— Stable",
+
+    advisor_points_forts_prefix: "Tes points forts : {list}",
+    advisor_points_forts_empty: "Continue tes efforts, aucune matière ne se démarque encore nettement.",
+    advisor_a_ameliorer_prefix: "À améliorer : {list}",
+    advisor_a_ameliorer_empty: "Aucune matière en difficulté particulière, bravo pour cet équilibre !",
+    advisor_objectif_excellent: "Excellent niveau ({value}/20) : continue sur cette lancée pour viser l'excellence.",
+    advisor_objectif_template: "Pour atteindre {objectif}/20 : {leviers}",
+    advisor_leviers_with_subjects: "augmente principalement tes résultats en {list}.",
+    advisor_leviers_none: "continue à consolider l'ensemble de tes matières.",
+
+    result_pill_semestre: "Moyenne du {semestre}",
+    result_pill_annee: "Moyenne annuelle",
+    result_coefficient_text: "Coefficient {n}",
+
+    pdf_republique: "RÉPUBLIQUE DU SÉNÉGAL",
+    pdf_devise: "Un Peuple - Un But - Une Foi",
+    pdf_ministere: "MINISTÈRE DE L'ÉDUCATION NATIONALE",
+    pdf_lycee: "Lycée Nation-Armée pour la Qualité et l'Equité",
+    pdf_bulletin_titre: "BULLETIN DE NOTES - {semestre}",
+    pdf_semestre1_full: "1er Semestre",
+    pdf_semestre2_full: "2ème Semestre",
+    pdf_eleve: "Élève : {nom}",
+    pdf_classe: "Classe : {classe}",
+    pdf_moyenne_generale: "Moyenne Générale : {value} / 20",
+    pdf_th_discipline: "Discipline",
+    pdf_th_devoir1: "Devoir 1",
+    pdf_th_devoir2: "Devoir 2",
+    pdf_th_compo: "Compo.",
+    pdf_th_coeff: "Coeff.",
+    pdf_th_moyenne: "Moyenne",
+    pdf_th_appreciation: "Appréciation",
+    pdf_total_coefficients: "Total Coefficients : {n}",
+    pdf_total_points: "Total Points : {n}",
+    pdf_moyenne_semestrielle: "Moyenne Semestrielle : {value} / 20",
+    pdf_mention: "Mention : {label}",
+    pdf_obs_parents: "Observation & Signature des Parents",
+    pdf_prof_principal: "Le Professeur Principal",
+    pdf_commandant: "Le Commandant d'école",
+    pdf_signature_cachet: "Signature et Cachet Officiel",
+    pdf_footer_doc: "Document officiel généré par SUNU MOYENNE - Lycée Nation-Armée pour la Qualité et l'Equité",
+    pdf_appreciation_insuffisant: "Insuffisant",
+    pdf_appreciation_passable: "Passable",
+    pdf_appreciation_assez_bien: "Assez Bien",
+    pdf_appreciation_bien: "Bien",
+    pdf_appreciation_tres_bien: "Très Bien",
+    pdf_appreciation_excellent: "Excellent",
+
+    pdf_button_default: "Télécharger mon bulletin (PDF)",
+    pdf_button_generating: "Génération en cours…",
+    pdf_button_success: "Bulletin téléchargé"
+  },
+  en: {
+    device_modal_eyebrow: "Welcome to SUNU MOYENNE",
+    device_modal_title: "Which device are you using?",
+    device_modal_subtitle: "This choice automatically adapts the site's display to your screen.",
+    device_phone: "Phone",
+    device_tablet: "Tablet",
+    device_computer: "Computer",
+    change_device_btn: "Change device",
+    lang_switch_btn: "Français",
+    hero_eyebrow: "Official school tool",
+    hero_h1: "Calculate your subject and semester average in seconds",
+    hero_subtitle: "Enter your subjects, grades and their coefficients to get your average in seconds. Then generate a clear report card, downloadable as a PDF, on both phone and computer.",
+    stat_devoirs_label: "Assignments",
+    stat_composition_label: "Exam",
+    stat_coeff_label: "Coeff.",
+    stat_coeff_value: "Custom",
+    quote_of_day_label: "Tip of the day",
+    calculator_h2: "Form",
+    step1_label: "Enter your info",
+    step2_label: "Add subjects",
+    step3_label: "Download report card",
+    label_nom: "Last name",
+    placeholder_nom: "e.g. Diop",
+    label_prenom: "First name",
+    placeholder_prenom: "e.g. Mamadou",
+    label_classe: "Grade level",
+    option_classe_default: "-- Select your grade level --",
+    legend_semestre: "Semester",
+    radio_semestre1: "Semester 1",
+    radio_semestre2: "Semester 2",
+    legend_langue: "Which language do you choose?",
+    opt_espagnol: "Spanish",
+    opt_arabe: "Arabic",
+    label_matiere: "Subject",
+    option_matiere_default: "-- Select a subject --",
+    label_coefficient: "Coefficient",
+    placeholder_coefficient: "e.g. 4",
+    label_devoir1: "Assignment 1 grade",
+    placeholder_devoir1: "e.g. 15.25",
+    label_devoir2: "Assignment 2 grade",
+    placeholder_devoir2: "e.g. 12.25",
+    legend_composition: "Does this subject include an exam?",
+    radio_oui: "Yes",
+    radio_non: "No",
+    label_composition: "Exam grade",
+    placeholder_composition: "e.g. 17.25",
+    btn_calculer_matiere: "Calculate subject average",
+    btn_calculer_semestre: "Calculate my semester average",
+    btn_calculer_annee: "Calculate my annual average",
+    btn_reset: "Reset data",
+    result_label: "Result",
+    result_placeholder_h3: "Your average will appear here.",
+    advisor_header_h3: "School advisor",
+    subjects_h3: "Recorded subjects",
+    th_matiere: "Subject",
+    th_moyenne: "Average",
+    th_coefficient: "Coefficient",
+    th_points: "Points",
+    th_actions: "Actions",
+    empty_state_title: "No subject recorded yet",
+    empty_state_subtitle: "Add your first subject above to see your table appear.",
+    comparison_h3: "Semester 1 / Semester 2 Comparison",
+    faq_h3: "How does it work?",
+    faq_subtitle: "Understanding how your average is calculated",
+    faq_q1: "How is a subject's average calculated?",
+    faq_a1: "Without an exam: the average is the average of your two assignments. With an exam: the average of the two assignments is added to the exam grade, then the whole is divided by 2 (assignments and exam have equal weight).",
+    faq_q2: "What is a coefficient and what is it for?",
+    faq_a2: "The coefficient represents how important a subject is in your semester. A subject with a high coefficient (e.g. 4 or 5) weighs more in your overall average than a subject with a low coefficient (e.g. 1 or 2). A subject's points are calculated by multiplying its average by its coefficient.",
+    faq_q3: "How is the semester average calculated?",
+    faq_a3: "The points of all subjects in the class are added together (average × coefficient of each subject), then the total is divided by the sum of all coefficients. It is therefore a weighted average.",
+    faq_q4: "How is the annual average calculated?",
+    faq_a4: "The annual average is the simple average of the semester 1 and semester 2 averages, calculated based on the subjects entered in both semesters. Remember to fill in all subjects for both semesters to get a reliable result.",
+    faq_q5: "Are my grades saved?",
+    faq_a5: "Yes, your grades are automatically saved on your device (localStorage) as you calculate them. They remain available on your next visits from the same device. Remember to download your report card as a PDF to keep a record of your results.",
+    footer_rights: "All rights reserved",
+    footer_credit_label: "Made by",
+
+    theme_btn_to_light: "Light mode",
+    theme_btn_to_dark: "Dark mode",
+    sound_on: "Sound on",
+    sound_off: "Sound off",
+
+    mention_insuffisant: "Insufficient",
+    mention_peux_mieux_faire: "Could do better",
+    mention_bon_travail: "Good work",
+    mention_tres_bon_travail: "Very good work",
+    mention_excellent_travail: "Excellent work",
+
+    msg_champs_manquants: "Please fill in your last name, first name, grade level and subject.",
+    msg_notes_invalides: "Grades must be between 0 and 20 and use only .25, .50 or .75.",
+    msg_coefficient_invalide: "Please enter a valid coefficient between 1 and 8.",
+    msg_composition_invalide: "The exam grade must be between 0 and 20 and use only .25, .50 or .75.",
+    msg_classe_requise_semestre: "Please select a grade level first to calculate your semester average.",
+    msg_langue_requise_semestre: "Please choose your language for this grade level before calculating the semester average.",
+    msg_classe_requise_annee: "Please select a grade level first to calculate your annual average.",
+    msg_langue_requise_annee: "Please choose your language for this grade level before calculating the annual average.",
+    msg_matieres_manquantes: "You must first calculate all subjects for the class. Missing subjects: {list}.",
+    msg_aucun_coefficient: "No coefficient available to calculate the semester average.",
+    msg_semestre_incomplet: "Grades are missing for {semestre} for all subjects in the class. Complete both semesters before calculating the annual average.",
+    msg_semestre1_court: "semester 1",
+    msg_semestre2_court: "semester 2",
+    msg_matiere_supprimee: "The subject {matiere} has been deleted.",
+    msg_matiere_prete_modif: "The data for {matiere} is ready to be edited.",
+    msg_donnees_reinitialisees: "The data has been successfully reset.",
+    confirm_supprimer_matiere: "Delete the subject \"{matiere}\"?",
+    confirm_reset_classe: "All grades for grade level {classe} (Semester 1 and 2) will be permanently deleted. Do you want to continue?",
+    confirm_reset_all: "All saved data (all grade levels and subjects) will be permanently deleted. Do you want to continue?",
+    msg_erreur_pdf: "An error occurred while generating the report card. Please try again.",
+    msg_jspdf_manquant: "Error: The jsPDF library is not loaded.",
+    msg_aucune_note_pdf: "No grades recorded for this grade level and semester. Please fill in the grades first.",
+
+    table_modifier: "Edit",
+    table_supprimer: "Delete",
+    table_classe_label: "Class: {classe} • {semestre}",
+    table_aucune_classe: "No class selected",
+    table_semestre1_full: "Semester 1",
+    table_semestre2_full: "Semester 2",
+
+    progress_label_default: "{done} / {total} subjects entered",
+    progress_label_complete: "{done} / {total} subjects • Report card ready!",
+
+    compare_btn_open: "Compare S1 / S2",
+    compare_btn_close: "Close comparison",
+    compare_subtitle: "Class: {classe} • {n} subject{s} total",
+    compare_empty: "No subject to compare yet.",
+    compare_new: "New",
+    compare_stable: "— Stable",
+
+    advisor_points_forts_prefix: "Your strengths: {list}",
+    advisor_points_forts_empty: "Keep up your efforts, no subject stands out clearly yet.",
+    advisor_a_ameliorer_prefix: "To improve: {list}",
+    advisor_a_ameliorer_empty: "No subject in particular difficulty, well done for this balance!",
+    advisor_objectif_excellent: "Excellent level ({value}/20): keep up this momentum to aim for excellence.",
+    advisor_objectif_template: "To reach {objectif}/20: {leviers}",
+    advisor_leviers_with_subjects: "mainly improve your results in {list}.",
+    advisor_leviers_none: "keep consolidating all your subjects.",
+
+    result_pill_semestre: "{semestre} average",
+    result_pill_annee: "Annual average",
+    result_coefficient_text: "Coefficient {n}",
+
+    pdf_republique: "REPUBLIC OF SENEGAL",
+    pdf_devise: "One People - One Goal - One Faith",
+    pdf_ministere: "MINISTRY OF NATIONAL EDUCATION",
+    pdf_lycee: "Lycée Nation-Armée pour la Qualité et l'Equité",
+    pdf_bulletin_titre: "REPORT CARD - {semestre}",
+    pdf_semestre1_full: "1st Semester",
+    pdf_semestre2_full: "2nd Semester",
+    pdf_eleve: "Student: {nom}",
+    pdf_classe: "Grade level: {classe}",
+    pdf_moyenne_generale: "Overall Average: {value} / 20",
+    pdf_th_discipline: "Subject",
+    pdf_th_devoir1: "Assign. 1",
+    pdf_th_devoir2: "Assign. 2",
+    pdf_th_compo: "Exam",
+    pdf_th_coeff: "Coeff.",
+    pdf_th_moyenne: "Average",
+    pdf_th_appreciation: "Remarks",
+    pdf_total_coefficients: "Total Coefficients: {n}",
+    pdf_total_points: "Total Points: {n}",
+    pdf_moyenne_semestrielle: "Semester Average: {value} / 20",
+    pdf_mention: "Grade: {label}",
+    pdf_obs_parents: "Parents' Observation & Signature",
+    pdf_prof_principal: "The Head Teacher",
+    pdf_commandant: "The School Commander",
+    pdf_signature_cachet: "Official Signature and Stamp",
+    pdf_footer_doc: "Official document generated by SUNU MOYENNE - Lycée Nation-Armée pour la Qualité et l'Equité",
+    pdf_appreciation_insuffisant: "Insufficient",
+    pdf_appreciation_passable: "Pass",
+    pdf_appreciation_assez_bien: "Fairly Good",
+    pdf_appreciation_bien: "Good",
+    pdf_appreciation_tres_bien: "Very Good",
+    pdf_appreciation_excellent: "Excellent",
+
+    pdf_button_default: "Download my report card (PDF)",
+    pdf_button_generating: "Generating…",
+    pdf_button_success: "Report card downloaded"
+  }
+};
+
+/* Traductions d'affichage pour les noms de matières.
+   La clé (côté FR) reste la valeur canonique utilisée pour le stockage
+   localStorage / <option> ; seul l'affichage change selon la langue. */
+const MATIERE_LABELS = {
+  'Mathématiques': { fr: 'Mathématiques', en: 'Mathematics' },
+  'Français': { fr: 'Français', en: 'French' },
+  'SVT': { fr: 'SVT', en: 'Life & Earth Sciences (SVT)' },
+  'Anglais': { fr: 'Anglais', en: 'English' },
+  'Histoire Géographie': { fr: 'Histoire Géographie', en: 'History & Geography' },
+  'EC': { fr: 'EC', en: 'Civic Education (EC)' },
+  'EPS': { fr: 'EPS', en: 'Physical Education (EPS)' },
+  'Informatique': { fr: 'Informatique', en: 'Computer Science' },
+  'E2C': { fr: 'E2C', en: 'E2C' },
+  'ECOFAM': { fr: 'ECOFAM', en: 'Family & Social Economics (ECOFAM)' },
+  'Sciences Physiques': { fr: 'Sciences Physiques', en: 'Physical Sciences' },
+  'Philosophie': { fr: 'Philosophie', en: 'Philosophy' },
+  'Espagnol': { fr: 'Espagnol', en: 'Spanish' },
+  'Arabe': { fr: 'Arabe', en: 'Arabic' }
+};
+
+function translateMatiere(nomMatiere) {
+  const entry = MATIERE_LABELS[nomMatiere];
+  if (!entry) return nomMatiere;
+  return entry[getLang()] || nomMatiere;
+}
+
+/* t(key, vars) : renvoie la chaîne traduite pour la langue active,
+   en remplaçant les {placeholders} par les valeurs fournies. */
+function t(key, vars) {
+  const dict = translations[getLang()] || translations.fr;
+  let str = dict[key] ?? translations.fr[key] ?? key;
+  if (vars) {
+    Object.keys(vars).forEach((k) => {
+      str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), vars[k]);
+    });
+  }
+  return str;
+}
+
+/* Applique les traductions statiques du HTML : tout élément portant
+   data-i18n, data-i18n-placeholder ou data-i18n-title est mis à jour. */
+function applyStaticTranslations() {
+  document.documentElement.lang = getLang();
+
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+    el.setAttribute('title', t(el.dataset.i18nTitle));
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach((el) => {
+    el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
+  });
+
+  const langBtnLabel = document.querySelector('#toggle-lang-btn .lang-label');
+  if (langBtnLabel) langBtnLabel.textContent = t('lang_switch_btn');
+}
+
+/* Redessine tout le contenu généré dynamiquement en JS, pour qu'il
+   reflète immédiatement un changement de langue sans recharger la page. */
+function refreshDynamicTranslatedTexts() {
+  updateSoundButtonUI();
+  if (typeof applyThemeLabels === 'function') applyThemeLabels();
+  afficherCitationDuJour();
+  updateMatieres();
+  renderTableMatiere();
+  updateStepsTimeline();
+  if (comparaisonPanel && !comparaisonPanel.hidden) {
+    renderComparaisonSemestres();
+    if (compareToggleBtn) {
+      compareToggleBtn.innerHTML = `<span aria-hidden="true">✕</span> ${t('compare_btn_close')}`;
+    }
+  } else if (compareToggleBtn && !compareToggleBtn.hidden) {
+    compareToggleBtn.innerHTML = `<span aria-hidden="true">⇄</span> ${t('compare_btn_open')}`;
+  }
+  setPdfButtonLabel(t('pdf_button_default'));
+}
+
 const form = document.getElementById('moyenne-form');
 const resultat = document.getElementById('resultat');
 
@@ -174,11 +632,11 @@ function gradeClass(value) {
 }
 
 function getMention(value) {
-  if (value < 10) return { label: 'Insuffisant', cls: 'mention-insuffisant' };
-  if (value < 14) return { label: 'Peux mieux faire', cls: 'mention-peux-mieux-faire' };
-  if (value < 16) return { label: 'Bon travail', cls: 'mention-bon-travail' };
-  if (value < 18) return { label: 'Très bon travail', cls: 'mention-tres-bon-travail' };
-  return { label: 'Excellent travail', cls: 'mention-excellent-travail' };
+  if (value < 10) return { label: t('mention_insuffisant'), cls: 'mention-insuffisant' };
+  if (value < 14) return { label: t('mention_peux_mieux_faire'), cls: 'mention-peux-mieux-faire' };
+  if (value < 16) return { label: t('mention_bon_travail'), cls: 'mention-bon-travail' };
+  if (value < 18) return { label: t('mention_tres_bon_travail'), cls: 'mention-tres-bon-travail' };
+  return { label: t('mention_excellent_travail'), cls: 'mention-excellent-travail' };
 }
 
 /* Icône associée à chaque mention : étoile pour les meilleurs résultats,
@@ -416,7 +874,7 @@ function updateSoundButtonUI() {
   boutonSon.classList.toggle('is-muted', !enabled);
   if (iconOn) iconOn.hidden = !enabled;
   if (iconOff) iconOff.hidden = enabled;
-  if (label) label.textContent = enabled ? 'Son activé' : 'Son désactivé';
+  if (label) label.textContent = enabled ? t('sound_on') : t('sound_off');
 }
 
 document.getElementById('toggle-son-btn')?.addEventListener('click', () => {
@@ -453,8 +911,8 @@ function updateProgressTracker(classeVal, notes) {
   progressTracker.classList.toggle('is-complete', isComplete);
   progressTrackerFill.style.width = `${percent}%`;
   progressTrackerLabel.textContent = isComplete
-    ? `${doneMatieres} / ${totalMatieres} matières • Bulletin prêt !`
-    : `${doneMatieres} / ${totalMatieres} matières renseignées`;
+    ? t('progress_label_complete', { done: doneMatieres, total: totalMatieres })
+    : t('progress_label_default', { done: doneMatieres, total: totalMatieres });
 }
 
 function updateStepsTimeline() {
@@ -696,8 +1154,8 @@ function renderTableMatiere() {
   const entries = Object.entries(notes).sort(([a], [b]) => a.localeCompare(b));
 
   classeLabel.textContent = classe
-    ? `Classe : ${classe} • ${semestre === 'Semestre1' ? 'Semestre 1' : 'Semestre 2'}`
-    : 'Aucune classe sélectionnée';
+    ? t('table_classe_label', { classe, semestre: semestre === 'Semestre1' ? t('table_semestre1_full') : t('table_semestre2_full') })
+    : t('table_aucune_classe');
 
   updateCompareToggleVisibility();
 
@@ -717,7 +1175,7 @@ function renderTableMatiere() {
     const coefficient = Number(data.coefficient);
     const points = Number(data.points ?? moyenne);
 
-    [matiere, moyenne.toFixed(2), coefficient, points.toFixed(2)].forEach((value) => {
+    [translateMatiere(matiere), moyenne.toFixed(2), coefficient, points.toFixed(2)].forEach((value) => {
       const cell = document.createElement('td');
       cell.textContent = value;
       row.appendChild(cell);
@@ -731,14 +1189,14 @@ function renderTableMatiere() {
     editButton.className = 'table-action edit-action';
     editButton.dataset.action = 'edit';
     editButton.dataset.matiere = matiere;
-    editButton.textContent = 'Modifier';
+    editButton.textContent = t('table_modifier');
 
     const deleteButton = document.createElement('button');
     deleteButton.type = 'button';
     deleteButton.className = 'table-action delete-action';
     deleteButton.dataset.action = 'delete';
     deleteButton.dataset.matiere = matiere;
-    deleteButton.textContent = 'Supprimer';
+    deleteButton.textContent = t('table_supprimer');
 
     actionsCell.append(editButton, deleteButton);
     row.appendChild(actionsCell);
@@ -781,7 +1239,7 @@ function hideComparaisonPanel() {
   comparaisonPanel.hidden = true;
   if (compareToggleBtn) {
     compareToggleBtn.classList.remove('is-active');
-    compareToggleBtn.innerHTML = '<span aria-hidden="true">⇄</span> Comparer S1 / S2';
+    compareToggleBtn.innerHTML = `<span aria-hidden="true">⇄</span> ${t('compare_btn_open')}`;
   }
 }
 
@@ -797,11 +1255,11 @@ function renderComparaisonSemestres() {
   );
 
   if (comparaisonSubtitle) {
-    comparaisonSubtitle.textContent = `Classe : ${classe} • ${matieres.length} matière${matieres.length > 1 ? 's' : ''} au total`;
+    comparaisonSubtitle.textContent = t('compare_subtitle', { classe, n: matieres.length, s: matieres.length > 1 ? 's' : '' });
   }
 
   if (!matieres.length) {
-    comparaisonList.innerHTML = '<p class="compare-empty">Aucune matière à comparer pour le moment.</p>';
+    comparaisonList.innerHTML = `<p class="compare-empty">${t('compare_empty')}</p>`;
     return;
   }
 
@@ -810,7 +1268,7 @@ function renderComparaisonSemestres() {
       const moyS1 = notesS1[matiere] ? Number(notesS1[matiere].moyenne) : null;
       const moyS2 = notesS2[matiere] ? Number(notesS2[matiere].moyenne) : null;
 
-      let deltaHtml = '<span class="compare-delta compare-delta-new">Nouveau</span>';
+      let deltaHtml = `<span class="compare-delta compare-delta-new">${t('compare_new')}</span>`;
       if (moyS1 !== null && moyS2 !== null) {
         const delta = moyS2 - moyS1;
         if (delta > 0.05) {
@@ -818,7 +1276,7 @@ function renderComparaisonSemestres() {
         } else if (delta < -0.05) {
           deltaHtml = `<span class="compare-delta compare-delta-down">▼ ${delta.toFixed(2)}</span>`;
         } else {
-          deltaHtml = '<span class="compare-delta compare-delta-stable">— Stable</span>';
+          deltaHtml = `<span class="compare-delta compare-delta-stable">${t('compare_stable')}</span>`;
         }
       }
 
@@ -829,7 +1287,7 @@ function renderComparaisonSemestres() {
       return `
         <div class="compare-row" style="animation-delay:${delay}">
           <div class="compare-row-head">
-            <span class="compare-subject">${escapeXml(matiere)}</span>
+            <span class="compare-subject">${escapeXml(translateMatiere(matiere))}</span>
             ${deltaHtml}
           </div>
           <div class="compare-bars">
@@ -857,7 +1315,7 @@ compareToggleBtn?.addEventListener('click', () => {
     renderComparaisonSemestres();
     comparaisonPanel.hidden = false;
     compareToggleBtn.classList.add('is-active');
-    compareToggleBtn.innerHTML = '<span aria-hidden="true">✕</span> Fermer la comparaison';
+    compareToggleBtn.innerHTML = `<span aria-hidden="true">✕</span> ${t('compare_btn_close')}`;
     comparaisonPanel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' });
   } else {
     hideComparaisonPanel();
@@ -867,7 +1325,7 @@ compareToggleBtn?.addEventListener('click', () => {
 function updateMatieres() {
   const selectedClasse = classeSelect.value;
 
-  matiereSelect.innerHTML = '<option value="">-- Sélectionner une matière --</option>';
+  matiereSelect.innerHTML = `<option value="">${t('option_matiere_default')}</option>`;
 
   if (!selectedClasse) {
     langueGroup.hidden = true;
@@ -886,7 +1344,7 @@ function updateMatieres() {
   matieres.forEach(matiere => {
     const option = document.createElement('option');
     option.value = matiere;
-    option.textContent = matiere;
+    option.textContent = translateMatiere(matiere);
     matiereSelect.appendChild(option);
   });
 
@@ -985,23 +1443,23 @@ function calculerMoyenneDeMatiere() {
   const compositionRaw = compositionInput.value;
 
   if (!nom || !prenom || !classe || !matiere) {
-    setResult('Veuillez renseigner votre nom, prénom, classe et matière.', true);
+    setResult(t('msg_champs_manquants'), true);
     return null;
   }
 
   if (![devoir1Raw, devoir2Raw].every((value) => isValidDecimalNote(value))) {
-    setResult('Les notes doivent être comprises entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.', true);
+    setResult(t('msg_notes_invalides'), true);
     return null;
   }
 
   if (!Number.isInteger(coefficient) || coefficient < 1 || coefficient > 8) {
-    setResult('Veuillez entrer un coefficient valide entre 1 et 8.', true);
+    setResult(t('msg_coefficient_invalide'), true);
     return null;
   }
 
   if (hasComposition) {
     if (!isValidDecimalNote(compositionRaw)) {
-      setResult('La composition doit être comprise entre 0 et 20 et utiliser uniquement ,25, ,50 ou ,75.', true);
+      setResult(t('msg_composition_invalide'), true);
       return null;
     }
   }
@@ -1028,10 +1486,10 @@ function calculerMoyenneDeMatiere() {
   });
 
   renderMoyenneResult({
-    pillText: matiere,
+    pillText: translateMatiere(matiere),
     value: moyenneMatiere,
     subtitleText: `${prenom} ${nom} • ${classe}`,
-    coefficientText: `Coefficient ${coefficient}`,
+    coefficientText: t('result_coefficient_text', { n: coefficient }),
     mention: true
   });
   masquerConseillerScolaire();
@@ -1106,7 +1564,8 @@ function renderRadarChart(entries) {
     const labelRadius = maxRadius + 22;
     const lx = center + labelRadius * Math.cos(angle);
     const ly = center + labelRadius * Math.sin(angle);
-    const shortLabel = matiere.length > 16 ? `${matiere.slice(0, 14)}…` : matiere;
+    const displayName = translateMatiere(matiere);
+    const shortLabel = displayName.length > 16 ? `${displayName.slice(0, 14)}…` : displayName;
     const anchor = Math.cos(angle) > 0.25 ? 'start' : Math.cos(angle) < -0.25 ? 'end' : 'middle';
     svgContent += `<text class="radar-label" x="${lx}" y="${ly}" text-anchor="${anchor}" dominant-baseline="middle">${escapeXml(shortLabel)}</text>`;
   });
@@ -1127,31 +1586,58 @@ function renderRadarChart(entries) {
   svg.innerHTML = svgContent;
 }
 
-const CITATIONS_DU_JOUR = [
-  "La réussite est la somme de petits efforts répétés jour après jour.",
-  "Un examen ne mesure pas ton intelligence, seulement ta préparation du moment.",
-  "Relis tes cours le soir même : c’est le moment où la mémoire retient le mieux.",
-  "Une bonne moyenne se construit devoir après devoir, pas la veille de la composition.",
-  "Pose des questions en classe : ce n’est jamais une perte de temps.",
-  "Un planning de révision simple vaut mieux qu’un plan parfait jamais suivi.",
-  "Le sommeil avant un examen compte autant que les révisions.",
-  "Comprendre un exercice vaut mieux que le mémoriser sans le comprendre.",
-  "Chaque matière compte : ne néglige pas celles qui te semblent moins importantes.",
-  "Fixe-toi un petit objectif clair pour chaque séance de révision.",
-  "Les erreurs corrigées sont les meilleures leçons pour le prochain devoir.",
-  "Travailler un peu chaque jour vaut mieux que tout réviser en une nuit.",
-  "Note tes points faibles après chaque devoir pour savoir où progresser.",
-  "La régularité bat le talent quand le talent ne travaille pas régulièrement.",
-  "Un bon élève n’est pas celui qui ne se trompe jamais, mais celui qui persévère.",
-  "Prends soin de ta concentration : coupe les distractions pendant que tu révises.",
-  "Explique un cours à quelqu’un d’autre : c’est la meilleure façon de vérifier que tu l’as compris.",
-  "Chaque semestre est une nouvelle chance de progresser, quel que soit le précédent.",
-  "Ne te compare pas aux autres : compare-toi à toi-même et à tes progrès.",
-  "La confiance en soi se construit par la préparation et la pratique, pas par la chance.",
-  "Même un petit progrès chaque jour finit par faire une grande différence sur le long terme.",
-  "Les révisions actives (exercices, questions) sont plus efficaces que la simple lecture.",
-  "Un esprit reposé retient mieux : n’oublie pas de faire des pauses pendant tes révisions.",
-];
+const CITATIONS_DU_JOUR = {
+  fr: [
+    "La réussite est la somme de petits efforts répétés jour après jour.",
+    "Un examen ne mesure pas ton intelligence, seulement ta préparation du moment.",
+    "Relis tes cours le soir même : c’est le moment où la mémoire retient le mieux.",
+    "Une bonne moyenne se construit devoir après devoir, pas la veille de la composition.",
+    "Pose des questions en classe : ce n’est jamais une perte de temps.",
+    "Un planning de révision simple vaut mieux qu’un plan parfait jamais suivi.",
+    "Le sommeil avant un examen compte autant que les révisions.",
+    "Comprendre un exercice vaut mieux que le mémoriser sans le comprendre.",
+    "Chaque matière compte : ne néglige pas celles qui te semblent moins importantes.",
+    "Fixe-toi un petit objectif clair pour chaque séance de révision.",
+    "Les erreurs corrigées sont les meilleures leçons pour le prochain devoir.",
+    "Travailler un peu chaque jour vaut mieux que tout réviser en une nuit.",
+    "Note tes points faibles après chaque devoir pour savoir où progresser.",
+    "La régularité bat le talent quand le talent ne travaille pas régulièrement.",
+    "Un bon élève n’est pas celui qui ne se trompe jamais, mais celui qui persévère.",
+    "Prends soin de ta concentration : coupe les distractions pendant que tu révises.",
+    "Explique un cours à quelqu’un d’autre : c’est la meilleure façon de vérifier que tu l’as compris.",
+    "Chaque semestre est une nouvelle chance de progresser, quel que soit le précédent.",
+    "Ne te compare pas aux autres : compare-toi à toi-même et à tes progrès.",
+    "La confiance en soi se construit par la préparation et la pratique, pas par la chance.",
+    "Même un petit progrès chaque jour finit par faire une grande différence sur le long terme.",
+    "Les révisions actives (exercices, questions) sont plus efficaces que la simple lecture.",
+    "Un esprit reposé retient mieux : n’oublie pas de faire des pauses pendant tes révisions.",
+  ],
+  en: [
+    "Success is the sum of small efforts repeated day after day.",
+    "An exam doesn't measure your intelligence, only how prepared you are right now.",
+    "Review your lessons the same evening: that's when memory retains best.",
+    "A good average is built assignment after assignment, not the night before the exam.",
+    "Ask questions in class: it's never a waste of time.",
+    "A simple revision plan beats a perfect plan that's never followed.",
+    "Sleep before an exam matters as much as revision.",
+    "Understanding an exercise is worth more than memorizing it without understanding.",
+    "Every subject counts: don't neglect the ones that seem less important.",
+    "Set yourself one clear, small goal for each revision session.",
+    "Corrected mistakes are the best lessons for the next assignment.",
+    "Working a little every day beats cramming everything in one night.",
+    "Note your weak points after each assignment to know where to improve.",
+    "Consistency beats talent when talent doesn't work consistently.",
+    "A good student isn't one who never makes mistakes, but one who perseveres.",
+    "Look after your focus: cut out distractions while you revise.",
+    "Explain a lesson to someone else: it's the best way to check you've understood it.",
+    "Every semester is a new chance to improve, whatever happened before.",
+    "Don't compare yourself to others: compare yourself to your own progress.",
+    "Self-confidence is built through preparation and practice, not luck.",
+    "Even small daily progress adds up to a big difference over time.",
+    "Active revision (exercises, questions) is more effective than simple reading.",
+    "A rested mind retains better: don't forget to take breaks while revising.",
+  ]
+};
 
 function afficherCitationDuJour() {
   const quoteEl = document.getElementById('quote-of-day-text');
@@ -1159,7 +1645,8 @@ function afficherCitationDuJour() {
 
   const debutAnnee = new Date(new Date().getFullYear(), 0, 0);
   const diffJours = Math.floor((new Date() - debutAnnee) / 86400000);
-  const citation = CITATIONS_DU_JOUR[diffJours % CITATIONS_DU_JOUR.length];
+  const citations = CITATIONS_DU_JOUR[getLang()] || CITATIONS_DU_JOUR.fr;
+  const citation = citations[diffJours % citations.length];
   quoteEl.textContent = citation;
 }
 
@@ -1235,7 +1722,7 @@ function getConseilScolaire(matieresCalculees, moyenneGenerale) {
   let objectifText;
 
   if (moyenneGenerale >= 18) {
-    objectifText = `Excellent niveau (${moyenneGenerale.toFixed(2)}/20) : continue sur cette lancée pour viser l'excellence.`;
+    objectifText = t('advisor_objectif_excellent', { value: moyenneGenerale.toFixed(2) });
   } else {
     let objectif = Math.ceil((moyenneGenerale + 1.5) * 2) / 2;
     objectif = Math.min(objectif, 20);
@@ -1251,10 +1738,10 @@ function getConseilScolaire(matieresCalculees, moyenneGenerale) {
       .map((item) => item.matiere);
 
     const leviersText = leviers.length
-      ? `augmente principalement tes résultats en ${leviers.join(' et ')}.`
-      : `continue à consolider l'ensemble de tes matières.`;
+      ? t('advisor_leviers_with_subjects', { list: leviers.map(translateMatiere).join(getLang() === 'en' ? ' and ' : ' et ') })
+      : t('advisor_leviers_none');
 
-    objectifText = `Pour atteindre ${objectif}/20 : ${leviersText}`;
+    objectifText = t('advisor_objectif_template', { objectif, leviers: leviersText });
   }
 
   return {
@@ -1273,12 +1760,12 @@ function afficherConseillerScolaire(matieresCalculees, moyenneGenerale) {
   const conseil = getConseilScolaire(matieresCalculees, moyenneGenerale);
 
   advisorPointsFortsEl.querySelector('.advisor-text').textContent = conseil.pointsForts.length
-    ? `Tes points forts : ${conseil.pointsForts.join(', ')}`
-    : `Continue tes efforts, aucune matière ne se démarque encore nettement.`;
+    ? t('advisor_points_forts_prefix', { list: conseil.pointsForts.map(translateMatiere).join(', ') })
+    : t('advisor_points_forts_empty');
 
   advisorAAmeliorerEl.querySelector('.advisor-text').textContent = conseil.aAmeliorer.length
-    ? `À améliorer : ${conseil.aAmeliorer.join(', ')}`
-    : `Aucune matière en difficulté particulière, bravo pour cet équilibre !`;
+    ? t('advisor_a_ameliorer_prefix', { list: conseil.aAmeliorer.map(translateMatiere).join(', ') })
+    : t('advisor_a_ameliorer_empty');
 
   advisorObjectifEl.querySelector('.advisor-text').textContent = conseil.objectifText;
 
@@ -1299,14 +1786,14 @@ boutonSemestre.addEventListener('click', function () {
   const semestre = getSemestreActuel();
 
   if (!classe) {
-    setResult('Veuillez d’abord sélectionner une classe pour calculer votre moyenne du semestre.', true);
+    setResult(t('msg_classe_requise_semestre'), true);
     return;
   }
 
   if (['4e', '3e', '2nde', '1er', 'Tle'].includes(classe)) {
     const selectedLangue = document.querySelector('input[name="langue"]:checked')?.value;
     if (!selectedLangue) {
-      setResult('Veuillez choisir votre langue pour cette classe avant de calculer la moyenne du semestre.', true);
+      setResult(t('msg_langue_requise_semestre'), true);
       return;
     }
   }
@@ -1318,15 +1805,15 @@ boutonSemestre.addEventListener('click', function () {
   if (!result.complete) {
     setResult(
       result.matieresManquantes.length
-        ? `Vous devez d’abord calculer toutes les matières de la classe. Matières manquantes : ${result.matieresManquantes.join(', ')}.`
-        : 'Aucun coefficient disponible pour calculer la moyenne du semestre.',
+        ? t('msg_matieres_manquantes', { list: result.matieresManquantes.map(translateMatiere).join(', ') })
+        : t('msg_aucun_coefficient'),
       true
     );
     return;
   }
 
   renderMoyenneResult({
-    pillText: `Moyenne du ${semestre === 'Semestre1' ? 'Semestre 1' : 'Semestre 2'}`,
+    pillText: t('result_pill_semestre', { semestre: semestre === 'Semestre1' ? t('table_semestre1_full') : t('table_semestre2_full') }),
     value: result.value,
     subtitleText: `${prenom} ${nom} • ${classe}`,
     mention: true
@@ -1341,14 +1828,14 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
   const nom = document.getElementById('nom').value.trim();
 
   if (!classe) {
-    setResult('Veuillez d’abord sélectionner une classe pour calculer votre moyenne annuelle.', true);
+    setResult(t('msg_classe_requise_annee'), true);
     return;
   }
 
   if (['4e', '3e', '2nde', '1er', 'Tle'].includes(classe)) {
     const selectedLangue = document.querySelector('input[name="langue"]:checked')?.value;
     if (!selectedLangue) {
-      setResult('Veuillez choisir votre langue pour cette classe avant de calculer la moyenne annuelle.', true);
+      setResult(t('msg_langue_requise_annee'), true);
       return;
     }
   }
@@ -1359,7 +1846,7 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
 
   if (!resultS1.complete || !resultS2.complete) {
     setResult(
-      `Il manque des notes au ${!resultS1.complete ? 'semestre 1' : 'semestre 2'} pour toutes les matières de la classe. Complétez les deux semestres avant de calculer la moyenne annuelle.`,
+      t('msg_semestre_incomplet', { semestre: !resultS1.complete ? t('msg_semestre1_court') : t('msg_semestre2_court') }),
       true
     );
     return;
@@ -1368,7 +1855,7 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
   const moyenneAnnuelle = (resultS1.value + resultS2.value) / 2;
 
   renderMoyenneResult({
-    pillText: 'Moyenne annuelle',
+    pillText: t('result_pill_annee'),
     value: moyenneAnnuelle,
     subtitleText: `${prenom} ${nom} • ${classe}`,
     mention: true
@@ -1381,7 +1868,7 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
 function generatePDFBulletin() {
   const { jsPDF } = window.jspdf;
   if (!jsPDF) {
-    alert("Erreur: La bibliothèque jsPDF n'est pas chargée.");
+    alert(t('msg_jspdf_manquant'));
     return;
   }
 
@@ -1389,12 +1876,12 @@ function generatePDFBulletin() {
   const prenom = document.getElementById('prenom').value.trim() || 'Mamadou';
   const classe = document.getElementById('classe').value.trim() || '2nde';
   const semestreVal = getSemestreActuel();
-  const semestreText = semestreVal === 'Semestre1' ? '1er Semestre' : '2ème Semestre';
+  const semestreText = semestreVal === 'Semestre1' ? t('pdf_semestre1_full') : t('pdf_semestre2_full');
   const notes = getStoredNotesForClasse(classe, semestreVal);
   const entries = Object.entries(notes);
 
   if (entries.length === 0) {
-    alert("Aucune note enregistrée pour cette classe et ce semestre. Veuillez remplir les notes d'abord.");
+    alert(t('msg_aucune_note_pdf'));
     return;
   }
 
@@ -1451,14 +1938,14 @@ function generatePDFBulletin() {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(16, 47, 40);
-  doc.text("RÉPUBLIQUE DU SÉNÉGAL", pageWidth - 14, 15, { align: "right" });
+  doc.text(t('pdf_republique'), pageWidth - 14, 15, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(80, 80, 80);
-  doc.text("Un Peuple - Un But - Une Foi", pageWidth - 14, 19, { align: "right" });
-  doc.text("MINISTÈRE DE L'ÉDUCATION NATIONALE", pageWidth - 14, 23, { align: "right" });
+  doc.text(t('pdf_devise'), pageWidth - 14, 19, { align: "right" });
+  doc.text(t('pdf_ministere'), pageWidth - 14, 23, { align: "right" });
   doc.setFont("helvetica", "bold");
-  doc.text("Lycée Nation-Armée pour la Qualité et l'Equité", pageWidth - 14, 27, { align: "right" });
+  doc.text(t('pdf_lycee'), pageWidth - 14, 27, { align: "right" });
 
   // Ligne de séparation élégante
   doc.setDrawColor(16, 47, 40);
@@ -1475,7 +1962,7 @@ function generatePDFBulletin() {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   doc.setTextColor(255, 255, 255);
-  doc.text(`BULLETIN DE NOTES - ${semestreText.toUpperCase()}`, pageWidth / 2, 55.5, { align: "center" });
+  doc.text(t('pdf_bulletin_titre', { semestre: semestreText.toUpperCase() }), pageWidth / 2, 55.5, { align: "center" });
 
   // Cartouche Informations Élève
   doc.setFillColor(248, 246, 240);
@@ -1486,8 +1973,8 @@ function generatePDFBulletin() {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(16, 47, 40);
-  doc.text(`Élève : ${prenom.toUpperCase()} ${nom.toUpperCase()}`, 18, 71);
-  doc.text(`Classe : ${classe}`, 18, 78);
+  doc.text(t('pdf_eleve', { nom: `${prenom.toUpperCase()} ${nom.toUpperCase()}` }), 18, 71);
+  doc.text(t('pdf_classe', { classe }), 18, 78);
 
   const totalCoeff = entries.reduce((acc, [, item]) => acc + Number(item.coefficient), 0);
   const totalPoints = entries.reduce((acc, [, item]) => acc + Number(item.points ?? (item.moyenne * item.coefficient)), 0);
@@ -1508,12 +1995,12 @@ function getAnneeScolaire() {
 
 const anneeScolaireEl = document.getElementById("annee-scolaire");
 if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
-  doc.text(`Moyenne Générale : ${moyenneGen.toFixed(2)} / 20`, pageWidth - 18, 78, { align: "right" });
+  doc.text(t('pdf_moyenne_generale', { value: moyenneGen.toFixed(2) }), pageWidth - 18, 78, { align: "right" });
 
   // Tableau des Notes Soigné avec Colonne d'Appréciation
   const startY = 92;
   const colWidths = [45, 20, 20, 22, 20, 22, 33]; // Somme = 182
-  const headers = ["Discipline", "Devoir 1", "Devoir 2", "Compo.", "Coeff.", "Moyenne", "Appréciation"];
+  const headers = [t('pdf_th_discipline'), t('pdf_th_devoir1'), t('pdf_th_devoir2'), t('pdf_th_compo'), t('pdf_th_coeff'), t('pdf_th_moyenne'), t('pdf_th_appreciation')];
 
   let curY = startY;
 
@@ -1539,12 +2026,12 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   doc.setFontSize(8.5);
 
   function getAppreciation(moy) {
-    if (moy < 8) return "Insuffisant";
-    if (moy < 10) return "Passable";
-    if (moy < 12) return "Assez Bien";
-    if (moy < 14) return "Bien";
-    if (moy < 16) return "Très Bien";
-    return "Excellent";
+    if (moy < 8) return t('pdf_appreciation_insuffisant');
+    if (moy < 10) return t('pdf_appreciation_passable');
+    if (moy < 12) return t('pdf_appreciation_assez_bien');
+    if (moy < 14) return t('pdf_appreciation_bien');
+    if (moy < 16) return t('pdf_appreciation_tres_bien');
+    return t('pdf_appreciation_excellent');
   }
 
   // Lignes du tableau
@@ -1568,7 +2055,7 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
     doc.setTextColor(30, 30, 30);
     let x = 14;
 
-    const rowData = [matiere, d1, d2, comp, String(coeff), moy.toFixed(2), app];
+    const rowData = [translateMatiere(matiere), d1, d2, comp, String(coeff), moy.toFixed(2), app];
 
     rowData.forEach((val, i) => {
       let xPos = x + (colAligns[i] === "center" ? colWidths[i] / 2 : (colAligns[i] === "right" ? colWidths[i] - 2 : 2));
@@ -1596,13 +2083,13 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(16, 47, 40);
-  doc.text(`Total Coefficients : ${totalCoeff}`, 18, curY + 6);
-  doc.text(`Total Points : ${totalPoints.toFixed(2)}`, 18, curY + 12);
+  doc.text(t('pdf_total_coefficients', { n: totalCoeff }), 18, curY + 6);
+  doc.text(t('pdf_total_points', { n: totalPoints.toFixed(2) }), 18, curY + 12);
 
-  doc.text(`Moyenne Semestrielle : ${moyenneGen.toFixed(2)} / 20`, pageWidth / 2 - 10, curY + 6);
+  doc.text(t('pdf_moyenne_semestrielle', { value: moyenneGen.toFixed(2) }), pageWidth / 2 - 10, curY + 6);
 
   doc.setTextColor(210, 100, 30);
-  doc.text(`Mention : ${mentionObj.label}`, pageWidth - 18, curY + 9, { align: "right" });
+  doc.text(t('pdf_mention', { label: mentionObj.label }), pageWidth - 18, curY + 9, { align: "right" });
 
   // Bloc Cadre de Signatures
   curY += 24;
@@ -1611,35 +2098,35 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   doc.setTextColor(16, 47, 40);
 
   // Cadre 1 : Parents
-  doc.text("Observation & Signature des Parents", 14, curY);
+  doc.text(t('pdf_obs_parents'), 14, curY);
   doc.setDrawColor(180, 180, 180);
   doc.setLineWidth(0.3);
   doc.rect(14, curY + 3, 55, 25);
 
   // Cadre 2 : Professeur Principal
-  doc.text("Le Professeur Principal", pageWidth / 2 - 27.5, curY);
+  doc.text(t('pdf_prof_principal'), pageWidth / 2 - 27.5, curY);
   doc.rect(pageWidth / 2 - 27.5, curY + 3, 55, 25);
 
   // Cadre 3 : Le Proviseur
-  doc.text("Le Commandant d'école", pageWidth - 69, curY);
+  doc.text(t('pdf_commandant'), pageWidth - 69, curY);
   doc.rect(pageWidth - 69, curY + 3, 55, 25);
 
   doc.setFont("helvetica", "italic");
   doc.setFontSize(7.5);
   doc.setTextColor(120, 120, 120);
-  doc.text("Signature et Cachet Officiel", pageWidth - 41.5, curY + 16, { align: "center" });
+  doc.text(t('pdf_signature_cachet'), pageWidth - 41.5, curY + 16, { align: "center" });
 
   // Bas de page
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(120, 120, 120);
-  doc.text("Document officiel généré par SUNU MOYENNE - Lycée Nation-Armée pour la Qualité et l'Equité", pageWidth / 2, pageHeight - 12, { align: "center" });
+  doc.text(t('pdf_footer_doc'), pageWidth / 2, pageHeight - 12, { align: "center" });
 
   doc.save(`Bulletin_${prenom}_${nom}_${classe}_${semestreVal}.pdf`);
 }
 
-const PDF_BUTTON_DEFAULT_LABEL = 'Télécharger mon bulletin (PDF)';
-const PDF_BUTTON_SUCCESS_LABEL = 'Bulletin téléchargé';
+function PDF_BUTTON_DEFAULT_LABEL_FN() { return t('pdf_button_default'); }
+function PDF_BUTTON_SUCCESS_LABEL_FN() { return t('pdf_button_success'); }
 
 function setPdfButtonLabel(text) {
   const label = boutonTelechargerPdf?.querySelector('.pdf-button-label');
@@ -1653,7 +2140,7 @@ function handleTelechargerBulletinClick() {
   boutonTelechargerPdf.classList.add('is-loading');
   boutonTelechargerPdf.disabled = true;
   boutonTelechargerPdf.setAttribute('aria-busy', 'true');
-  setPdfButtonLabel('Génération en cours…');
+  setPdfButtonLabel(t('pdf_button_generating'));
 
   const finishLoading = (success) => {
     boutonTelechargerPdf.classList.remove('is-loading');
@@ -1662,18 +2149,18 @@ function handleTelechargerBulletinClick() {
       // Bref état de succès (coche + barre pleine) avant de revenir à l'état initial :
       // donne une confirmation claire que le bulletin a bien été généré.
       boutonTelechargerPdf.classList.add('is-success');
-      setPdfButtonLabel(PDF_BUTTON_SUCCESS_LABEL);
+      setPdfButtonLabel(PDF_BUTTON_SUCCESS_LABEL_FN());
 
       window.setTimeout(() => {
         boutonTelechargerPdf.classList.remove('is-success');
         boutonTelechargerPdf.disabled = false;
         boutonTelechargerPdf.removeAttribute('aria-busy');
-        setPdfButtonLabel(PDF_BUTTON_DEFAULT_LABEL);
+        setPdfButtonLabel(PDF_BUTTON_DEFAULT_LABEL_FN());
       }, 1300);
     } else {
       boutonTelechargerPdf.disabled = false;
       boutonTelechargerPdf.removeAttribute('aria-busy');
-      setPdfButtonLabel(PDF_BUTTON_DEFAULT_LABEL);
+      setPdfButtonLabel(PDF_BUTTON_DEFAULT_LABEL_FN());
     }
   };
 
@@ -1686,7 +2173,7 @@ function handleTelechargerBulletinClick() {
       finishLoading(true);
     } catch (error) {
       console.error('Erreur lors de la génération du PDF :', error);
-      setResult('Une erreur est survenue pendant la génération du bulletin. Veuillez réessayer.', true);
+      setResult(t('msg_erreur_pdf'), true);
       finishLoading(false);
     }
   }, 30);
@@ -1706,11 +2193,11 @@ tableBody.addEventListener('click', function (event) {
   if (!classe || !note) return;
 
   if (actionButton.dataset.action === 'delete') {
-    if (!window.confirm(`Supprimer la matière « ${matiere} » ?`)) return;
+    if (!window.confirm(t('confirm_supprimer_matiere', { matiere: translateMatiere(matiere) }))) return;
     delete notes[matiere];
     localStorage.setItem(getClassStorageKey(classe), JSON.stringify(notes));
     renderTableMatiere();
-    setResult(`La matière ${matiere} a été supprimée.`);
+    setResult(t('msg_matiere_supprimee', { matiere: translateMatiere(matiere) }));
     return;
   }
 
@@ -1729,15 +2216,15 @@ tableBody.addEventListener('click', function (event) {
   if (compositionRadio) compositionRadio.checked = true;
   toggleCompositionField();
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  setResult(`Les données de ${matiere} sont prêtes à être modifiées.`);
+  setResult(t('msg_matiere_prete_modif', { matiere: translateMatiere(matiere) }));
 });
 
 boutonReset.addEventListener('click', function () {
   const classe = classeSelect.value.trim();
 
   const confirmMessage = classe
-    ? `Toutes les notes de la classe ${classe} (Semestre 1 et 2) seront définitivement supprimées. Voulez-vous continuer ?`
-    : 'Toutes les données enregistrées (toutes les classes et matières) seront définitivement supprimées. Voulez-vous continuer ?';
+    ? t('confirm_reset_classe', { classe })
+    : t('confirm_reset_all');
 
   if (!window.confirm(confirmMessage)) return;
 
@@ -1756,9 +2243,9 @@ boutonReset.addEventListener('click', function () {
   });
   toggleCompositionField();
   renderTableMatiere();
-  setResult('Les données ont été réinitialisées avec succès.', false);
+  setResult(t('msg_donnees_reinitialisees'), false);
   if (!classe) {
-    matiereSelect.innerHTML = '<option value="">-- Sélectionner une matière --</option>';
+    matiereSelect.innerHTML = `<option value="">${t('option_matiere_default')}</option>`;
     classeSelect.value = '';
     langueGroup.hidden = true;
   }
@@ -1788,11 +2275,12 @@ restoreFaviconBadgeFromStorage();
       btn.setAttribute('aria-pressed', String(dark));
       const label = btn.querySelector('.theme-label');
       const icon = btn.querySelector('.theme-icon');
-      if (label) label.textContent = dark ? 'Mode clair' : 'Mode sombre';
+      if (label) label.textContent = dark ? t('theme_btn_to_light') : t('theme_btn_to_dark');
       if (icon) icon.textContent = dark ? '☀️' : '🌙';
     }
   }
 
+  window.applyThemeLabels = applyTheme;
   applyTheme();
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -1801,6 +2289,36 @@ restoreFaviconBadgeFromStorage();
     document.getElementById('toggle-theme-btn')?.addEventListener('click', () => {
       save(THEME_KEY, getTheme() === 'dark' ? 'light' : 'dark');
       applyTheme();
+    });
+  });
+})();
+
+/* =========================================================
+   LANGUE FR / EN
+   ========================================================= */
+(() => {
+  function applyLangButton() {
+    const btn = document.getElementById('toggle-lang-btn');
+    if (!btn) return;
+    const label = btn.querySelector('.lang-label');
+    if (label) label.textContent = t('lang_switch_btn');
+    btn.setAttribute('aria-label', getLang() === 'fr' ? 'Passer en anglais' : 'Switch to French');
+  }
+
+  applyStaticTranslations();
+  applyLangButton();
+  setPdfButtonLabel(t('pdf_button_default'));
+
+  document.addEventListener('DOMContentLoaded', () => {
+    applyStaticTranslations();
+    applyLangButton();
+    setPdfButtonLabel(t('pdf_button_default'));
+
+    document.getElementById('toggle-lang-btn')?.addEventListener('click', () => {
+      setLang(getLang() === 'fr' ? 'en' : 'fr');
+      applyStaticTranslations();
+      applyLangButton();
+      refreshDynamicTranslatedTexts();
     });
   });
 })();

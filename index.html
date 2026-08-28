@@ -22,9 +22,9 @@
 
     <div id="device-modal" class="device-modal" role="dialog" aria-modal="true" aria-labelledby="device-modal-title">
       <div class="device-modal-card">
-        <p class="eyebrow">Bienvenue sur SUNU MOYENNE</p>
-        <h2 id="device-modal-title">Quel appareil utilisez-vous ?</h2>
-        <p class="device-modal-subtitle">
+        <p class="eyebrow" data-i18n="device_modal_eyebrow">Bienvenue sur SUNU MOYENNE</p>
+        <h2 id="device-modal-title" data-i18n="device_modal_title">Quel appareil utilisez-vous ?</h2>
+        <p class="device-modal-subtitle" data-i18n="device_modal_subtitle">
           Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.
         </p>
 
@@ -34,7 +34,7 @@
               <rect x="14" y="4" width="20" height="40" rx="4"></rect>
               <line x1="20" y1="38" x2="28" y2="38"></line>
             </svg>
-            <span>Téléphone</span>
+            <span data-i18n="device_phone">Téléphone</span>
           </button>
 
           <button type="button" class="device-option" data-device="tablette">
@@ -42,7 +42,7 @@
               <rect x="7" y="6" width="34" height="36" rx="4"></rect>
               <line x1="21" y1="36" x2="27" y2="36"></line>
             </svg>
-            <span>Tablette</span>
+            <span data-i18n="device_tablet">Tablette</span>
           </button>
 
           <button type="button" class="device-option" data-device="ordinateur">
@@ -51,7 +51,7 @@
               <line x1="18" y1="40" x2="30" y2="40"></line>
               <line x1="24" y1="32" x2="24" y2="40"></line>
             </svg>
-            <span>Ordinateur</span>
+            <span data-i18n="device_computer">Ordinateur</span>
           </button>
         </div>
       </div>
@@ -76,6 +76,10 @@
             <span class="theme-icon" aria-hidden="true">🌙</span>
             <span class="theme-label">Mode sombre</span>
           </button>
+          <button type="button" id="toggle-lang-btn" class="device-change-btn" aria-label="Passer en anglais">
+            <span class="lang-icon" aria-hidden="true">🌐</span>
+            <span class="lang-label">English</span>
+          </button>
         </div>
         <button type="button" id="toggle-son-btn" class="device-change-btn" aria-pressed="true">
           <svg class="son-icon-on" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -96,30 +100,30 @@
             <line x1="14" y1="33" x2="25" y2="33"></line>
             <rect x="34" y="14" width="9" height="16" rx="2"></rect>
           </svg>
-          <span>Changer d'appareil</span>
+          <span data-i18n="change_device_btn">Changer d'appareil</span>
         </button>
       </header>
 
       <main class="hero">
         <section class="info-panel">
-          <p class="eyebrow">Outil scolaire officiel</p>
-          <h1>Calculez votre moyenne de matière et semestrielle en quelques secondes</h1>
-          <p class="subtitle">
+          <p class="eyebrow" data-i18n="hero_eyebrow">Outil scolaire officiel</p>
+          <h1 data-i18n="hero_h1">Calculez votre moyenne de matière et semestrielle en quelques secondes</h1>
+          <p class="subtitle" data-i18n="hero_subtitle">
             Renseignez vos matières, vos notes et leurs coefficients pour obtenir votre moyenne en quelques secondes. Générez ensuite un bulletin scolaire clair, téléchargeable en PDF, aussi bien sur téléphone que sur ordinateur.
           </p>
 
           <div class="stats">
             <div>
               <strong>2</strong>
-              <span>Devoirs</span>
+              <span data-i18n="stat_devoirs_label">Devoirs</span>
             </div>
             <div>
               <strong>1</strong>
-              <span>Composition</span>
+              <span data-i18n="stat_composition_label">Composition</span>
             </div>
             <div>
-              <strong>Coeff.</strong>
-              <span>Personnalisé</span>
+              <strong data-i18n="stat_coeff_label">Coeff.</strong>
+              <span data-i18n="stat_coeff_value">Personnalisé</span>
             </div>
           </div>
 
@@ -136,28 +140,28 @@
           </div>
 
           <div class="quote-of-day" id="quote-of-day">
-            <span class="quote-of-day-label">Conseil du jour</span>
+            <span class="quote-of-day-label" data-i18n="quote_of_day_label">Conseil du jour</span>
             <p class="quote-of-day-text" id="quote-of-day-text"></p>
           </div>
         </section>
 
         <section class="calculator-card">
-          <h2>Formulaire</h2>
+          <h2 data-i18n="calculator_h2">Formulaire</h2>
 
           <ol class="steps-timeline" id="steps-timeline" aria-label="Étapes à suivre">
             <li class="step-item" data-step="1">
               <span class="step-number">1</span>
-              <span class="step-label">Renseigner les infos</span>
+              <span class="step-label" data-i18n="step1_label">Renseigner les infos</span>
             </li>
             <li class="step-connector" aria-hidden="true"></li>
             <li class="step-item" data-step="2">
               <span class="step-number">2</span>
-              <span class="step-label">Ajouter les matières</span>
+              <span class="step-label" data-i18n="step2_label">Ajouter les matières</span>
             </li>
             <li class="step-connector" aria-hidden="true"></li>
             <li class="step-item" data-step="3">
               <span class="step-number">3</span>
-              <span class="step-label">Télécharger le bulletin</span>
+              <span class="step-label" data-i18n="step3_label">Télécharger le bulletin</span>
             </li>
           </ol>
 
@@ -171,20 +175,20 @@
           <form id="moyenne-form">
             <div class="two-columns">
               <div class="field-group">
-                <label for="nom">Nom</label>
-                <input type="text" id="nom" name="nom" autocomplete="family-name" placeholder="Ex : Diop" required />
+                <label for="nom" data-i18n="label_nom">Nom</label>
+                <input type="text" id="nom" name="nom" autocomplete="family-name" placeholder="Ex : Diop" data-i18n-placeholder="placeholder_nom" required />
               </div>
 
               <div class="field-group">
-                <label for="prenom">Prénom</label>
-                <input type="text" id="prenom" name="prenom" autocomplete="given-name" placeholder="Ex : Mamadou" required />
+                <label for="prenom" data-i18n="label_prenom">Prénom</label>
+                <input type="text" id="prenom" name="prenom" autocomplete="given-name" placeholder="Ex : Mamadou" data-i18n-placeholder="placeholder_prenom" required />
               </div>
             </div>
 
             <div class="field-group">
-              <label for="classe">Classe</label>
+              <label for="classe" data-i18n="label_classe">Classe</label>
               <select id="classe" name="classe" required>
-                <option value="">-- Sélectionner votre classe --</option>
+                <option value="" data-i18n="option_classe_default">-- Sélectionner votre classe --</option>
                 <option value="6e">6e</option>
                 <option value="5e">5e</option>
                 <option value="4e">4e</option>
@@ -196,42 +200,42 @@
             </div>
 
             <fieldset class="field-group">
-              <legend>Semestre</legend>
+              <legend data-i18n="legend_semestre">Semestre</legend>
               <div class="choice-group" role="radiogroup" aria-label="Choix du semestre">
                 <label class="choice-option">
                   <input type="radio" name="semestre" value="Semestre1" checked />
-                  <span>Semestre 1</span>
+                  <span data-i18n="radio_semestre1">Semestre 1</span>
                 </label>
                 <label class="choice-option">
                   <input type="radio" name="semestre" value="Semestre2" />
-                  <span>Semestre 2</span>
+                  <span data-i18n="radio_semestre2">Semestre 2</span>
                 </label>
               </div>
             </fieldset>
 
             <fieldset class="field-group" id="langue-group" hidden>
-              <legend>Quelle langue choisissez-vous ?</legend>
+              <legend data-i18n="legend_langue">Quelle langue choisissez-vous ?</legend>
               <div class="choice-group" role="radiogroup" aria-label="Choix de langue">
                 <label class="choice-option">
                   <input type="radio" name="langue" value="Espagnol" />
-                  <span>Espagnol</span>
+                  <span data-i18n="opt_espagnol">Espagnol</span>
                 </label>
                 <label class="choice-option">
                   <input type="radio" name="langue" value="Arabe" />
-                  <span>Arabe</span>
+                  <span data-i18n="opt_arabe">Arabe</span>
                 </label>
               </div>
             </fieldset>
 
             <div class="field-group">
-              <label for="matiere">Matière</label>
+              <label for="matiere" data-i18n="label_matiere">Matière</label>
               <select id="matiere" name="matiere" required>
-                <option value="">-- Sélectionner une matière --</option>
+                <option value="" data-i18n="option_matiere_default">-- Sélectionner une matière --</option>
               </select>
             </div>
 
             <div class="field-group">
-              <label for="coefficient">Coefficient</label>
+              <label for="coefficient" data-i18n="label_coefficient">Coefficient</label>
               <input
                 type="number"
                 id="coefficient"
@@ -240,6 +244,7 @@
                 max="8"
                 step="1"
                 placeholder="Ex : 4"
+                data-i18n-placeholder="placeholder_coefficient"
                 inputmode="numeric"
                 required
               />
@@ -247,7 +252,7 @@
 
             <div class="two-columns">
               <div class="field-group">
-                <label for="devoir1">Note de devoir 1</label>
+                <label for="devoir1" data-i18n="label_devoir1">Note de devoir 1</label>
                 <input
                   type="text"
                   id="devoir1"
@@ -256,13 +261,14 @@
                   max="20"
                   pattern="(?:[0-9]|1[0-9]|20)(?:[,.](?:25|50|75))?"
                   placeholder="Ex : 15,25"
+                  data-i18n-placeholder="placeholder_devoir1"
                   inputmode="decimal"
                   required
                 />
               </div>
 
               <div class="field-group">
-                <label for="devoir2">Note de devoir 2</label>
+                <label for="devoir2" data-i18n="label_devoir2">Note de devoir 2</label>
                 <input
                   type="text"
                   id="devoir2"
@@ -271,6 +277,7 @@
                   max="20"
                   pattern="(?:[0-9]|1[0-9]|20)(?:[,.](?:25|50|75))?"
                   placeholder="Ex : 12,25"
+                  data-i18n-placeholder="placeholder_devoir2"
                   inputmode="decimal"
                   required
                 />
@@ -278,21 +285,21 @@
             </div>
 
             <fieldset class="field-group">
-              <legend>La matière comporte-t-elle une composition ?</legend>
+              <legend data-i18n="legend_composition">La matière comporte-t-elle une composition ?</legend>
               <div class="choice-group" role="radiogroup" aria-label="Composition disponible">
                 <label class="choice-option">
                   <input type="radio" name="hasComposition" value="oui" checked />
-                  <span>Oui</span>
+                  <span data-i18n="radio_oui">Oui</span>
                 </label>
                 <label class="choice-option">
                   <input type="radio" name="hasComposition" value="non" />
-                  <span>Non</span>
+                  <span data-i18n="radio_non">Non</span>
                 </label>
               </div>
             </fieldset>
 
             <div class="field-group composition-group" id="composition-group">
-              <label for="composition">Note de composition</label>
+              <label for="composition" data-i18n="label_composition">Note de composition</label>
               <input
                 type="text"
                 id="composition"
@@ -301,19 +308,20 @@
                 max="20"
                 pattern="(?:[0-9]|1[0-9]|20)(?:[,.](?:25|50|75))?"
                 placeholder="Ex : 17,25"
+                data-i18n-placeholder="placeholder_composition"
                 inputmode="decimal"
               />
             </div>
 
             <div class="button-row">
-              <button type="submit" class="primary-button">Calculer la moyenne de la matière</button>
-              <button type="button" id="calculer-semestre" class="secondary-button">
+              <button type="submit" class="primary-button" data-i18n="btn_calculer_matiere">Calculer la moyenne de la matière</button>
+              <button type="button" id="calculer-semestre" class="secondary-button" data-i18n="btn_calculer_semestre">
                 Calculer ma moyenne du semestre
               </button>
             </div>
 
             <div class="button-row">
-              <button type="button" id="calculer-annee" class="secondary-button">
+              <button type="button" id="calculer-annee" class="secondary-button" data-i18n="btn_calculer_annee">
                 Calculer ma moyenne annuelle
               </button>
               <button type="button" id="telecharger-bulletin" class="pdf-button">
@@ -321,7 +329,7 @@
                 <svg class="pdf-button-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polyline points="4 13 9 18 20 6"></polyline>
                 </svg>
-                <span class="pdf-button-label">Télécharger mon bulletin (PDF)</span>
+                <span class="pdf-button-label" data-i18n="pdf_button_default">Télécharger mon bulletin (PDF)</span>
                 <span class="pdf-button-progress" aria-hidden="true">
                   <span class="pdf-button-progress-fill"></span>
                 </span>
@@ -329,7 +337,7 @@
             </div>
 
             <div class="button-row reset-row">
-              <button type="button" id="reset-donnees" class="ghost-button">
+              <button type="button" id="reset-donnees" class="ghost-button" data-i18n="btn_reset">
                 Réinitialiser les données
               </button>
             </div>
@@ -338,7 +346,7 @@
       </main>
 
       <section id="resultat" class="result-card" aria-live="polite">
-        <p class="result-label">Résultat</p>
+        <p class="result-label" data-i18n="result_label">Résultat</p>
         <div class="result-content">
           <div class="result-placeholder">
             <svg class="result-placeholder-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -354,7 +362,7 @@
               <circle cx="24" cy="35" r="1.6" fill="currentColor" stroke="none"></circle>
               <circle cx="31.5" cy="35" r="1.6" fill="currentColor" stroke="none"></circle>
             </svg>
-            <h3>Votre moyenne apparaîtra ici.</h3>
+            <h3 data-i18n="result_placeholder_h3">Votre moyenne apparaîtra ici.</h3>
           </div>
         </div>
       </section>
@@ -362,7 +370,7 @@
       <section id="conseiller-scolaire" class="advisor-card" aria-live="polite" hidden>
         <div class="advisor-header">
           <span class="advisor-icon" aria-hidden="true">🎓</span>
-          <h3>Conseiller scolaire</h3>
+          <h3 data-i18n="advisor_header_h3">Conseiller scolaire</h3>
         </div>
         <div class="advisor-body">
           <p class="advisor-line advisor-strong" id="advisor-points-forts">
@@ -382,7 +390,7 @@
 
       <section id="tableau-matieres" class="subjects-card" aria-live="polite">
         <div class="subjects-header">
-          <h3>Matières enregistrées</h3>
+          <h3 data-i18n="subjects_h3">Matières enregistrées</h3>
           <div class="subjects-header-right">
             <span id="classe-label">Aucune classe sélectionnée</span>
             <button type="button" id="toggle-comparaison-btn" class="compare-toggle-btn" hidden>
@@ -399,11 +407,11 @@
           <table>
             <thead>
               <tr>
-                <th>Matière</th>
-                <th>Moyenne</th>
-                <th>Coefficient</th>
-                <th>Points</th>
-                <th>Actions</th>
+                <th data-i18n="th_matiere">Matière</th>
+                <th data-i18n="th_moyenne">Moyenne</th>
+                <th data-i18n="th_coefficient">Coefficient</th>
+                <th data-i18n="th_points">Points</th>
+                <th data-i18n="th_actions">Actions</th>
               </tr>
             </thead>
             <tbody id="matiere-table-body">
@@ -413,8 +421,8 @@
                     <path d="M6 14a3 3 0 0 1 3-3h9l3 4h18a3 3 0 0 1 3 3v20a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V14Z"></path>
                     <path d="M18 27l4 4 8-9"></path>
                   </svg>
-                  <p class="empty-state-title">Aucune matière enregistrée pour le moment</p>
-                  <p class="empty-state-subtitle">Ajoutez votre première matière ci-dessus pour voir apparaître votre tableau.</p>
+                  <p class="empty-state-title" data-i18n="empty_state_title">Aucune matière enregistrée pour le moment</p>
+                  <p class="empty-state-subtitle" data-i18n="empty_state_subtitle">Ajoutez votre première matière ci-dessus pour voir apparaître votre tableau.</p>
                 </td>
               </tr>
             </tbody>
@@ -426,7 +434,7 @@
         <div class="comparison-header">
           <span class="comparison-icon" aria-hidden="true">📊</span>
           <div>
-            <h3>Comparaison Semestre 1 / Semestre 2</h3>
+            <h3 data-i18n="comparison_h3">Comparaison Semestre 1 / Semestre 2</h3>
             <span class="comparison-subtitle" id="comparaison-subtitle"></span>
           </div>
         </div>
@@ -437,17 +445,17 @@
         <div class="faq-header">
           <span class="faq-icon" aria-hidden="true">❓</span>
           <div>
-            <h3>Comment ça marche ?</h3>
-            <span class="faq-subtitle">Comprendre le calcul de votre moyenne en quelques points</span>
+            <h3 data-i18n="faq_h3">Comment ça marche ?</h3>
+            <span class="faq-subtitle" data-i18n="faq_subtitle">Comprendre le calcul de votre moyenne en quelques points</span>
           </div>
         </div>
 
         <div class="faq-list" id="faq-list">
           <details class="faq-item">
-            <summary>Comment est calculée la moyenne d'une matière ?</summary>
+            <summary data-i18n="faq_q1">Comment est calculée la moyenne d'une matière ?</summary>
             <div class="faq-answer">
               <div class="faq-answer-inner">
-                <p>
+                <p data-i18n="faq_a1">
                   Sans composition : la moyenne est la moyenne de vos deux devoirs.
                   Avec composition : la moyenne des deux devoirs est additionnée à la note de composition, puis le tout est divisé par 2
                   (les devoirs et la composition ont le même poids).
@@ -457,10 +465,10 @@
           </details>
 
           <details class="faq-item">
-            <summary>Qu'est-ce qu'un coefficient et à quoi sert-il ?</summary>
+            <summary data-i18n="faq_q2">Qu'est-ce qu'un coefficient et à quoi sert-il ?</summary>
             <div class="faq-answer">
               <div class="faq-answer-inner">
-                <p>
+                <p data-i18n="faq_a2">
                   Le coefficient représente l'importance d'une matière dans votre semestre. Une matière à fort coefficient (ex : 4 ou 5)
                   pèse davantage dans votre moyenne générale qu'une matière à faible coefficient (ex : 1 ou 2).
                   Les points d'une matière sont calculés en multipliant sa moyenne par son coefficient.
@@ -470,10 +478,10 @@
           </details>
 
           <details class="faq-item">
-            <summary>Comment est calculée la moyenne du semestre ?</summary>
+            <summary data-i18n="faq_q3">Comment est calculée la moyenne du semestre ?</summary>
             <div class="faq-answer">
               <div class="faq-answer-inner">
-                <p>
+                <p data-i18n="faq_a3">
                   On additionne les <strong>points</strong> de toutes les matières de la classe
                   (moyenne × coefficient de chaque matière), puis on divise le total par la somme de tous les coefficients.
                   C'est donc une moyenne pondérée.
@@ -483,10 +491,10 @@
           </details>
 
           <details class="faq-item">
-            <summary>Comment est calculée la moyenne annuelle ?</summary>
+            <summary data-i18n="faq_q4">Comment est calculée la moyenne annuelle ?</summary>
             <div class="faq-answer">
               <div class="faq-answer-inner">
-                <p>
+                <p data-i18n="faq_a4">
                   La moyenne annuelle est la moyenne simple des moyennes des semestres 1 et 2,
                   calculée sur la base des matières renseignées dans les deux semestres.
                   Pensez à remplir toutes les matières pour les deux semestres pour obtenir un résultat fiable.
@@ -496,10 +504,10 @@
           </details>
 
           <details class="faq-item">
-            <summary>Mes notes sont-elles sauvegardées ?</summary>
+            <summary data-i18n="faq_q5">Mes notes sont-elles sauvegardées ?</summary>
             <div class="faq-answer">
               <div class="faq-answer-inner">
-                <p>
+                <p data-i18n="faq_a5">
                   Oui, vos notes sont enregistrées automatiquement sur votre appareil (localStorage) pendant que vous les calculez.
                   Elles restent disponibles lors de vos prochaines visites sur ce même appareil.
                   Pensez à télécharger votre bulletin en PDF pour garder une trace de vos résultats.
@@ -527,9 +535,9 @@
           />
         </a>
         <p class="footer-copyright">
-          © 2026 LYNAQE Sédhiou — Tous droits réservés
+          © 2026 LYNAQE Sédhiou — <span data-i18n="footer_rights">Tous droits réservés</span>
           <span class="footer-separator" aria-hidden="true">·</span>
-          Fait par <span class="footer-credit">Ahmadou Bamba Bousso SANKHARE</span>
+          <span data-i18n="footer_credit_label">Fait par</span> <span class="footer-credit">Ahmadou Bamba Bousso SANKHARE</span>
         </p>
       </footer>
         </div>
