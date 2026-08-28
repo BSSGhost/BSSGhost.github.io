@@ -2244,19 +2244,22 @@ th {
 
 /* Conteneur animé : on fait "glisser" la hauteur de 0 à auto.
    La grille avec grid-template-rows est la technique la plus fiable
-   pour animer l'ouverture d'un contenu à hauteur variable. */
+   pour animer l'ouverture d'un contenu à hauteur variable, dans les deux sens.
+   Le contenu reste toujours dans le DOM (details maintenu ouvert via JS) et
+   c'est la classe .is-faq-closed qui replie/ouvre le bloc, ce qui permet
+   d'animer aussi bien la fermeture que l'ouverture. */
 .faq-answer {
   display: grid;
-  grid-template-rows: 0fr;
+  grid-template-rows: 1fr;
   transition: grid-template-rows 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.faq-answer.is-faq-closed {
+  grid-template-rows: 0fr;
 }
 
 .faq-answer-inner {
   overflow: hidden;
-}
-
-.faq-item[open] .faq-answer {
-  grid-template-rows: 1fr;
 }
 
 .faq-answer-inner p {
@@ -2270,7 +2273,7 @@ th {
   transition: opacity 0.3s ease 0.05s, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.05s;
 }
 
-.faq-item[open] .faq-answer-inner p {
+.faq-answer:not(.is-faq-closed) .faq-answer-inner p {
   opacity: 1;
   transform: translateY(0);
 }

@@ -1804,3 +1804,59 @@ restoreFaviconBadgeFromStorage();
     });
   });
 })();
+
+/* =========================================================
+   FAQ — animation d'ouverture / fermeture
+   ========================================================= */
+(() => {
+  const items = document.querySelectorAll('.faq-item');
+  if (!items.length) return;
+
+  // Durée de l'animation, alignée sur la transition CSS (0.4s).
+  const ANIM_DURATION = 400;
+
+  items.forEach((item) => {
+    const summary = item.querySelector('summary');
+    const answer = item.querySelector('.faq-answer');
+    if (!summary || !answer) return;
+
+    // Le contenu doit toujours rester dans le DOM pour pouvoir animer
+    // aussi bien la fermeture que l'ouverture. On maintient donc le
+    // <details> ouvert en permanence et on pilote l'affichage via la
+    // classe is-faq-closed (qui replie la grille à hauteur 0).
+    item.open = true;
+    answer.classList.add('is-faq-closed');
+
+    let animating = false;
+
+    function toggleFaq() {
+      // En reduced motion l'animation est instantanée (CSS désactivé) :
+      // on ne bloque pas les clics.
+      if (animating && !prefersReducedMotion) return;
+      animating = true;
+
+      answer.classList.toggle('is-faq-closed');
+
+      // On laisse la transition CSS se terminer avant d'admettre un
+      // nouveau clic (sauf en reduced motion où c'est instantané).
+      window.setTimeout(() => {
+        animating = false;
+      }, prefersReducedMotion ? 0 : ANIM_DURATION);
+    }
+
+    // Clic souris / tactile : on neutralise le basculement natif du
+    // <details> (déjà maintenu ouvert) pour piloter l'animation nous-mêmes.
+    summary.addEventListener('click', (event) => {
+      event.preventDefault();
+      toggleFaq();
+    });
+
+    // Accessibilité clavier : Entrée et Espace déclenchent aussi l'animation.
+    summary.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleFaq();
+      }
+    });
+  });
+})();
