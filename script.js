@@ -127,6 +127,8 @@ const translations = {
     confirm_modal_title: "Êtes-vous sûr ?",
     confirm_modal_ok: "Confirmer",
     confirm_modal_cancel: "Annuler",
+    confirm_modal_close: "Fermer",
+    confirm_modal_info_title: "Information",
     msg_erreur_pdf: "Une erreur est survenue pendant la génération du bulletin. Veuillez réessayer.",
     msg_jspdf_manquant: "Erreur: La bibliothèque jsPDF n'est pas chargée.",
     msg_aucune_note_pdf: "Aucune note enregistrée pour cette classe et ce semestre. Veuillez remplir les notes d'abord.",
@@ -308,6 +310,8 @@ const translations = {
     confirm_modal_title: "Are you sure?",
     confirm_modal_ok: "Confirm",
     confirm_modal_cancel: "Cancel",
+    confirm_modal_close: "Close",
+    confirm_modal_info_title: "Information",
     msg_erreur_pdf: "An error occurred while generating the report card. Please try again.",
     msg_jspdf_manquant: "Error: The jsPDF library is not loaded.",
     msg_aucune_note_pdf: "No grades recorded for this grade level and semester. Please fill in the grades first.",
@@ -1874,7 +1878,7 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
 function generatePDFBulletin() {
   const { jsPDF } = window.jspdf;
   if (!jsPDF) {
-    alert(t('msg_jspdf_manquant'));
+    showInfoDialog(t('msg_jspdf_manquant'));
     return;
   }
 
@@ -1887,7 +1891,7 @@ function generatePDFBulletin() {
   const entries = Object.entries(notes);
 
   if (entries.length === 0) {
-    alert(t('msg_aucune_note_pdf'));
+    showInfoDialog(t('msg_aucune_note_pdf'));
     return;
   }
 
@@ -2398,20 +2402,42 @@ restoreFaviconBadgeFromStorage();
    ========================================================= */
 const confirmModal = {
   el: document.getElementById('confirm-modal'),
+  titleEl: document.getElementById('confirm-modal-title'),
+  iconSvg: document.querySelector('#confirm-modal .confirm-modal-icon svg'),
   messageEl: document.getElementById('confirm-modal-message'),
   okBtn: document.getElementById('confirm-modal-ok'),
   cancelBtn: document.getElementById('confirm-modal-cancel'),
   onConfirm: null,
   closing: false,
 
-  show({ message, onConfirm, danger = true }) {
+  show({ message, onConfirm, danger = true, info = false }) {
     if (!this.el) return;
     this.onConfirm = onConfirm || null;
     this.messageEl.textContent = message;
     this.el.hidden = false;
     this.closing = false;
-    this.el.classList.remove('is-closing', 'is-danger-soft');
-    if (!danger) this.el.classList.add('is-danger-soft');
+    this.el.classList.remove('is-closing', 'is-danger-soft', 'is-info');
+    if (info) {
+      this.el.classList.add('is-info');
+      this.cancelBtn.hidden = true;
+      this.okBtn.textContent = t('confirm_modal_close');
+      this.titleEl.textContent = t('confirm_modal_info_title');
+      this.titleEl.removeAttribute('data-i18n');
+      this.iconSvg.innerHTML =
+        '<circle cx="12" cy="12" r="10"></circle>' +
+        '<line x1="12" y1="16" x2="12" y2="12"></line>' +
+        '<line x1="12" y1="8" x2="12.01" y2="8"></line>';
+    } else {
+      this.cancelBtn.hidden = false;
+      this.okBtn.textContent = t('confirm_modal_ok');
+      this.titleEl.textContent = t('confirm_modal_title');
+      this.titleEl.setAttribute('data-i18n', 'confirm_modal_title');
+      this.iconSvg.innerHTML =
+        '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>' +
+        '<line x1="12" y1="9" x2="12" y2="13"></line>' +
+        '<line x1="12" y1="17" x2="12.01" y2="17"></line>';
+    }
+    if (!danger && !info) this.el.classList.add('is-danger-soft');
     this.okBtn.focus({ preventScroll: true });
   },
 
@@ -2452,4 +2478,8 @@ if (confirmModal.el) {
 
 function showConfirmDialog(options) {
   confirmModal.show(options);
+}
+
+function showInfoDialog(message) {
+  confirmModal.show({ message, info: true });
 }

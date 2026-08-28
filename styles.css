@@ -408,6 +408,24 @@ th {
   color: var(--copper-500);
 }
 
+.confirm-modal.is-info .confirm-ok-btn {
+  background: linear-gradient(160deg, var(--green-700), var(--green-900));
+  box-shadow: 0 10px 22px rgba(23, 75, 61, 0.26);
+}
+
+.confirm-modal.is-info .confirm-ok-btn:hover {
+  background: linear-gradient(160deg, var(--green-600), var(--green-800));
+}
+
+.confirm-modal.is-info .confirm-modal-icon {
+  background: rgba(78, 170, 126, 0.14);
+  color: var(--green-600);
+}
+
+.confirm-modal.is-info .confirm-cancel-btn {
+  display: none;
+}
+
 .device-options {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
