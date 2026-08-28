@@ -1450,6 +1450,14 @@ button:disabled {
   color: var(--red-600);
 }
 
+html.dark-mode .result-card.error {
+  background: linear-gradient(135deg, rgba(217, 60, 60, 0.16), rgba(31, 45, 39, 0.92));
+}
+
+html.dark-mode .result-card.error h3 {
+  color: #f2a3a3;
+}
+
 @keyframes shake {
   10%, 90% { transform: translateX(-1px); }
   20%, 80% { transform: translateX(2px); }
@@ -2933,4 +2941,16 @@ html.dark-mode .advisor-text strong {
 
 html.dark-mode .eyebrow {
   color: var(--yellow-400);
+}
+
+html.dark-mode .radar-grid {
+  stroke: rgba(220, 232, 226, 0.16);
+}
+
+html.dark-mode .radar-axis {
+  stroke: rgba(220, 232, 226, 0.22);
+}
+
+html.dark-mode .radar-label {
+  fill: rgba(220, 232, 226, 0.65);
 }
