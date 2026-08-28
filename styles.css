@@ -2156,6 +2156,128 @@ th {
   padding: 10px 0;
 }
 
+/* =========================================================
+   FAQ — Comment ça marche
+   ========================================================= */
+.faq-card {
+  margin-top: 28px;
+  padding: 22px 20px;
+  background: var(--card-strong);
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  animation: rise-in 0.45s ease both;
+}
+
+.faq-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.faq-icon {
+  flex: 0 0 auto;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.faq-header h3 {
+  margin: 0 0 4px;
+  color: var(--dark);
+  font-size: 1.1rem;
+}
+
+.faq-subtitle {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.faq-item {
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 12px;
+  background: rgba(41, 128, 100, 0.035);
+  overflow: hidden;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  font-weight: 700;
+  color: var(--dark);
+  font-size: 0.92rem;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.faq-item summary::after {
+  content: "▾";
+  flex: 0 0 auto;
+  color: var(--green-600);
+  font-size: 0.85rem;
+  transition: transform 0.25s ease;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary:hover,
+.faq-item summary:focus-visible {
+  background: rgba(41, 128, 100, 0.08);
+  outline: none;
+}
+
+.faq-item[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.faq-item p {
+  margin: 0;
+  padding: 0 16px 16px;
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.faq-item p strong {
+  color: var(--green-700);
+}
+
+html.dark-mode .faq-item {
+  background: rgba(160, 196, 177, 0.06);
+  border-color: rgba(160, 196, 177, 0.12);
+}
+
+html.dark-mode .faq-item summary {
+  color: #f0f7f3;
+}
+
+html.dark-mode .faq-item summary:hover,
+html.dark-mode .faq-item summary:focus-visible {
+  background: rgba(160, 196, 177, 0.1);
+}
+
+html.dark-mode .faq-item p {
+  color: #dce8e2;
+}
+
+html.dark-mode .faq-card {
+  background: #121d18;
+  color: #e6eee9;
+  border-color: rgba(160, 196, 177, 0.14);
+}
+
 .site-footer {
   display: flex;
   flex-direction: column;

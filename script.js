@@ -1458,7 +1458,7 @@ function generatePDFBulletin() {
   doc.text("Un Peuple - Un But - Une Foi", pageWidth - 14, 19, { align: "right" });
   doc.text("MINISTÈRE DE L'ÉDUCATION NATIONALE", pageWidth - 14, 23, { align: "right" });
   doc.setFont("helvetica", "bold");
-  doc.text("Lycéé Nation-Armée pour la Qualité et l'Equité", pageWidth - 14, 27, { align: "right" });
+  doc.text("Lycée Nation-Armée pour la Qualité et l'Equité", pageWidth - 14, 27, { align: "right" });
 
   // Ligne de séparation élégante
   doc.setDrawColor(16, 47, 40);
@@ -1734,6 +1734,12 @@ tableBody.addEventListener('click', function (event) {
 
 boutonReset.addEventListener('click', function () {
   const classe = classeSelect.value.trim();
+
+  const confirmMessage = classe
+    ? `Toutes les notes de la classe ${classe} (Semestre 1 et 2) seront définitivement supprimées. Voulez-vous continuer ?`
+    : 'Toutes les données enregistrées (toutes les classes et matières) seront définitivement supprimées. Voulez-vous continuer ?';
+
+  if (!window.confirm(confirmMessage)) return;
 
   if (classe) {
     localStorage.removeItem(getClassStorageKey(classe, 'Semestre1'));
