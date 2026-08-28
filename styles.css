@@ -2242,15 +2242,52 @@ th {
   transform: rotate(180deg);
 }
 
-.faq-item p {
+/* Conteneur animé : on fait "glisser" la hauteur de 0 à auto.
+   La grille avec grid-template-rows est la technique la plus fiable
+   pour animer l'ouverture d'un contenu à hauteur variable. */
+.faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.faq-answer-inner {
+  overflow: hidden;
+}
+
+.faq-item[open] .faq-answer {
+  grid-template-rows: 1fr;
+}
+
+.faq-answer-inner p {
   margin: 0;
   padding: 0 16px 16px;
   color: var(--text);
   font-size: 0.88rem;
   line-height: 1.65;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.3s ease 0.05s, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.05s;
 }
 
-.faq-item p strong {
+.faq-item[open] .faq-answer-inner p {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-answer {
+    transition: none;
+  }
+
+  .faq-answer-inner p {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+.faq-answer-inner p strong {
   color: var(--green-700);
 }
 
@@ -2268,7 +2305,7 @@ html.dark-mode .faq-item summary:focus-visible {
   background: rgba(160, 196, 177, 0.1);
 }
 
-html.dark-mode .faq-item p {
+html.dark-mode .faq-answer-inner p {
   color: #dce8e2;
 }
 
