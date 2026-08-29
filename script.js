@@ -61,6 +61,10 @@ const translations = {
     legend_langue: "Quelle langue choisissez-vous ?",
     opt_espagnol: "Espagnol",
     opt_arabe: "Arabe",
+    legend_serie: "Quelle série suivez-vous ?",
+    opt_serie_s1: "S1",
+    opt_serie_s2: "S2",
+    coefficient_badge_text: "Coefficient officiel suggéré — modifiable si besoin",
     label_matiere: "Matière",
     option_matiere_default: "-- Sélectionner une matière --",
     label_coefficient: "Coefficient",
@@ -255,6 +259,10 @@ const translations = {
     legend_langue: "Which language do you choose?",
     opt_espagnol: "Spanish",
     opt_arabe: "Arabic",
+    legend_serie: "Which series are you in?",
+    opt_serie_s1: "S1",
+    opt_serie_s2: "S2",
+    coefficient_badge_text: "Suggested official coefficient — editable if needed",
     label_matiere: "Subject",
     option_matiere_default: "-- Select a subject --",
     label_coefficient: "Coefficient",
@@ -530,6 +538,10 @@ const classeSelect = document.getElementById('classe');
 const matiereSelect = document.getElementById('matiere');
 const langueGroup = document.getElementById('langue-group');
 const langueRadios = document.querySelectorAll('input[name="langue"]');
+const serieGroup = document.getElementById('serie-group');
+const serieRadios = document.querySelectorAll('input[name="serie"]');
+const coefficientInput = document.getElementById('coefficient');
+const coefficientBadge = document.getElementById('coefficient-badge');
 const boutonSemestre = document.getElementById('calculer-semestre');
 const boutonReset = document.getElementById('reset-donnees');
 const boutonTelechargerPdf = document.getElementById('telecharger-bulletin');
@@ -1109,6 +1121,79 @@ const matieresCommunesBase = [
   'ECOFAM'
 ];
 
+/* =========================================================
+   COEFFICIENTS OFFICIELS SUGGERES
+   Source lycée (S1/S2) : grille des épreuves du Baccalauréat
+   sénégalais (Office du Bac), complétée pour les matières de
+   bulletin non examinées au Bac (Espagnol, EPS) sur confirmation
+   du porteur du projet. La 6e→3e n'a pas encore de grille
+   officielle confirmée : le pré-remplissage y reste désactivé
+   tant qu'une source fiable n'est pas fournie.
+   ========================================================= */
+const COEFFICIENTS_OFFICIELS = {
+  lycee: {
+    S1: {
+      'Français': 3,
+      'Philosophie': 2,
+      'Histoire Géographie': 2,
+      'Anglais': 2,
+      'Mathématiques': 8,
+      'Sciences Physiques': 8,
+      'SVT': 2,
+      'Espagnol': 2,
+      'EPS': 1
+    },
+    S2: {
+      'Français': 3,
+      'Philosophie': 2,
+      'Histoire Géographie': 2,
+      'Anglais': 2,
+      'Mathématiques': 5,
+      'Sciences Physiques': 6,
+      'SVT': 6,
+      'Espagnol': 2,
+      'EPS': 1
+    }
+  }
+};
+
+const CLASSES_LYCEE = ['2nde', '1er', 'Tle'];
+
+function getCoefficientOfficiel(classe, matiere) {
+  if (!CLASSES_LYCEE.includes(classe)) return null;
+
+  const serie = document.querySelector('input[name="serie"]:checked')?.value;
+  if (!serie) return null;
+
+  const valeur = COEFFICIENTS_OFFICIELS.lycee[serie]?.[matiere];
+  return typeof valeur === 'number' ? valeur : null;
+}
+
+function showCoefficientBadge() {
+  if (!coefficientBadge) return;
+  coefficientBadge.hidden = false;
+  coefficientInput.dataset.suggested = 'true';
+}
+
+function hideCoefficientBadge() {
+  if (!coefficientBadge) return;
+  coefficientBadge.hidden = true;
+  delete coefficientInput.dataset.suggested;
+}
+
+function updateCoefficientSuggestion() {
+  const classe = classeSelect.value;
+  const matiere = matiereSelect.value;
+  const suggestion = matiere ? getCoefficientOfficiel(classe, matiere) : null;
+
+  if (suggestion !== null) {
+    coefficientInput.value = suggestion;
+    showCoefficientBadge();
+  } else {
+    hideCoefficientBadge();
+  }
+}
+
 const STORAGE_PREFIX = 'lynaqe_moyennes';
 
 function getSemestreActuel() {
@@ -1362,6 +1447,8 @@ function updateMatieres() {
 
   if (!selectedClasse) {
     langueGroup.hidden = true;
+    serieGroup.hidden = true;
+    hideCoefficientBadge();
     renderTableMatiere();
     return;
   }
@@ -1370,6 +1457,13 @@ function updateMatieres() {
     langueGroup.hidden = false;
   } else {
     langueGroup.hidden = true;
+  }
+
+  if (CLASSES_LYCEE.includes(selectedClasse)) {
+    serieGroup.hidden = false;
+  } else {
+    serieGroup.hidden = true;
+    hideCoefficientBadge();
   }
 
   const matieres = getMatieresDisponiblesPourClasse(selectedClasse);
@@ -1414,9 +1508,18 @@ classeSelect.addEventListener('change', function () {
   langueRadios.forEach((radio) => {
     radio.checked = false;
   });
+  serieRadios.forEach((radio) => {
+    radio.checked = false;
+  });
   updateMatieres();
   if (nextSubjectBtn) nextSubjectBtn.hidden = true;
 });
+
+matiereSelect.addEventListener('change', updateCoefficientSuggestion);
+
+serieRadios.forEach((radio) => radio.addEventListener('change', updateCoefficientSuggestion));
+
+coefficientInput.addEventListener('input', hideCoefficientBadge);
 
 function toggleCompositionField() {
   const hasComposition = document.querySelector('input[name="hasComposition"]:checked')?.value === 'oui';
@@ -2301,6 +2404,7 @@ tableBody.addEventListener('click', function (event) {
 
   matiereSelect.value = matiere;
   document.getElementById('coefficient').value = note.coefficient ?? '';
+  hideCoefficientBadge();
   document.getElementById('devoir1').value = note.devoir1 ?? '';
   document.getElementById('devoir2').value = note.devoir2 ?? '';
   compositionInput.value = note.composition ?? '';

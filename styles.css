@@ -1201,6 +1201,39 @@ form {
   gap: 8px;
 }
 
+.coefficient-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(78, 170, 126, 0.12);
+  color: #2f7a52;
+  font-size: 0.78rem;
+  font-weight: 600;
+  width: fit-content;
+  animation: fadeInBadge 0.2s ease;
+}
+
+.coefficient-badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4eaa7e;
+  color: #fff;
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
+@keyframes fadeInBadge {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 label {
   font-weight: 600;
   color: var(--dark);

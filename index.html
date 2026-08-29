@@ -274,6 +274,20 @@
               </div>
             </fieldset>
 
+            <fieldset class="field-group" id="serie-group" hidden>
+              <legend data-i18n="legend_serie">Quelle série suivez-vous ?</legend>
+              <div class="choice-group" role="radiogroup" aria-label="Choix de série">
+                <label class="choice-option">
+                  <input type="radio" name="serie" value="S1" />
+                  <span data-i18n="opt_serie_s1">S1</span>
+                </label>
+                <label class="choice-option">
+                  <input type="radio" name="serie" value="S2" />
+                  <span data-i18n="opt_serie_s2">S2</span>
+                </label>
+              </div>
+            </fieldset>
+
             <div class="field-group">
               <label for="matiere" data-i18n="label_matiere">Matière</label>
               <select id="matiere" name="matiere" required>
@@ -295,6 +309,10 @@
                 inputmode="numeric"
                 required
               />
+              <p class="coefficient-badge" id="coefficient-badge" hidden>
+                <span class="coefficient-badge-icon" aria-hidden="true">✓</span>
+                <span data-i18n="coefficient_badge_text">Coefficient officiel suggéré — modifiable si besoin</span>
+              </p>
             </div>
 
             <div class="two-columns">
