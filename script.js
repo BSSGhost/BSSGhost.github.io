@@ -154,7 +154,7 @@ const translations = {
     progress_label_default: "{done} / {total} matières renseignées",
     progress_label_complete: "{done} / {total} matières • Bulletin prêt !",
 
-    compare_btn_open: "Comparer S1 / S2",
+    compare_btn_open: "Comparer Sem1 / Sem2",
     compare_btn_close: "Fermer la comparaison",
     compare_subtitle: "Classe : {classe} • {n} matière{s} au total",
     compare_empty: "Aucune matière à comparer pour le moment.",
@@ -348,7 +348,7 @@ const translations = {
     progress_label_default: "{done} / {total} subjects entered",
     progress_label_complete: "{done} / {total} subjects • Report card ready!",
 
-    compare_btn_open: "Compare S1 / S2",
+    compare_btn_open: "Compare Sem1 / Sem2",
     compare_btn_close: "Close comparison",
     compare_subtitle: "Class: {classe} • {n} subject{s} total",
     compare_empty: "No subject to compare yet.",
@@ -1325,12 +1325,12 @@ function renderComparaisonSemestres() {
           </div>
           <div class="compare-bars">
             <div class="compare-bar-line">
-              <span class="compare-bar-label">S1</span>
+              <span class="compare-bar-label">Sem1</span>
               <div class="compare-bar-track"><div class="compare-bar-fill compare-bar-s1" style="width:${widthS1}%"></div></div>
               <span class="compare-bar-value">${moyS1 !== null ? moyS1.toFixed(2) : '—'}</span>
             </div>
             <div class="compare-bar-line">
-              <span class="compare-bar-label">S2</span>
+              <span class="compare-bar-label">Sem2</span>
               <div class="compare-bar-track"><div class="compare-bar-fill compare-bar-s2" style="width:${widthS2}%"></div></div>
               <span class="compare-bar-value">${moyS2 !== null ? moyS2.toFixed(2) : '—'}</span>
             </div>
