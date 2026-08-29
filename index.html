@@ -130,18 +130,47 @@
             Renseignez vos matières, vos notes et leurs coefficients pour obtenir votre moyenne en quelques secondes. Générez ensuite un bulletin scolaire clair, téléchargeable en PDF, aussi bien sur téléphone que sur ordinateur.
           </p>
 
+          <div class="hero-preview" aria-hidden="true">
+            <div class="hero-preview-window">
+              <div class="hero-preview-dots"><span></span><span></span><span></span></div>
+              <span class="hero-preview-tag" data-i18n="hero_preview_tag">Aperçu du bulletin</span>
+            </div>
+            <div class="hero-preview-body">
+              <div class="hero-preview-row" style="--delay: 0">
+                <span class="hero-preview-subject" data-i18n="hero_preview_subject1">Mathématiques</span>
+                <span class="hero-preview-track"><span class="hero-preview-fill grade-bien" style="--value: 82%"></span></span>
+                <span class="hero-preview-grade">16.50</span>
+              </div>
+              <div class="hero-preview-row" style="--delay: 1">
+                <span class="hero-preview-subject" data-i18n="hero_preview_subject2">Français</span>
+                <span class="hero-preview-track"><span class="hero-preview-fill grade-moyen" style="--value: 66%"></span></span>
+                <span class="hero-preview-grade">13.25</span>
+              </div>
+              <div class="hero-preview-row" style="--delay: 2">
+                <span class="hero-preview-subject" data-i18n="hero_preview_subject3">Sciences Physiques</span>
+                <span class="hero-preview-track"><span class="hero-preview-fill grade-bien" style="--value: 75%"></span></span>
+                <span class="hero-preview-grade">15.00</span>
+              </div>
+              <div class="hero-preview-total">
+                <span class="hero-preview-total-label" data-i18n="hero_preview_total_label">Moyenne générale</span>
+                <strong class="hero-preview-total-value" id="hero-preview-value">0.00</strong>
+                <span class="hero-preview-mention" data-i18n="hero_preview_mention">Très bon travail</span>
+              </div>
+            </div>
+          </div>
+
           <div class="stats">
             <div>
-              <strong>2</strong>
-              <span data-i18n="stat_devoirs_label">Devoirs</span>
+              <strong>7</strong>
+              <span data-i18n="stat_classes_label">Classes couvertes (6e → Tle)</span>
             </div>
             <div>
-              <strong>1</strong>
-              <span data-i18n="stat_composition_label">Composition</span>
+              <strong>10+</strong>
+              <span data-i18n="stat_matieres_label">Matières disponibles</span>
             </div>
             <div>
-              <strong data-i18n="stat_coeff_label">Coeff.</strong>
-              <span data-i18n="stat_coeff_value">Personnalisé</span>
+              <strong>100%</strong>
+              <span data-i18n="stat_gratuit_label">Gratuit, en ligne comme hors-ligne</span>
             </div>
           </div>
 
@@ -383,6 +412,13 @@
             <h3 data-i18n="result_placeholder_h3">Votre moyenne apparaîtra ici.</h3>
           </div>
         </div>
+        <button type="button" id="next-subject-btn" class="next-subject-button" hidden>
+          <span data-i18n="next_subject_btn">Matière suivante</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
       </section>
 
       <section id="conseiller-scolaire" class="advisor-card" aria-live="polite" hidden>

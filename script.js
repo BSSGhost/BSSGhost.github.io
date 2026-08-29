@@ -33,6 +33,17 @@ const translations = {
     stat_composition_label: "Composition",
     stat_coeff_label: "Coeff.",
     stat_coeff_value: "Personnalisé",
+    stat_classes_label: "Classes couvertes (6e → Tle)",
+    stat_matieres_label: "Matières disponibles",
+    stat_gratuit_label: "Gratuit, en ligne comme hors-ligne",
+    hero_preview_tag: "Aperçu du bulletin",
+    hero_preview_subject1: "Mathématiques",
+    hero_preview_subject2: "Français",
+    hero_preview_subject3: "Sciences Physiques",
+    hero_preview_total_label: "Moyenne générale",
+    hero_preview_mention: "Très bon travail",
+    next_subject_btn: "Matière suivante",
+    next_subject_done: "Toutes les matières sont renseignées ✓",
     quote_of_day_label: "Conseil du jour",
     calculator_h2: "Formulaire",
     step1_label: "Renseigner les infos",
@@ -216,6 +227,17 @@ const translations = {
     stat_composition_label: "Exam",
     stat_coeff_label: "Coeff.",
     stat_coeff_value: "Custom",
+    stat_classes_label: "Grade levels covered (6th → 12th)",
+    stat_matieres_label: "Subjects available",
+    stat_gratuit_label: "Free, online and offline",
+    hero_preview_tag: "Report card preview",
+    hero_preview_subject1: "Mathematics",
+    hero_preview_subject2: "French",
+    hero_preview_subject3: "Physics",
+    hero_preview_total_label: "Overall average",
+    hero_preview_mention: "Very good work",
+    next_subject_btn: "Next subject",
+    next_subject_done: "All subjects have been entered ✓",
     quote_of_day_label: "Tip of the day",
     calculator_h2: "Form",
     step1_label: "Enter your info",
@@ -529,6 +551,7 @@ const EMPTY_SUBJECTS_ROW_HTML = `
 `;
 
 const classeLabel = document.getElementById('classe-label');
+const nextSubjectBtn = document.getElementById('next-subject-btn');
 const partnerVisuals = document.querySelectorAll('.partner-visual');
 const progressTracker = document.getElementById('progress-tracker');
 const progressTrackerFill = document.getElementById('progress-tracker-fill');
@@ -1383,6 +1406,7 @@ function setResult(message, isError = false) {
     resultat.classList.add('shake');
   }
 
+  if (nextSubjectBtn) nextSubjectBtn.hidden = true;
   masquerConseillerScolaire();
 }
 
@@ -1391,6 +1415,7 @@ classeSelect.addEventListener('change', function () {
     radio.checked = false;
   });
   updateMatieres();
+  if (nextSubjectBtn) nextSubjectBtn.hidden = true;
 });
 
 function toggleCompositionField() {
@@ -1504,12 +1529,71 @@ function calculerMoyenneDeMatiere() {
   });
   masquerConseillerScolaire();
   pulseCard();
+  updateNextSubjectButton(classe);
   return { moyenneMatiere, coefficient };
 }
 
 form.addEventListener('submit', function (event) {
   event.preventDefault();
   calculerMoyenneDeMatiere();
+});
+
+/* =========================================================
+   RACCOURCI "MATIÈRE SUIVANTE"
+   ========================================================= */
+function getMatieresRestantes(classe) {
+  const semestre = getSemestreActuel();
+  const notes = getStoredNotesForClasse(classe, semestre);
+  const matieres = getMatieresDisponiblesPourClasse(classe);
+  return matieres.filter((matiere) => !(matiere in notes));
+}
+
+function updateNextSubjectButton(classe) {
+  if (!nextSubjectBtn) return;
+  const restantes = getMatieresRestantes(classe);
+
+  if (!restantes.length) {
+    nextSubjectBtn.hidden = true;
+    return;
+  }
+
+  nextSubjectBtn.hidden = false;
+  nextSubjectBtn.dataset.nextMatiere = restantes[0];
+}
+
+nextSubjectBtn?.addEventListener('click', () => {
+  const classe = classeSelect.value.trim();
+  if (!classe) return;
+
+  const restantes = getMatieresRestantes(classe);
+
+  if (!restantes.length) {
+    nextSubjectBtn.hidden = true;
+    return;
+  }
+
+  const prochaine = restantes[0];
+  if ([...matiereSelect.options].some((option) => option.value === prochaine)) {
+    matiereSelect.value = prochaine;
+  }
+
+  document.getElementById('coefficient').value = '';
+  document.getElementById('devoir1').value = '';
+  document.getElementById('devoir2').value = '';
+  compositionInput.value = '';
+
+  document.querySelectorAll('.note-input').forEach((input) => {
+    input.classList.remove('is-valid', 'is-invalid');
+  });
+
+  nextSubjectBtn.hidden = true;
+
+  const calculatorCard = document.querySelector('.calculator-card');
+  calculatorCard?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+
+  window.setTimeout(() => {
+    document.getElementById('coefficient')?.focus();
+  }, prefersReducedMotion ? 0 : 350);
 });
 
 function escapeXml(str) {
@@ -2272,6 +2356,33 @@ afficherCitationDuJour();
 updateMatieres();
 renderTableMatiere();
 restoreFaviconBadgeFromStorage();
+animateHeroPreview();
+
+/* =========================================================
+   APERÇU ANIMÉ DU BULLETIN (hero)
+   ========================================================= */
+function animateHeroPreview() {
+  const heroPreviewValue = document.getElementById('hero-preview-value');
+  if (!heroPreviewValue) return;
+
+  const targetValue = 14.85;
+
+  if (prefersReducedMotion) {
+    heroPreviewValue.textContent = targetValue.toFixed(2);
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        animateValue(heroPreviewValue, 0, targetValue, 1100);
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.4 });
+
+  observer.observe(heroPreviewValue.closest('.hero-preview'));
+}
 
 /* =========================================================
    MODE CLAIR/SOMBRE
