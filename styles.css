@@ -3174,40 +3174,30 @@ html.dark-mode {
 }
 
 /* =========================================================
-   TRANSITION CLAIR/SOMBRE — reveal circulaire depuis le bouton
+   TRANSITION CLAIR/SOMBRE — voile circulaire léger (sans API
+   expérimentale, pour rester fiable sur toutes les machines)
    ========================================================= */
-
-/* Navigateurs compatibles View Transitions API (Chrome, Edge, Safari récent) */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
+#theme-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: #101915;
+  clip-path: circle(0px at var(--theme-x, 50%) var(--theme-y, 50%));
+  will-change: clip-path;
 }
 
-::view-transition-old(root) { z-index: 1; }
-::view-transition-new(root) { z-index: 2; }
-
-html.theme-animating::view-transition-new(root) {
-  animation: theme-circle-reveal 0.65s cubic-bezier(0.65, 0, 0.35, 1);
+#theme-reveal-overlay.grow {
+  transition: clip-path 0.48s cubic-bezier(0.65, 0, 0.35, 1);
+  clip-path: circle(var(--theme-radius, 150%) at var(--theme-x, 50%) var(--theme-y, 50%));
 }
 
-@keyframes theme-circle-reveal {
-  from { clip-path: circle(0px at var(--theme-x, 50%) var(--theme-y, 50%)); }
-  to   { clip-path: circle(var(--theme-radius, 140%) at var(--theme-x, 50%) var(--theme-y, 50%)); }
+#theme-reveal-overlay.shrink {
+  transition: clip-path 0.48s cubic-bezier(0.65, 0, 0.35, 1);
+  clip-path: circle(0px at var(--theme-x, 50%) var(--theme-y, 50%));
 }
 
-/* Repli pour les navigateurs sans View Transitions API : léger fondu, sans
-   transition property-par-property (évite les backgrounds en dégradé qui
-   ne s'interpolent pas et donnent un rendu saccadé) */
-body {
-  transition: opacity 0.18s ease;
-}
-
-html.theme-fade body {
-  opacity: 0.45;
-}
-
-/* Petite pop d'icône lune/soleil au clic, dans tous les cas */
+/* Petite pop d'icône lune/soleil au clic */
 @keyframes theme-icon-pop {
   0%   { transform: scale(1) rotate(0deg); }
   45%  { transform: scale(0.55) rotate(160deg); opacity: 0.35; }
@@ -3220,10 +3210,8 @@ html.theme-fade body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html.theme-animating::view-transition-new(root) {
-    animation: none;
-  }
-  body {
+  #theme-reveal-overlay.grow,
+  #theme-reveal-overlay.shrink {
     transition: none;
   }
   .theme-icon.pop {

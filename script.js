@@ -2493,6 +2493,8 @@ function animateHeroPreview() {
    ========================================================= */
 (() => {
   const THEME_KEY = 'sunu_moyenne_theme';
+  const REVEAL_MS = 480;
+  let themeAnimating = false;
 
   function getTheme() {
     try { return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'; } catch { return 'light'; }
@@ -2519,7 +2521,8 @@ function animateHeroPreview() {
     applyTheme();
 
     document.getElementById('toggle-theme-btn')?.addEventListener('click', (event) => {
-      const root = document.documentElement;
+      if (themeAnimating) return;
+
       const btn = event.currentTarget;
       const nextIsDark = getTheme() !== 'dark';
       const commitChange = () => {
@@ -2531,8 +2534,7 @@ function animateHeroPreview() {
       const icon = btn.querySelector('.theme-icon');
       if (icon && !prefersReducedMotion) {
         icon.classList.remove('pop');
-        // force reflow pour pouvoir rejouer l'animation si cliqué plusieurs fois vite
-        void icon.offsetWidth;
+        void icon.offsetWidth; // force reflow pour pouvoir rejouer l'animation
         icon.classList.add('pop');
       }
 
@@ -2541,33 +2543,44 @@ function animateHeroPreview() {
         return;
       }
 
-      // Reveal circulaire depuis le bouton, via la View Transitions API
-      if (typeof document.startViewTransition === 'function') {
-        const rect = btn.getBoundingClientRect();
-        const x = rect.left + rect.width / 2;
-        const y = rect.top + rect.height / 2;
-        const maxRadius = Math.hypot(
-          Math.max(x, window.innerWidth - x),
-          Math.max(y, window.innerHeight - y)
-        );
-        root.style.setProperty('--theme-x', `${x}px`);
-        root.style.setProperty('--theme-y', `${y}px`);
-        root.style.setProperty('--theme-radius', `${maxRadius}px`);
-        root.classList.add('theme-animating');
-
-        const transition = document.startViewTransition(commitChange);
-        transition.finished
-          .catch(() => {})
-          .finally(() => root.classList.remove('theme-animating'));
+      const overlay = document.getElementById('theme-reveal-overlay');
+      if (!overlay) {
+        commitChange();
         return;
       }
 
-      // Repli pour navigateurs sans View Transitions API : léger fondu
-      root.classList.add('theme-fade');
+      // Voile circulaire léger : un simple <div> qui grandit depuis le
+      // bouton pour couvrir l'écran, on bascule le thème pendant qu'il est
+      // caché dessous, puis le voile se referme pour révéler le résultat.
+      const rect = btn.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const maxRadius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      overlay.style.setProperty('--theme-x', `${x}px`);
+      overlay.style.setProperty('--theme-y', `${y}px`);
+      overlay.style.setProperty('--theme-radius', `${maxRadius}px`);
+      overlay.style.background = nextIsDark ? '#101915' : '#f5f1e8';
+
+      themeAnimating = true;
+      overlay.classList.remove('shrink');
+      // reflow pour garantir le départ à 0 avant de lancer la croissance
+      void overlay.offsetWidth;
+      overlay.classList.add('grow');
+
       window.setTimeout(() => {
         commitChange();
-        window.setTimeout(() => root.classList.remove('theme-fade'), 200);
-      }, 160);
+        overlay.classList.remove('grow');
+        overlay.classList.add('shrink');
+
+        window.setTimeout(() => {
+          overlay.classList.remove('shrink');
+          themeAnimating = false;
+        }, REVEAL_MS);
+      }, REVEAL_MS);
     });
   });
 })();
