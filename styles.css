@@ -3168,14 +3168,19 @@ body.device-phone .topbar {
   line-height: 1;
 }
 
-.lang-icon {
+.lang-icon-wrap {
   display: inline-block;
+  vertical-align: middle;
+  line-height: 0;
+}
+
+.lang-icon {
+  display: block;
   width: 18px;
   height: 13px;
   border-radius: 2px;
   object-fit: cover;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
-  vertical-align: middle;
 }
 
 html.dark-mode {
@@ -3238,8 +3243,7 @@ html.dark-mode {
   100% { transform: scale(1) rotate(0deg); }
 }
 
-.lang-icon.pop {
-  display: inline-block;
+.lang-icon-wrap.pop {
   animation: lang-icon-pop 0.5s ease;
 }
 
@@ -3249,7 +3253,7 @@ html.dark-mode {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lang-icon.pop {
+  .lang-icon-wrap.pop {
     animation: none;
   }
   .page-shell.lang-fade {

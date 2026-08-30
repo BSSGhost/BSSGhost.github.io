@@ -2600,8 +2600,14 @@ function animateHeroPreview() {
     if (label) label.textContent = t('lang_switch_btn');
     if (icon) {
       const code = switchingToEnglish ? 'gb' : 'fr';
-      icon.src = `https://flagcdn.com/w40/${code}.png`;
-      icon.srcset = `https://flagcdn.com/w80/${code}.png 2x`;
+      icon.setAttribute('src', `https://flagcdn.com/w40/${code}.png`);
+      icon.setAttribute('srcset', `https://flagcdn.com/w80/${code}.png 2x`);
+      // Force le navigateur à rafraîchir l'affichage de l'image (certains
+      // navigateurs mobiles ne repeignent pas immédiatement un <img> dont
+      // le src change juste après une animation de transform à proximité)
+      icon.style.display = 'none';
+      void icon.offsetHeight;
+      icon.style.display = '';
     }
     btn.setAttribute('aria-label', switchingToEnglish ? 'Passer en anglais' : 'Switch to French');
   }
@@ -2617,7 +2623,7 @@ function animateHeroPreview() {
 
     document.getElementById('toggle-lang-btn')?.addEventListener('click', (event) => {
       const btn = event.currentTarget;
-      const icon = btn.querySelector('.lang-icon');
+      const iconWrap = btn.querySelector('.lang-icon-wrap');
       const shell = document.querySelector('.page-shell');
 
       const swapContent = () => {
@@ -2627,11 +2633,12 @@ function animateHeroPreview() {
         refreshDynamicTranslatedTexts();
       };
 
-      // Petite pop sur l'icône globe, à chaque clic
-      if (icon && !prefersReducedMotion) {
-        icon.classList.remove('pop');
-        void icon.offsetWidth; // force reflow pour pouvoir rejouer l'animation
-        icon.classList.add('pop');
+      // Petite pop sur le drapeau, à chaque clic (sur le conteneur, pas
+      // sur l'image elle-même, pour ne jamais gêner sa mise à jour)
+      if (iconWrap && !prefersReducedMotion) {
+        iconWrap.classList.remove('pop');
+        void iconWrap.offsetWidth; // force reflow pour pouvoir rejouer l'animation
+        iconWrap.classList.add('pop');
       }
 
       if (prefersReducedMotion || !shell) {
