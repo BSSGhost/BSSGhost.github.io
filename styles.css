@@ -3163,10 +3163,19 @@ body.device-phone .topbar {
   white-space: nowrap;
 }
 
-.theme-icon,
-.lang-icon {
+.theme-icon {
   font-size: 1rem;
   line-height: 1;
+}
+
+.lang-icon {
+  display: inline-block;
+  width: 18px;
+  height: 13px;
+  border-radius: 2px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+  vertical-align: middle;
 }
 
 html.dark-mode {

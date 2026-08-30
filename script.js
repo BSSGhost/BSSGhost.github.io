@@ -2598,7 +2598,11 @@ function animateHeroPreview() {
     const icon = btn.querySelector('.lang-icon');
     const switchingToEnglish = getLang() === 'fr';
     if (label) label.textContent = t('lang_switch_btn');
-    if (icon) icon.textContent = switchingToEnglish ? '🇬🇧' : '🇫🇷';
+    if (icon) {
+      const code = switchingToEnglish ? 'gb' : 'fr';
+      icon.src = `https://flagcdn.com/w40/${code}.png`;
+      icon.srcset = `https://flagcdn.com/w80/${code}.png 2x`;
+    }
     btn.setAttribute('aria-label', switchingToEnglish ? 'Passer en anglais' : 'Switch to French');
   }
 
