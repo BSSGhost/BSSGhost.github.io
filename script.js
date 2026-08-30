@@ -2469,7 +2469,7 @@ function animateHeroPreview() {
   const heroPreviewValue = document.getElementById('hero-preview-value');
   if (!heroPreviewValue) return;
 
-  const targetValue = 14.85;
+  const targetValue = 16;
 
   if (prefersReducedMotion) {
     heroPreviewValue.textContent = targetValue.toFixed(2);
@@ -2519,6 +2519,11 @@ function animateHeroPreview() {
     applyTheme();
 
     document.getElementById('toggle-theme-btn')?.addEventListener('click', () => {
+      const root = document.documentElement;
+      if (!prefersReducedMotion) {
+        root.classList.add('theme-transition');
+        window.setTimeout(() => root.classList.remove('theme-transition'), 420);
+      }
       save(THEME_KEY, getTheme() === 'dark' ? 'light' : 'dark');
       applyTheme();
     });

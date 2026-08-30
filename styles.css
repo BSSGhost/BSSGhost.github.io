@@ -3173,6 +3173,16 @@ html.dark-mode {
   color-scheme: dark;
 }
 
+/* Transition douce lors du switch clair/sombre : classe ajoutée brièvement par JS */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 0.35s ease, background-image 0.35s ease,
+    color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease,
+    fill 0.35s ease, stroke 0.35s ease !important;
+}
+
 html.dark-mode body {
   --light: #101915;
   --card: rgba(25, 36, 31, 0.94);
@@ -3299,6 +3309,45 @@ html.dark-mode .info-panel h1,
 html.dark-mode .info-panel .subtitle,
 html.dark-mode .info-panel .eyebrow {
   color: #eaf3ee;
+}
+
+html.dark-mode .hero-preview {
+  background: rgba(18, 29, 24, 0.9);
+  border-color: rgba(160, 196, 177, 0.16);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+html.dark-mode .hero-preview-window {
+  background: linear-gradient(135deg, #16281f, #1c3327);
+}
+
+html.dark-mode .hero-preview-subject {
+  color: #eaf3ee;
+}
+
+html.dark-mode .hero-preview-track {
+  background: rgba(230, 238, 233, 0.12);
+}
+
+html.dark-mode .hero-preview-grade {
+  color: #eaf3ee;
+}
+
+html.dark-mode .hero-preview-total {
+  border-top-color: rgba(160, 196, 177, 0.18);
+}
+
+html.dark-mode .hero-preview-total-label {
+  color: #a7b5ae;
+}
+
+html.dark-mode .hero-preview-total-value {
+  color: var(--copper-300);
+}
+
+html.dark-mode .hero-preview-mention {
+  background: rgba(78, 170, 126, 0.18);
+  color: #bfe6d3;
 }
 
 html.dark-mode .calculator-card,
