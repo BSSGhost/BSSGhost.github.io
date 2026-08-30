@@ -2589,6 +2589,8 @@ function animateHeroPreview() {
    LANGUE FR / EN
    ========================================================= */
 (() => {
+  const LANG_FADE_MS = 180;
+
   function applyLangButton() {
     const btn = document.getElementById('toggle-lang-btn');
     if (!btn) return;
@@ -2606,11 +2608,36 @@ function animateHeroPreview() {
     applyLangButton();
     setPdfButtonLabel(t('pdf_button_default'));
 
-    document.getElementById('toggle-lang-btn')?.addEventListener('click', () => {
-      setLang(getLang() === 'fr' ? 'en' : 'fr');
-      applyStaticTranslations();
-      applyLangButton();
-      refreshDynamicTranslatedTexts();
+    document.getElementById('toggle-lang-btn')?.addEventListener('click', (event) => {
+      const btn = event.currentTarget;
+      const icon = btn.querySelector('.lang-icon');
+      const shell = document.querySelector('.page-shell');
+
+      const swapContent = () => {
+        setLang(getLang() === 'fr' ? 'en' : 'fr');
+        applyStaticTranslations();
+        applyLangButton();
+        refreshDynamicTranslatedTexts();
+      };
+
+      // Petite pop sur l'icône globe, à chaque clic
+      if (icon && !prefersReducedMotion) {
+        icon.classList.remove('pop');
+        void icon.offsetWidth; // force reflow pour pouvoir rejouer l'animation
+        icon.classList.add('pop');
+      }
+
+      if (prefersReducedMotion || !shell) {
+        swapContent();
+        return;
+      }
+
+      // Léger fondu du contenu pendant que tous les textes changent
+      shell.classList.add('lang-fade');
+      window.setTimeout(() => {
+        swapContent();
+        shell.classList.remove('lang-fade');
+      }, LANG_FADE_MS);
     });
   });
 })();
