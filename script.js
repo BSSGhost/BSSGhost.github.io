@@ -2518,14 +2518,56 @@ function animateHeroPreview() {
   document.addEventListener('DOMContentLoaded', () => {
     applyTheme();
 
-    document.getElementById('toggle-theme-btn')?.addEventListener('click', () => {
+    document.getElementById('toggle-theme-btn')?.addEventListener('click', (event) => {
       const root = document.documentElement;
-      if (!prefersReducedMotion) {
-        root.classList.add('theme-transition');
-        window.setTimeout(() => root.classList.remove('theme-transition'), 420);
+      const btn = event.currentTarget;
+      const nextIsDark = getTheme() !== 'dark';
+      const commitChange = () => {
+        save(THEME_KEY, nextIsDark ? 'dark' : 'light');
+        applyTheme();
+      };
+
+      // Petite pop sur l'icône lune/soleil, à chaque clic
+      const icon = btn.querySelector('.theme-icon');
+      if (icon && !prefersReducedMotion) {
+        icon.classList.remove('pop');
+        // force reflow pour pouvoir rejouer l'animation si cliqué plusieurs fois vite
+        void icon.offsetWidth;
+        icon.classList.add('pop');
       }
-      save(THEME_KEY, getTheme() === 'dark' ? 'light' : 'dark');
-      applyTheme();
+
+      if (prefersReducedMotion) {
+        commitChange();
+        return;
+      }
+
+      // Reveal circulaire depuis le bouton, via la View Transitions API
+      if (typeof document.startViewTransition === 'function') {
+        const rect = btn.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        const maxRadius = Math.hypot(
+          Math.max(x, window.innerWidth - x),
+          Math.max(y, window.innerHeight - y)
+        );
+        root.style.setProperty('--theme-x', `${x}px`);
+        root.style.setProperty('--theme-y', `${y}px`);
+        root.style.setProperty('--theme-radius', `${maxRadius}px`);
+        root.classList.add('theme-animating');
+
+        const transition = document.startViewTransition(commitChange);
+        transition.finished
+          .catch(() => {})
+          .finally(() => root.classList.remove('theme-animating'));
+        return;
+      }
+
+      // Repli pour navigateurs sans View Transitions API : léger fondu
+      root.classList.add('theme-fade');
+      window.setTimeout(() => {
+        commitChange();
+        window.setTimeout(() => root.classList.remove('theme-fade'), 200);
+      }, 160);
     });
   });
 })();
