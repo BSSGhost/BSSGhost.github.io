@@ -2595,8 +2595,11 @@ function animateHeroPreview() {
     const btn = document.getElementById('toggle-lang-btn');
     if (!btn) return;
     const label = btn.querySelector('.lang-label');
+    const icon = btn.querySelector('.lang-icon');
+    const switchingToEnglish = getLang() === 'fr';
     if (label) label.textContent = t('lang_switch_btn');
-    btn.setAttribute('aria-label', getLang() === 'fr' ? 'Passer en anglais' : 'Switch to French');
+    if (icon) icon.textContent = switchingToEnglish ? '🇬🇧' : '🇫🇷';
+    btn.setAttribute('aria-label', switchingToEnglish ? 'Passer en anglais' : 'Switch to French');
   }
 
   applyStaticTranslations();
