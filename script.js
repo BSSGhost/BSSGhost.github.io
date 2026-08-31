@@ -2602,9 +2602,19 @@ function animateHeroPreview() {
     const switchingToEnglish = getLang() === 'fr';
     if (label) label.textContent = t('lang_switch_btn');
     // Drapeaux en SVG inline (pas de dépendance réseau ni de souci de
-    // repaint mobile) : on affiche simplement celui de la langue cible.
-    if (iconGb) iconGb.hidden = !switchingToEnglish;
-    if (iconFr) iconFr.hidden = switchingToEnglish;
+    // repaint mobile). Important : contrairement aux éléments HTML,
+    // un <svg> ne répercute pas la propriété JS `.hidden` sur son
+    // attribut réel — il faut donc manipuler l'attribut directement
+    // via setAttribute/removeAttribute pour que le CSS [hidden]
+    // s'applique effectivement.
+    if (iconGb) {
+      if (switchingToEnglish) iconGb.removeAttribute('hidden');
+      else iconGb.setAttribute('hidden', '');
+    }
+    if (iconFr) {
+      if (switchingToEnglish) iconFr.setAttribute('hidden', '');
+      else iconFr.removeAttribute('hidden');
+    }
     btn.setAttribute('aria-label', switchingToEnglish ? 'Passer en anglais' : 'Switch to French');
   }
 

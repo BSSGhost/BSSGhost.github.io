@@ -3176,18 +3176,21 @@ body.device-phone .topbar {
 
 .lang-icon {
   display: block;
-  width: 18px;
-  height: 13px;
   border-radius: 2px;
   overflow: hidden;
 }
 
-/* La classe ci-dessus force display:block, ce qui a la même priorité
-   CSS que la règle par défaut du navigateur pour [hidden]. Sans cette
-   surcharge explicite, l'attribut hidden est ignoré et les deux
-   drapeaux restent visibles en permanence, empilés l'un sur l'autre. */
 .lang-icon[hidden] {
   display: none;
+}
+
+/* Spécificité volontairement plus élevée que ".device-change-btn svg"
+   (qui force 18x18 sur toutes les icônes du bouton) : sans ça, nos
+   drapeaux sont écrasés dans un carré et apparaissent "encadrés" par
+   les marges transparentes du redimensionnement. */
+.lang-icon-wrap .lang-icon {
+  width: 18px;
+  height: 13px;
 }
 
 html.dark-mode {
