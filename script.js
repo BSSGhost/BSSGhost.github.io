@@ -2608,12 +2608,12 @@ function animateHeroPreview() {
     // via setAttribute/removeAttribute pour que le CSS [hidden]
     // s'applique effectivement.
     if (iconGb) {
-      if (switchingToEnglish) iconGb.removeAttribute('hidden');
-      else iconGb.setAttribute('hidden', '');
+      if (switchingToEnglish) { iconGb.removeAttribute('hidden'); iconGb.style.display = ''; }
+      else { iconGb.setAttribute('hidden', ''); iconGb.style.display = 'none'; }
     }
     if (iconFr) {
-      if (switchingToEnglish) iconFr.setAttribute('hidden', '');
-      else iconFr.removeAttribute('hidden');
+      if (switchingToEnglish) { iconFr.setAttribute('hidden', ''); iconFr.style.display = 'none'; }
+      else { iconFr.removeAttribute('hidden'); iconFr.style.display = ''; }
     }
     btn.setAttribute('aria-label', switchingToEnglish ? 'Passer en anglais' : 'Switch to French');
   }

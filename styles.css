@@ -3177,7 +3177,6 @@ body.device-phone .topbar {
 .lang-icon {
   display: block;
   border-radius: 2px;
-  overflow: hidden;
 }
 
 .lang-icon[hidden] {
@@ -3185,12 +3184,18 @@ body.device-phone .topbar {
 }
 
 /* Spécificité volontairement plus élevée que ".device-change-btn svg"
-   (qui force 18x18 sur toutes les icônes du bouton) : sans ça, nos
-   drapeaux sont écrasés dans un carré et apparaissent "encadrés" par
-   les marges transparentes du redimensionnement. */
-.lang-icon-wrap .lang-icon {
+   (qui force 18x18 sur toutes les icônes du bouton). Chaque drapeau
+   garde ICI ses propres proportions réelles (au lieu d'une boîte
+   18x13 commune) pour ne plus laisser de bandes transparentes qui
+   ressemblaient à un "cadre" autour du drapeau. */
+.lang-icon-wrap .lang-icon-gb {
   width: 18px;
-  height: 13px;
+  height: 9px; /* ratio 2:1 du drapeau britannique */
+}
+
+.lang-icon-wrap .lang-icon-fr {
+  width: 18px;
+  height: 12px; /* ratio 3:2 du drapeau français */
 }
 
 html.dark-mode {
