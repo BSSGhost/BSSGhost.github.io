@@ -1125,8 +1125,8 @@ const matieresCommunesBase = [
    COEFFICIENTS OFFICIELS SUGGERES
    Source lycée (S1/S2) : grille des épreuves du Baccalauréat
    sénégalais (Office du Bac), complétée pour les matières de
-   bulletin non examinées au Bac (Espagnol, EPS) sur confirmation
-   du porteur du projet. La 6e→3e n'a pas encore de grille
+   bulletin non examinées au Bac (Espagnol, Arabe, EPS) sur
+   confirmation du porteur du projet. La 6e→3e n'a pas encore de grille
    officielle confirmée : le pré-remplissage y reste désactivé
    tant qu'une source fiable n'est pas fournie.
    ========================================================= */
@@ -1141,6 +1141,7 @@ const COEFFICIENTS_OFFICIELS = {
       'Sciences Physiques': 8,
       'SVT': 2,
       'Espagnol': 2,
+      'Arabe': 2,
       'EPS': 1
     },
     S2: {
@@ -1152,6 +1153,7 @@ const COEFFICIENTS_OFFICIELS = {
       'Sciences Physiques': 6,
       'SVT': 6,
       'Espagnol': 2,
+      'Arabe': 2,
       'EPS': 1
     }
   }
@@ -2595,20 +2597,14 @@ function animateHeroPreview() {
     const btn = document.getElementById('toggle-lang-btn');
     if (!btn) return;
     const label = btn.querySelector('.lang-label');
-    const icon = btn.querySelector('.lang-icon');
+    const iconGb = btn.querySelector('.lang-icon-gb');
+    const iconFr = btn.querySelector('.lang-icon-fr');
     const switchingToEnglish = getLang() === 'fr';
     if (label) label.textContent = t('lang_switch_btn');
-    if (icon) {
-      const code = switchingToEnglish ? 'gb' : 'fr';
-      icon.setAttribute('src', `https://flagcdn.com/w40/${code}.png`);
-      icon.setAttribute('srcset', `https://flagcdn.com/w80/${code}.png 2x`);
-      // Force le navigateur à rafraîchir l'affichage de l'image (certains
-      // navigateurs mobiles ne repeignent pas immédiatement un <img> dont
-      // le src change juste après une animation de transform à proximité)
-      icon.style.display = 'none';
-      void icon.offsetHeight;
-      icon.style.display = '';
-    }
+    // Drapeaux en SVG inline (pas de dépendance réseau ni de souci de
+    // repaint mobile) : on affiche simplement celui de la langue cible.
+    if (iconGb) iconGb.hidden = !switchingToEnglish;
+    if (iconFr) iconFr.hidden = switchingToEnglish;
     btn.setAttribute('aria-label', switchingToEnglish ? 'Passer en anglais' : 'Switch to French');
   }
 

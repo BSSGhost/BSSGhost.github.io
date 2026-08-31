@@ -1,0 +1,20 @@
+{
+  "name": "SUNU MOYENNE — LYNAQE Sédhiou",
+  "short_name": "SUNU MOYENNE",
+  "description": "Calculateur de moyenne pour élèves du LYNAQE de Sédhiou.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f1e8",
+  "theme_color": "#174b3d",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "LYNAQE.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

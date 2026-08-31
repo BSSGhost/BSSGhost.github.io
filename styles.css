@@ -3179,7 +3179,7 @@ body.device-phone .topbar {
   width: 18px;
   height: 13px;
   border-radius: 2px;
-  object-fit: cover;
+  overflow: hidden;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
