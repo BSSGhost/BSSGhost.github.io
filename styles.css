@@ -3180,7 +3180,14 @@ body.device-phone .topbar {
   height: 13px;
   border-radius: 2px;
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+/* La classe ci-dessus force display:block, ce qui a la même priorité
+   CSS que la règle par défaut du navigateur pour [hidden]. Sans cette
+   surcharge explicite, l'attribut hidden est ignoré et les deux
+   drapeaux restent visibles en permanence, empilés l'un sur l'autre. */
+.lang-icon[hidden] {
+  display: none;
 }
 
 html.dark-mode {
