@@ -3600,6 +3600,15 @@ html.dark-mode .partner-visual {
   background: #182821;
 }
 
+/* SEN.avif a un fond blanc opaque "en dur" dans l'image (contrairement
+   aux deux autres logos, en fond transparent) : sans ce blend mode, ce
+   blanc reste visible même quand la carte autour passe en mode sombre.
+   "multiply" fait disparaître le blanc de l'image pour laisser voir le
+   fond sombre de la carte en dessous, comme pour les deux autres. */
+html.dark-mode .partner-visual-sen img {
+  mix-blend-mode: multiply;
+}
+
 html.dark-mode .quote-of-day {
   background: rgba(78, 170, 126, 0.09);
   color: #dce8e2;
