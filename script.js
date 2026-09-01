@@ -765,89 +765,6 @@ function pulseCard() {
   calculatorCard.classList.add('just-saved');
 }
 
-/* ---------- Favicon dynamique selon la dernière moyenne ---------- */
-
-const LAST_MOYENNE_STORAGE_KEY = 'lynaqe_last_moyenne';
-
-function setFaviconHref(dataUrl) {
-  const oldLink = document.querySelector('link[rel="icon"]');
-  const newLink = document.createElement('link');
-  newLink.rel = 'icon';
-  newLink.type = 'image/png';
-  newLink.href = dataUrl;
-  if (oldLink) {
-    oldLink.replaceWith(newLink);
-  } else {
-    document.head.appendChild(newLink);
-  }
-}
-
-const BADGE_IMAGE_SRC = 'LYNAQE.png';
-let badgeImagePromise = null;
-
-function getBadgeImage() {
-  if (!badgeImagePromise) {
-    badgeImagePromise = new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = BADGE_IMAGE_SRC;
-    });
-  }
-  return badgeImagePromise;
-}
-
-async function updateFaviconBadge(value) {
-  try {
-    const img = await getBadgeImage();
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    /* On dessine le badge LYNAQE tel quel */
-    ctx.drawImage(img, 0, 0, 64, 64);
-
-    /* Puis on applique une teinte selon la moyenne, en ne colorant
-       que les pixels non transparents du badge (source-atop) */
-    let tintColor;
-    if (value < 10) {
-      tintColor = 'rgba(194, 59, 59, 0.5)';
-    } else if (value < 14) {
-      tintColor = 'rgba(210, 168, 74, 0.45)';
-    } else {
-      tintColor = 'rgba(29, 106, 82, 0.4)';
-    }
-
-    ctx.globalCompositeOperation = 'source-atop';
-    ctx.fillStyle = tintColor;
-    ctx.fillRect(0, 0, 64, 64);
-    ctx.globalCompositeOperation = 'source-over';
-
-    setFaviconHref(canvas.toDataURL('image/png'));
-
-    try {
-      localStorage.setItem(LAST_MOYENNE_STORAGE_KEY, String(value));
-    } catch {
-      /* stockage indisponible, on ignore silencieusement */
-    }
-  } catch (e) {
-    console.log("Impossible de mettre à jour le favicon :", e);
-  }
-}
-
-function restoreFaviconBadgeFromStorage() {
-  try {
-    const stored = Number(localStorage.getItem(LAST_MOYENNE_STORAGE_KEY));
-    if (Number.isFinite(stored)) {
-      updateFaviconBadge(stored);
-    }
-  } catch {
-    /* pas de localStorage disponible, on garde le favicon par défaut */
-  }
-}
-
 /* ---------- Son discret et optionnel au moment du résultat ---------- */
 
 const SOUND_STORAGE_KEY = 'lynaqe_sound_enabled';
@@ -1104,7 +1021,6 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, m
     launchConfetti(resultat);
   }
 
-  updateFaviconBadge(value);
   playResultSound(value);
 }
 
@@ -2461,7 +2377,6 @@ boutonReset.addEventListener('click', function () {
 afficherCitationDuJour();
 updateMatieres();
 renderTableMatiere();
-restoreFaviconBadgeFromStorage();
 animateHeroPreview();
 
 /* =========================================================
