@@ -3601,20 +3601,19 @@ html.dark-mode .partner-visual {
 }
 
 /* SEN.avif a un fond blanc opaque "en dur" dans l'image (contrairement
-   aux deux autres logos, en fond transparent). Le "mix-blend-mode:
-   multiply" utilisé auparavant faisait bien disparaître ce blanc, mais
-   il assombrissait AUSSI les couleurs du drapeau (vert/jaune/rouge) en
-   les multipliant par le fond sombre : résultat, une carte terne et
-   différente des deux autres logos, qui eux gardent leurs couleurs
-   d'origine. On garde donc cette tuile sur un fond clair fixe (comme un
-   petit cadre/tampon), pour que le drapeau reste toujours dans ses
-   vraies couleurs, en mode clair comme en mode sombre. */
+   aux deux autres logos, en fond transparent). Pour qu'il s'affiche sur
+   la même tuile sombre que les deux autres en mode sombre, on lui
+   applique "mix-blend-mode: multiply", qui fait disparaître le fond
+   blanc (multiplié par la tuile sombre). Un léger boost de luminosité
+   et de saturation compense l'assombrissement des couleurs du drapeau
+   pour garder la carte lisible et cohérente avec les autres logos. */
 html.dark-mode .partner-visual-sen {
-  background: rgba(255, 253, 248, 0.92);
+  background: #182821;
 }
 
 html.dark-mode .partner-visual-sen img {
-  mix-blend-mode: normal;
+  mix-blend-mode: multiply;
+  filter: brightness(1.9) saturate(1.35);
 }
 
 html.dark-mode .quote-of-day {
