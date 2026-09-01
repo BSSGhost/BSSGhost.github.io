@@ -726,7 +726,7 @@ function animateValue(el, from, to, duration = 900) {
 
 /* Confettis discrets, déclenchés uniquement pour une moyenne excellente (>= 16).
    Respecte prefers-reduced-motion et se nettoie automatiquement du DOM. */
-const CONFETTI_COLORS = ['#e8c875', '#cf8a45', '#4eaa7e', '#fffaf0', '#b8752f'];
+const CONFETTI_COLORS = ['#e8c875', '#cf8a45', '#4e71aa', '#fffaf0', '#b8752f'];
 
 function launchConfetti(container) {
   if (prefersReducedMotion || !container) return;
@@ -2010,7 +2010,7 @@ function generatePDFBulletin() {
   const pageHeight = doc.internal.pageSize.getHeight(); // 297
 
   // Double Cadre Soigné
-  doc.setDrawColor(16, 47, 40); // Vert Foncé Premium (#102F28)
+  doc.setDrawColor(16, 28, 47); // Bleu Foncé Premium (#101C2F)
   doc.setLineWidth(0.8);
   doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
 
@@ -2021,7 +2021,7 @@ function generatePDFBulletin() {
   // Filigrane (Watermark en arrière-plan)
   doc.setFont("helvetica", "bold");
   doc.setFontSize(40);
-  doc.setTextColor(232, 238, 234);
+  doc.setTextColor(232, 234, 238);
   doc.text("LYNAQE SÉDHIOU", pageWidth / 2, pageHeight / 2, {
     align: "center",
     angle: 35
@@ -2052,7 +2052,7 @@ function generatePDFBulletin() {
   // En-tête officiel
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
-  doc.setTextColor(16, 47, 40);
+  doc.setTextColor(16, 28, 47);
   doc.text(t('pdf_republique'), pageWidth - 14, 15, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
@@ -2063,7 +2063,7 @@ function generatePDFBulletin() {
   doc.text(t('pdf_lycee'), pageWidth - 14, 27, { align: "right" });
 
   // Ligne de séparation élégante
-  doc.setDrawColor(16, 47, 40);
+  doc.setDrawColor(16, 28, 47);
   doc.setLineWidth(0.8);
   doc.line(14, 43, pageWidth - 14, 43);
   doc.setDrawColor(210, 168, 74);
@@ -2071,7 +2071,7 @@ function generatePDFBulletin() {
   doc.line(14, 44.2, pageWidth - 14, 44.2);
 
   // Bannière Titre
-  doc.setFillColor(16, 47, 40);
+  doc.setFillColor(16, 28, 47);
   doc.roundedRect(14, 48, pageWidth - 28, 12, 2, 2, 'F');
 
   doc.setFont("helvetica", "bold");
@@ -2087,7 +2087,7 @@ function generatePDFBulletin() {
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.setTextColor(16, 47, 40);
+  doc.setTextColor(16, 28, 47);
   doc.text(t('pdf_eleve', { nom: `${prenom.toUpperCase()} ${nom.toUpperCase()}` }), 18, 71);
   doc.text(t('pdf_classe', { classe }), 18, 78);
 
@@ -2120,7 +2120,7 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   let curY = startY;
 
   // En-tête du tableau
-  doc.setFillColor(23, 75, 61);
+  doc.setFillColor(23, 43, 75);
   doc.rect(14, curY, pageWidth - 28, 8, 'F');
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8.5);
@@ -2184,20 +2184,20 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   });
 
   // Bordure extérieure du tableau
-  doc.setDrawColor(16, 47, 40);
+  doc.setDrawColor(16, 28, 47);
   doc.setLineWidth(0.5);
   doc.rect(14, startY, pageWidth - 28, curY - startY);
 
   // Synthèse Finale
   curY += 6;
   doc.setFillColor(243, 241, 233);
-  doc.setDrawColor(16, 47, 40);
+  doc.setDrawColor(16, 28, 47);
   doc.setLineWidth(0.4);
   doc.roundedRect(14, curY, pageWidth - 28, 16, 1.5, 1.5, 'FD');
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
-  doc.setTextColor(16, 47, 40);
+  doc.setTextColor(16, 28, 47);
   doc.text(t('pdf_total_coefficients', { n: totalCoeff }), 18, curY + 6);
   doc.text(t('pdf_total_points', { n: totalPoints.toFixed(2) }), 18, curY + 12);
 
@@ -2210,7 +2210,7 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   curY += 24;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8.5);
-  doc.setTextColor(16, 47, 40);
+  doc.setTextColor(16, 28, 47);
 
   // Cadre 1 : Parents
   doc.text(t('pdf_obs_parents'), 14, curY);
@@ -2480,7 +2480,7 @@ function animateHeroPreview() {
       overlay.style.setProperty('--theme-x', `${x}px`);
       overlay.style.setProperty('--theme-y', `${y}px`);
       overlay.style.setProperty('--theme-radius', `${maxRadius}px`);
-      overlay.style.background = nextIsDark ? '#101915' : '#f5f1e8';
+      overlay.style.background = nextIsDark ? '#101319' : '#f5f1e8';
 
       themeAnimating = true;
       overlay.classList.remove('shrink');
