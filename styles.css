@@ -763,10 +763,10 @@ h1 {
   width: 112px;
   height: 88px;
   overflow: hidden;
-  border: 1px solid rgba(29, 106, 82, 0.14);
+  border: none;
   border-radius: 12px;
-  background: rgba(255, 253, 248, 0.82);
-  box-shadow: 0 10px 20px rgba(28, 55, 43, 0.08);
+  background: transparent;
+  box-shadow: none;
   cursor: pointer;
   transition: transform 0.24s ease, box-shadow 0.24s ease, filter 0.24s ease;
 }
