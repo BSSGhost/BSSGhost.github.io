@@ -213,7 +213,9 @@ const translations = {
 
     pdf_button_default: "Télécharger mon bulletin (PDF)",
     pdf_button_generating: "Génération en cours…",
-    pdf_button_success: "Bulletin téléchargé"
+    pdf_button_success: "Bulletin téléchargé",
+    pdf_button_incomplete_title: "Renseignez la moyenne de toutes les matières de la classe pour débloquer le téléchargement",
+    msg_matieres_incompletes: "Le bulletin n'est téléchargeable que lorsque toutes les matières de la classe ont leur moyenne renseignée."
   },
   en: {
     device_modal_eyebrow: "Welcome to SUNU MOYENNE",
@@ -411,7 +413,9 @@ const translations = {
 
     pdf_button_default: "Download my report card (PDF)",
     pdf_button_generating: "Generating…",
-    pdf_button_success: "Report card downloaded"
+    pdf_button_success: "Report card downloaded",
+    pdf_button_incomplete_title: "Fill in the average for every subject in the class to unlock the download",
+    msg_matieres_incompletes: "The report card can only be downloaded once every subject in the class has its average filled in."
   }
 };
 
@@ -857,6 +861,8 @@ updateSoundButtonUI();
 /* ---------- Frise d'étapes du formulaire ---------- */
 
 function updateProgressTracker(classeVal, notes) {
+  updateDownloadButtonAvailability(classeVal, notes);
+
   if (!progressTracker || !progressTrackerFill || !progressTrackerLabel) return;
 
   if (!classeVal) {
@@ -2248,8 +2254,44 @@ function setPdfButtonLabel(text) {
   if (label) label.textContent = text;
 }
 
+// Le bulletin ne doit être téléchargeable que lorsque TOUTES les matières
+// de la classe sélectionnée ont leur moyenne de matière renseignée.
+function isBulletinComplet(classeVal, notes) {
+  if (!classeVal) return false;
+  const totalMatieres = getMatieresDisponiblesPourClasse(classeVal).length;
+  const doneMatieres = Object.keys(notes || {}).length;
+  return totalMatieres > 0 && doneMatieres >= totalMatieres;
+}
+
+// Active/désactive le bouton de téléchargement selon la complétude des matières.
+// N'intervient pas pendant un chargement ou l'état de succès en cours, pour ne
+// pas interrompre le retour visuel déjà en place.
+function updateDownloadButtonAvailability(classeVal, notes) {
+  if (!boutonTelechargerPdf) return;
+  if (boutonTelechargerPdf.classList.contains('is-loading') || boutonTelechargerPdf.classList.contains('is-success')) return;
+
+  const complet = isBulletinComplet(classeVal, notes);
+  boutonTelechargerPdf.disabled = !complet;
+  boutonTelechargerPdf.classList.toggle('is-locked', !complet);
+
+  if (!complet) {
+    boutonTelechargerPdf.title = t('pdf_button_incomplete_title');
+  } else {
+    boutonTelechargerPdf.removeAttribute('title');
+  }
+}
+
 function handleTelechargerBulletinClick() {
   if (!boutonTelechargerPdf || boutonTelechargerPdf.classList.contains('is-loading')) return;
+
+  const classeVal = classeSelect.value.trim();
+  const notes = classeVal ? getStoredNotesForClasse(classeVal) : {};
+
+  if (!isBulletinComplet(classeVal, notes)) {
+    setResult(t('msg_matieres_incompletes'), true);
+    updateDownloadButtonAvailability(classeVal, notes);
+    return;
+  }
 
   boutonTelechargerPdf.classList.remove('is-success');
   boutonTelechargerPdf.classList.add('is-loading');
@@ -2268,14 +2310,18 @@ function handleTelechargerBulletinClick() {
 
       window.setTimeout(() => {
         boutonTelechargerPdf.classList.remove('is-success');
-        boutonTelechargerPdf.disabled = false;
         boutonTelechargerPdf.removeAttribute('aria-busy');
         setPdfButtonLabel(PDF_BUTTON_DEFAULT_LABEL_FN());
+        const currentClasse = classeSelect.value.trim();
+        const currentNotes = currentClasse ? getStoredNotesForClasse(currentClasse) : {};
+        updateDownloadButtonAvailability(currentClasse, currentNotes);
       }, 1300);
     } else {
-      boutonTelechargerPdf.disabled = false;
       boutonTelechargerPdf.removeAttribute('aria-busy');
       setPdfButtonLabel(PDF_BUTTON_DEFAULT_LABEL_FN());
+      const currentClasse = classeSelect.value.trim();
+      const currentNotes = currentClasse ? getStoredNotesForClasse(currentClasse) : {};
+      updateDownloadButtonAvailability(currentClasse, currentNotes);
     }
   };
 
@@ -2295,6 +2341,7 @@ function handleTelechargerBulletinClick() {
 }
 
 boutonTelechargerPdf?.addEventListener('click', handleTelechargerBulletinClick);
+
 
 tableBody.addEventListener('click', function (event) {
   const actionButton = event.target.closest('button[data-action]');

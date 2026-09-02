@@ -12,6 +12,7 @@
   --gauge-green-700: #1d6a52;
   --gauge-green-600: #298064;
   --gauge-green-500: #4eaa7e;
+  --gauge-green-400: #86c89d;
   --gauge-green-shape-fill: rgba(41, 128, 100, 0.22);
   /* Accent rare, réservé à la moyenne finale et au CTA principal */
   --copper-300: #e3ac6b;
@@ -948,8 +949,8 @@ h1 {
   letter-spacing: 0.02em;
   padding: 4px 9px;
   border-radius: 999px;
-  background: rgba(41, 74, 128, 0.12);
-  color: var(--blue-700);
+  background: rgba(41, 128, 100, 0.12);
+  color: var(--gauge-green-700);
   white-space: nowrap;
 }
 
@@ -1310,12 +1311,12 @@ select:focus {
 
 /* Feedback en temps réel sur les champs de notes, dès la saisie plutôt qu'au submit */
 .note-input.is-valid {
-  border-color: var(--blue-600);
-  background: rgba(78, 113, 170, 0.06);
+  border-color: var(--gauge-green-600);
+  background: rgba(78, 170, 126, 0.06);
 }
 
 .note-input.is-valid:focus {
-  box-shadow: 0 0 0 4px rgba(41, 74, 128, 0.14);
+  box-shadow: 0 0 0 4px rgba(41, 128, 100, 0.14);
 }
 
 .note-input.is-invalid {
@@ -1957,13 +1958,13 @@ html.dark-mode .result-card.error h3 {
 }
 
 .mention-badge.mention-bon-travail {
-  background: rgba(78, 113, 170, 0.18);
-  color: var(--blue-400);
+  background: rgba(78, 170, 126, 0.18);
+  color: var(--gauge-green-400);
 }
 
 .mention-badge.mention-tres-bon-travail {
-  background: rgba(78, 113, 170, 0.24);
-  color: #b7cae8;
+  background: rgba(78, 170, 126, 0.24);
+  color: #b7e8cc;
 }
 
 .mention-badge.mention-excellent-travail {
@@ -3445,8 +3446,8 @@ html.dark-mode .hero-preview-total-value {
 }
 
 html.dark-mode .hero-preview-mention {
-  background: rgba(78, 113, 170, 0.18);
-  color: #bfcee6;
+  background: rgba(78, 170, 126, 0.18);
+  color: #bfe6d3;
 }
 
 html.dark-mode .calculator-card,
