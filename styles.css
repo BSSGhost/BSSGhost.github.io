@@ -7,6 +7,12 @@
   --blue-400: #869fc8;
   --yellow-500: #d2a84a;
   --yellow-400: #e8c875;
+
+  /* Palette verte réservée exclusivement aux jauges (moyenne bonne, matières S2, graphique) */
+  --gauge-green-700: #1d6a52;
+  --gauge-green-600: #298064;
+  --gauge-green-500: #4eaa7e;
+  --gauge-green-shape-fill: rgba(41, 128, 100, 0.22);
   /* Accent rare, réservé à la moyenne finale et au CTA principal */
   --copper-300: #e3ac6b;
   --copper-400: #cf8a45;
@@ -903,7 +909,7 @@ h1 {
   to { width: var(--value, 70%); }
 }
 
-.hero-preview-fill.grade-bien { background: var(--blue-500); }
+.hero-preview-fill.grade-bien { background: var(--gauge-green-500); }
 .hero-preview-fill.grade-moyen { background: var(--yellow-500); }
 .hero-preview-fill.grade-faible { background: var(--red-600); }
 
@@ -1133,7 +1139,7 @@ h1 {
   height: 100%;
   width: 0%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--blue-600), var(--yellow-500));
+  background: linear-gradient(90deg, var(--gauge-green-600), var(--yellow-500));
   transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1146,11 +1152,11 @@ h1 {
 }
 
 .progress-tracker.is-complete .progress-tracker-fill {
-  background: linear-gradient(90deg, var(--blue-500), var(--yellow-400));
+  background: linear-gradient(90deg, var(--gauge-green-500), var(--yellow-400));
 }
 
 .progress-tracker.is-complete .progress-tracker-label {
-  color: var(--blue-700);
+  color: var(--gauge-green-700);
 }
 
 @media (max-width: 480px) {
@@ -2044,7 +2050,7 @@ html.dark-mode .result-card.error h3 {
   height: 100%;
   width: 0%;
   border-radius: 999px;
-  background: var(--blue-500);
+  background: var(--gauge-green-500);
   transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.4s ease;
 }
 
@@ -2057,7 +2063,7 @@ html.dark-mode .result-card.error h3 {
 }
 
 .moyenne-gauge.grade-bien .moyenne-gauge-fill {
-  background: var(--blue-500);
+  background: var(--gauge-green-500);
 }
 
 .advisor-card {
@@ -2249,14 +2255,14 @@ html.dark-mode .result-card.error h3 {
 }
 
 .radar-shape {
-  fill: rgba(41, 74, 128, 0.22);
-  stroke: var(--blue-600);
+  fill: var(--gauge-green-shape-fill);
+  stroke: var(--gauge-green-600);
   stroke-width: 2;
   stroke-linejoin: round;
 }
 
 .radar-point {
-  fill: var(--blue-700);
+  fill: var(--gauge-green-700);
 }
 
 .radar-label {
@@ -2523,7 +2529,7 @@ th {
 }
 
 .compare-bar-s2 {
-  background: var(--blue-600);
+  background: var(--gauge-green-600);
 }
 
 .compare-bar-value {
