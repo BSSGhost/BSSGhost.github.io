@@ -586,7 +586,7 @@ th {
   align-items: center;
   gap: 8px;
   background: rgba(16, 28, 47, 0.85);
-  color: #f8f2e6;
+  color: var(--gold-500);
   padding: 6px 14px;
   border-radius: 999px;
   font-size: 0.78rem;
@@ -605,8 +605,8 @@ th {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #4e71aa;
-  box-shadow: 0 0 8px #4e71aa;
+  background-color: var(--gold-500);
+  box-shadow: 0 0 8px var(--gold-500);
   animation: pulse-dot 2s infinite;
 }
 
