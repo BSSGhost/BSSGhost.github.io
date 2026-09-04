@@ -5,7 +5,7 @@
    Incrémenter CACHE_NAME à chaque déploiement pour invalider
    l'ancien cache.
    ========================================================= */
-const CACHE_NAME = 'sunu-moyenne-v5';
+const CACHE_NAME = 'sunu-moyenne-v6';
 
 const PRECACHE_URLS = [
   './',
@@ -14,6 +14,8 @@ const PRECACHE_URLS = [
   './script.js',
   './manifest.json',
   './LYNAQE.png',
+  './force-armee.webp',
+  './MEN.webp',
 ];
 
 self.addEventListener('install', (event) => {
