@@ -5,7 +5,7 @@
    Incrémenter CACHE_NAME à chaque déploiement pour invalider
    l'ancien cache.
    ========================================================= */
-const CACHE_NAME = 'sunu-moyenne-v6';
+const CACHE_NAME = 'sunu-moyenne-v7';
 
 const PRECACHE_URLS = [
   './',
@@ -38,27 +38,26 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Stratégie "cache d'abord, réseau en secours" pour les fichiers du
-// site. Les requêtes vers d'autres domaines (polices Google, CDN
-// jsPDF) passent directement au réseau : on ne veut pas gérer leur
-// mise en cache ici.
+// Stratégie "réseau d'abord, cache en secours" pour les fichiers du
+// site. Tant que l'appareil a du réseau, il reçoit toujours la
+// dernière version déployée ; le cache ne sert que si la requête
+// réseau échoue (mode hors-ligne). Les requêtes vers d'autres
+// domaines (polices Google, CDN jsPDF) passent directement au
+// réseau : on ne gère pas leur mise en cache ici.
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
