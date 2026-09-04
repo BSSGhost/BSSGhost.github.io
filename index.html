@@ -153,7 +153,30 @@
         </button>
       </header>
 
-      <main class="hero">
+      <nav class="app-tabbar" aria-label="Navigation principale">
+        <button type="button" class="app-tab is-active" data-target-screen="calculer" aria-current="page">
+          <span class="app-tab-icon" aria-hidden="true">🧮</span>
+          <span data-i18n="tab_calculer">Calculer</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="resultats">
+          <span class="app-tab-icon" aria-hidden="true">📋</span>
+          <span data-i18n="tab_resultats">Résultats</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="evolution">
+          <span class="app-tab-icon" aria-hidden="true">📈</span>
+          <span data-i18n="tab_evolution">Évolution</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="bulletin">
+          <span class="app-tab-icon" aria-hidden="true">📄</span>
+          <span data-i18n="tab_bulletin">Bulletin</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="conseils">
+          <span class="app-tab-icon" aria-hidden="true">❓</span>
+          <span data-i18n="tab_conseils">Conseils</span>
+        </button>
+      </nav>
+
+      <main class="hero app-screen is-active" data-screen="calculer">
         <section class="info-panel">
           <p class="eyebrow" data-i18n="hero_eyebrow">Outil scolaire officiel</p>
           <h1 data-i18n="hero_h1">Calculez votre moyenne de matière et semestrielle en quelques secondes</h1>
@@ -417,16 +440,6 @@
               <button type="button" id="calculer-annee" class="secondary-button" data-i18n="btn_calculer_annee">
                 Calculer ma moyenne annuelle
               </button>
-              <button type="button" id="telecharger-bulletin" class="pdf-button" disabled>
-                <span class="pdf-button-spinner" aria-hidden="true"></span>
-                <svg class="pdf-button-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polyline points="4 13 9 18 20 6"></polyline>
-                </svg>
-                <span class="pdf-button-label" data-i18n="pdf_button_default">Télécharger mon bulletin (PDF)</span>
-                <span class="pdf-button-progress" aria-hidden="true">
-                  <span class="pdf-button-progress-fill"></span>
-                </span>
-              </button>
             </div>
 
             <div class="button-row reset-row">
@@ -438,6 +451,7 @@
         </section>
       </main>
 
+      <div class="app-screen" data-screen="resultats">
       <section id="resultat" class="result-card" aria-live="polite">
         <p class="result-label" data-i18n="result_label">Résultat</p>
         <div class="result-content">
@@ -487,7 +501,9 @@
           </p>
         </div>
       </section>
+      </div>
 
+      <div class="app-screen" data-screen="evolution">
       <section id="tableau-matieres" class="subjects-card" aria-live="polite">
         <div class="subjects-header">
           <h3 data-i18n="subjects_h3">Matières enregistrées</h3>
@@ -540,7 +556,29 @@
         </div>
         <div class="comparison-list" id="comparaison-list"></div>
       </section>
+      </div>
 
+      <div class="app-screen" data-screen="bulletin">
+      <section id="bulletin-screen-card" class="bulletin-screen-card">
+        <span class="bulletin-screen-icon" aria-hidden="true">📄</span>
+        <h2 data-i18n="bulletin_screen_title">Mon bulletin</h2>
+        <p data-i18n="bulletin_screen_subtitle">
+          Téléchargez un récapitulatif de vos notes en PDF, dès que toutes les matières de la classe sont renseignées.
+        </p>
+        <button type="button" id="telecharger-bulletin" class="pdf-button" disabled>
+          <span class="pdf-button-spinner" aria-hidden="true"></span>
+          <svg class="pdf-button-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="4 13 9 18 20 6"></polyline>
+          </svg>
+          <span class="pdf-button-label" data-i18n="pdf_button_default">Télécharger mon bulletin (PDF)</span>
+          <span class="pdf-button-progress" aria-hidden="true">
+            <span class="pdf-button-progress-fill"></span>
+          </span>
+        </button>
+      </section>
+      </div>
+
+      <div class="app-screen" data-screen="conseils">
       <section id="faq" class="faq-card" aria-label="Comment ça marche">
         <div class="faq-header">
           <span class="faq-icon" aria-hidden="true">❓</span>
@@ -617,6 +655,7 @@
           </details>
         </div>
       </section>
+      </div>
 
       <footer class="site-footer">
         <a
