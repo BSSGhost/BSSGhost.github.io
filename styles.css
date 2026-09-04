@@ -2719,6 +2719,94 @@ html.dark-mode .faq-card {
   border-color: rgba(160, 174, 196, 0.14);
 }
 
+/* ---------- Section À propos ---------- */
+.about-card {
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding: 22px 20px;
+  background: var(--card-strong);
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  animation: rise-in 0.45s ease both;
+}
+
+.about-intro {
+  margin: 0 0 18px;
+  color: var(--dark);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.about-subheading {
+  margin: 0 0 10px;
+  color: var(--dark);
+  font-size: 0.95rem;
+}
+
+.about-features {
+  margin: 0 0 20px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--dark);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.about-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--gauge-green-shape-fill);
+  border: 1px solid rgba(41, 128, 100, 0.28);
+}
+
+.about-privacy-icon {
+  flex: 0 0 auto;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.about-privacy strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--gauge-green-700);
+  font-size: 0.92rem;
+}
+
+.about-privacy p {
+  margin: 0;
+  color: var(--gauge-green-700);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+html.dark-mode .about-card {
+  background: #12161d;
+  color: #e6e9ee;
+  border-color: rgba(160, 174, 196, 0.14);
+}
+
+html.dark-mode .about-intro,
+html.dark-mode .about-subheading,
+html.dark-mode .about-features {
+  color: #e6e9ee;
+}
+
+html.dark-mode .about-privacy {
+  background: rgba(78, 170, 126, 0.12);
+  border-color: rgba(78, 170, 126, 0.32);
+}
+
+html.dark-mode .about-privacy strong,
+html.dark-mode .about-privacy p {
+  color: var(--gauge-green-400);
+}
+
 .site-footer {
   display: flex;
   flex-direction: column;
