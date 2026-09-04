@@ -1,3 +1,75 @@
+/* =========================================================
+   POLICES AUTO-HÉBERGÉES
+   Les fichiers .woff2 doivent être placés dans ./fonts/ à la
+   racine du projet (voir liste exacte dans le README des polices).
+   Cela évite toute dépendance à Google Fonts au runtime, pour un
+   mode hors-ligne fidèle après la première visite (le Service
+   Worker met ces fichiers en cache comme les autres assets).
+   ========================================================= */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./fonts/plus-jakarta-sans-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./fonts/plus-jakarta-sans-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./fonts/plus-jakarta-sans-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./fonts/plus-jakarta-sans-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./fonts/plus-jakarta-sans-800.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  src: url('./fonts/fraunces-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  src: url('./fonts/fraunces-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  src: url('./fonts/fraunces-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  src: url('./fonts/fraunces-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --blue-900: #101c2f;
   --blue-800: #172b4b;

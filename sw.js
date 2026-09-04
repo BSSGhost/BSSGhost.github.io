@@ -5,7 +5,7 @@
    Incrémenter CACHE_NAME à chaque déploiement pour invalider
    l'ancien cache.
    ========================================================= */
-const CACHE_NAME = 'sunu-moyenne-v7';
+const CACHE_NAME = 'sunu-moyenne-v8';
 
 const PRECACHE_URLS = [
   './',
@@ -16,6 +16,15 @@ const PRECACHE_URLS = [
   './LYNAQE.png',
   './force-armee.webp',
   './MEN.webp',
+  './fonts/plus-jakarta-sans-400.woff2',
+  './fonts/plus-jakarta-sans-500.woff2',
+  './fonts/plus-jakarta-sans-600.woff2',
+  './fonts/plus-jakarta-sans-700.woff2',
+  './fonts/plus-jakarta-sans-800.woff2',
+  './fonts/fraunces-400.woff2',
+  './fonts/fraunces-500.woff2',
+  './fonts/fraunces-600.woff2',
+  './fonts/fraunces-700.woff2',
 ];
 
 self.addEventListener('install', (event) => {
@@ -41,9 +50,11 @@ self.addEventListener('activate', (event) => {
 // Stratégie "réseau d'abord, cache en secours" pour les fichiers du
 // site. Tant que l'appareil a du réseau, il reçoit toujours la
 // dernière version déployée ; le cache ne sert que si la requête
-// réseau échoue (mode hors-ligne). Les requêtes vers d'autres
-// domaines (polices Google, CDN jsPDF) passent directement au
-// réseau : on ne gère pas leur mise en cache ici.
+// réseau échoue (mode hors-ligne). Les polices sont maintenant
+// auto-hébergées et précachées ci-dessus. Seule la requête vers le
+// CDN jsPDF (autre domaine) passe directement au réseau : on ne
+// gère pas sa mise en cache ici, donc la génération du PDF
+// nécessite une connexion au moins lors de la première utilisation.
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
