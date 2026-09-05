@@ -949,8 +949,14 @@ function updateStepsTimeline() {
   });
 }
 
-document.getElementById('nom')?.addEventListener('input', updateStepsTimeline);
-document.getElementById('prenom')?.addEventListener('input', updateStepsTimeline);
+document.getElementById('nom')?.addEventListener('input', function () {
+  updateStepsTimeline();
+  saveStudentProfile({ nom: this.value.trim() });
+});
+document.getElementById('prenom')?.addEventListener('input', function () {
+  updateStepsTimeline();
+  saveStudentProfile({ prenom: this.value.trim() });
+});
 
 /* ---------- Validation en temps réel des champs de notes ---------- */
 /* Donne un retour visuel (bordure verte/rouge) dès la saisie, plutôt que
@@ -1149,6 +1155,79 @@ function updateCoefficientSuggestion() {
 }
 
 const STORAGE_PREFIX = 'lynaqe_moyennes';
+
+/* =========================================================
+   PROFIL ÉLÈVE (nom, prénom, classe)
+   Avant, nom/prénom étaient dupliqués dans chaque matière
+   enregistrée. Ils sont maintenant stockés une seule fois ici,
+   séparément des notes par matière, pour éviter la duplication
+   et permettre de restaurer l'identité de l'élève dès le
+   chargement de la page (plus besoin de rouvrir une matière
+   déjà saisie pour les retrouver).
+   ========================================================= */
+const STUDENT_PROFILE_KEY = 'lynaqe_student_profile';
+
+function getStudentProfile() {
+  try {
+    const raw = localStorage.getItem(STUDENT_PROFILE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveStudentProfile(partialProfile) {
+  const updated = { ...getStudentProfile(), ...partialProfile };
+  localStorage.setItem(STUDENT_PROFILE_KEY, JSON.stringify(updated));
+}
+
+/* Migration : si un profil élève n'existe pas encore mais que des
+   matières enregistrées avant cette mise à jour contiennent encore
+   nom/prénom, on les récupère une seule fois pour ne rien perdre. */
+function migrateLegacyStudentProfile() {
+  const profile = getStudentProfile();
+  if (profile.nom || profile.prenom) return;
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith(`${STORAGE_PREFIX}_`)) continue;
+
+    try {
+      const notes = JSON.parse(localStorage.getItem(key)) || {};
+      const firstEntry = Object.values(notes)[0];
+      if (firstEntry && (firstEntry.nom || firstEntry.prenom)) {
+        const classe = key.replace(`${STORAGE_PREFIX}_`, '').replace(/_(Semestre1|Semestre2)$/, '');
+        saveStudentProfile({
+          nom: firstEntry.nom || '',
+          prenom: firstEntry.prenom || '',
+          classe,
+        });
+        return;
+      }
+    } catch {
+      // Entrée corrompue : on l'ignore et on continue la recherche.
+    }
+  }
+}
+
+/* Restaure le profil élève dans le formulaire au chargement de la page. */
+function restoreStudentProfile() {
+  const profile = getStudentProfile();
+  const nomInput = document.getElementById('nom');
+  const prenomInput = document.getElementById('prenom');
+
+  if (profile.nom && nomInput) nomInput.value = profile.nom;
+  if (profile.prenom && prenomInput) prenomInput.value = profile.prenom;
+  if (profile.classe && classeSelect) {
+    classeSelect.value = profile.classe;
+    updateMatieres();
+  }
+  updateStepsTimeline();
+}
+
+migrateLegacyStudentProfile();
+restoreStudentProfile();
 
 function getSemestreActuel() {
   return document.querySelector('input[name="semestre"]:checked')?.value || 'Semestre1';
@@ -1465,6 +1544,7 @@ classeSelect.addEventListener('change', function () {
   serieRadios.forEach((radio) => {
     radio.checked = false;
   });
+  saveStudentProfile({ classe: classeSelect.value });
   updateMatieres();
   if (nextSubjectBtn) nextSubjectBtn.hidden = true;
 });
@@ -1565,6 +1645,8 @@ function calculerMoyenneDeMatiere() {
     : moyenneDevoirs;
   const points = moyenneMatiere * coefficient;
 
+  saveStudentProfile({ nom, prenom, classe });
+
   saveMatiereNote(classe, matiere, {
     moyenne: moyenneMatiere,
     points,
@@ -1572,9 +1654,7 @@ function calculerMoyenneDeMatiere() {
     devoir1,
     devoir2,
     composition,
-    hasComposition,
-    nom,
-    prenom
+    hasComposition
   });
 
   renderMoyenneResult({
@@ -2370,8 +2450,9 @@ tableBody.addEventListener('click', function (event) {
   document.getElementById('devoir1').value = note.devoir1 ?? '';
   document.getElementById('devoir2').value = note.devoir2 ?? '';
   compositionInput.value = note.composition ?? '';
-  document.getElementById('nom').value = note.nom ?? '';
-  document.getElementById('prenom').value = note.prenom ?? '';
+  const profile = getStudentProfile();
+  document.getElementById('nom').value = profile.nom || note.nom || '';
+  document.getElementById('prenom').value = profile.prenom || note.prenom || '';
   document.querySelectorAll('.note-input').forEach((input) => updateNoteInputValidity(input));
 
   const compositionRadio = document.querySelector(
@@ -2400,6 +2481,7 @@ boutonReset.addEventListener('click', function () {
         Object.keys(localStorage)
           .filter((key) => key.startsWith(`${STORAGE_PREFIX}_`))
           .forEach((key) => localStorage.removeItem(key));
+        localStorage.removeItem(STUDENT_PROFILE_KEY);
       }
 
       form.reset();
@@ -2414,6 +2496,10 @@ boutonReset.addEventListener('click', function () {
         matiereSelect.innerHTML = `<option value="">${t('option_matiere_default')}</option>`;
         classeSelect.value = '';
         langueGroup.hidden = true;
+      } else {
+        // Reset limité à une classe : le profil élève (nom/prénom/classe)
+        // reste valable, on le réaffiche après le form.reset().
+        restoreStudentProfile();
       }
     },
   });
