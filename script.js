@@ -1332,13 +1332,13 @@ function saveMatiereNote(classe, matiere, data) {
 function getMatieresPourClasse(classe) {
   const baseMatieres = [...matieresCommunesBase];
   const matieresSansEconomie = baseMatieres.filter(
-    matiere => matiere !== 'Economie Familiale et Sociale'
+    matiere => matiere !== 'ECOFAM'
   );
   const matieresSansEconomieEtCivisme = matieresSansEconomie.filter(
-    matiere => matiere !== 'Education au Civisme et à la Citoyenneté'
+    matiere => matiere !== 'EC'
   );
   const matieresSansCivisme = baseMatieres.filter(
-    matiere => matiere !== 'Education au Civisme et à la Citoyenneté'
+    matiere => matiere !== 'EC'
   );
 
   if (classe === 'Tle') {
