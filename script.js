@@ -159,6 +159,7 @@ const translations = {
     confirm_modal_info_title: "Information",
     msg_erreur_pdf: "Une erreur est survenue pendant la génération du bulletin. Veuillez réessayer.",
     msg_jspdf_manquant: "Erreur: La bibliothèque jsPDF n'est pas chargée.",
+    msg_erreur_generation_pdf: "Une erreur est survenue pendant la génération du PDF. Veuillez réessayer.",
     msg_aucune_note_pdf: "Aucune note enregistrée pour cette classe et ce semestre. Veuillez remplir les notes d'abord.",
 
     table_modifier: "Modifier",
@@ -375,6 +376,7 @@ const translations = {
     confirm_modal_info_title: "Information",
     msg_erreur_pdf: "An error occurred while generating the report card. Please try again.",
     msg_jspdf_manquant: "Error: The jsPDF library is not loaded.",
+    msg_erreur_generation_pdf: "An error occurred while generating the PDF. Please try again.",
     msg_aucune_note_pdf: "No grades recorded for this grade level and semester. Please fill in the grades first.",
 
     table_modifier: "Edit",
@@ -2176,7 +2178,7 @@ function generatePDFBulletin() {
   const { jsPDF } = window.jspdf;
   if (!jsPDF) {
     showInfoDialog(t('msg_jspdf_manquant'));
-    return;
+    return false;
   }
 
   const nom = document.getElementById('nom').value.trim() || 'DIOP';
@@ -2189,10 +2191,11 @@ function generatePDFBulletin() {
 
   if (entries.length === 0) {
     showInfoDialog(t('msg_aucune_note_pdf'));
-    return;
+    return false;
   }
 
-  const doc = new jsPDF({
+  try {
+    const doc = new jsPDF({
     orientation: 'p',
     unit: 'mm',
     format: 'a4'
@@ -2392,6 +2395,12 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   doc.text(t('pdf_footer_doc'), pageWidth / 2, pageHeight - 14, { align: "center", maxWidth: pageWidth - 28 });
 
   doc.save(`Bulletin_${prenom}_${nom}_${classe}_${semestreVal}.pdf`);
+    return true;
+  } catch (e) {
+    console.log('Erreur lors de la génération du PDF :', e);
+    showInfoDialog(t('msg_erreur_generation_pdf'));
+    return false;
+  }
 }
 
 function PDF_BUTTON_DEFAULT_LABEL_FN() { return t('pdf_button_default'); }
@@ -2478,8 +2487,8 @@ function handleTelechargerBulletinClick() {
   // sans retour visuel.
   window.setTimeout(() => {
     try {
-      generatePDFBulletin();
-      finishLoading(true);
+      const success = generatePDFBulletin();
+      finishLoading(success);
     } catch (error) {
       console.error('Erreur lors de la génération du PDF :', error);
       setResult(t('msg_erreur_pdf'), true);

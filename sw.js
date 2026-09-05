@@ -5,7 +5,7 @@
    Incrémenter CACHE_NAME à chaque déploiement pour invalider
    l'ancien cache.
    ========================================================= */
-const CACHE_NAME = 'sunu-moyenne-v9';
+const CACHE_NAME = 'sunu-moyenne-v10';
 
 const PRECACHE_URLS = [
   './',
@@ -16,6 +16,7 @@ const PRECACHE_URLS = [
   './LYNAQE.png',
   './force-armee.webp',
   './MEN.webp',
+  './js/jspdf.umd.min.js',
   './fonts/plus-jakarta-sans-400.woff2',
   './fonts/plus-jakarta-sans-500.woff2',
   './fonts/plus-jakarta-sans-600.woff2',
@@ -50,11 +51,10 @@ self.addEventListener('activate', (event) => {
 // Stratégie "réseau d'abord, cache en secours" pour les fichiers du
 // site. Tant que l'appareil a du réseau, il reçoit toujours la
 // dernière version déployée ; le cache ne sert que si la requête
-// réseau échoue (mode hors-ligne). Les polices sont maintenant
-// auto-hébergées et précachées ci-dessus. Seule la requête vers le
-// CDN jsPDF (autre domaine) passe directement au réseau : on ne
-// gère pas sa mise en cache ici, donc la génération du PDF
-// nécessite une connexion au moins lors de la première utilisation.
+// réseau échoue (mode hors-ligne). Les polices sont auto-hébergées
+// et précachées ci-dessus, tout comme jsPDF (./js/jspdf.umd.min.js) :
+// la génération du bulletin PDF fonctionne donc entièrement hors-ligne,
+// dès la première visite en ligne.
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
