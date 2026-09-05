@@ -314,16 +314,18 @@
 
             <div class="field-group">
               <label for="classe" data-i18n="label_classe">Classe</label>
-              <select id="classe" name="classe" required>
-                <option value="" data-i18n="option_classe_default">-- Sélectionner votre classe --</option>
-                <option value="6e">6e</option>
-                <option value="5e">5e</option>
-                <option value="4e">4e</option>
-                <option value="3e">3e</option>
-                <option value="2nde">2nde</option>
-                <option value="1er">1er</option>
-                <option value="Tle">Tle</option>
-              </select>
+              <div class="select-wrap">
+                <select id="classe" name="classe" required>
+                  <option value="" data-i18n="option_classe_default">-- Sélectionner votre classe --</option>
+                  <option value="6e">6e</option>
+                  <option value="5e">5e</option>
+                  <option value="4e">4e</option>
+                  <option value="3e">3e</option>
+                  <option value="2nde">2nde</option>
+                  <option value="1er">1er</option>
+                  <option value="Tle">Tle</option>
+                </select>
+              </div>
             </div>
 
             <fieldset class="field-group">
@@ -370,9 +372,11 @@
 
             <div class="field-group">
               <label for="matiere" data-i18n="label_matiere">Matière</label>
-              <select id="matiere" name="matiere" required>
-                <option value="" data-i18n="option_matiere_default">-- Sélectionner une matière --</option>
-              </select>
+              <div class="select-wrap">
+                <select id="matiere" name="matiere" required>
+                  <option value="" data-i18n="option_matiere_default">-- Sélectionner une matière --</option>
+                </select>
+              </div>
             </div>
 
             <div class="field-group">

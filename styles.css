@@ -1413,11 +1413,6 @@ select:focus {
 
 select {
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
-    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
-  background-position: calc(100% - 20px) calc(50% - 2px), calc(100% - 14px) calc(50% - 2px);
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
   padding-right: 38px;
   cursor: pointer;
 }
@@ -1425,6 +1420,34 @@ select {
 select option {
   background: white;
   color: var(--dark);
+}
+
+/* ---------- Wrapper de select avec flèche animée ---------- */
+/* La flèche pivote à l'ouverture du menu (approximée par le focus du
+   select, seul signal fiable en CSS pur, sans JS, cross-browser). */
+.select-wrap {
+  position: relative;
+}
+
+.select-wrap select {
+  width: 100%;
+}
+
+.select-wrap::after {
+  content: "▾";
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  color: var(--blue-600);
+  font-size: 0.85rem;
+  line-height: 1;
+  pointer-events: none;
+  transition: transform 0.25s ease;
+}
+
+.select-wrap:focus-within::after {
+  transform: translateY(-50%) rotate(180deg);
 }
 
 .two-columns {
