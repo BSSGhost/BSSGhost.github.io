@@ -18,13 +18,14 @@ function setLang(lang) {
 
 const translations = {
   fr: {
-    device_modal_eyebrow: "Bienvenue sur SUNU MOYENNE",
-    device_modal_title: "Quel appareil utilisez-vous ?",
-    device_modal_subtitle: "Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.",
+    device_modal_eyebrow: "Paramètres d'affichage",
+    device_modal_title: "Adapter l'affichage",
+    device_modal_subtitle: "Le site détecte automatiquement la taille de votre écran. Vous pouvez forcer un affichage ci-dessous si besoin.",
+    device_auto: "Automatique",
     device_phone: "Téléphone",
     device_tablet: "Tablette",
     device_computer: "Ordinateur",
-    change_device_btn: "Changer d'appareil",
+    change_device_btn: "Affichage",
     lang_switch_btn: "English",
     hero_eyebrow: "Outil scolaire officiel",
     hero_h1: "Calculez votre moyenne de matière et semestrielle en quelques secondes",
@@ -233,13 +234,14 @@ const translations = {
     msg_matieres_incompletes: "Le bulletin n'est téléchargeable que lorsque toutes les matières de la classe ont leur moyenne renseignée."
   },
   en: {
-    device_modal_eyebrow: "Welcome to SUNU MOYENNE",
-    device_modal_title: "Which device are you using?",
-    device_modal_subtitle: "This choice automatically adapts the site's display to your screen.",
+    device_modal_eyebrow: "Display settings",
+    device_modal_title: "Adjust the display",
+    device_modal_subtitle: "The site automatically detects your screen size. You can force a display below if needed.",
+    device_auto: "Automatic",
     device_phone: "Phone",
     device_tablet: "Tablet",
     device_computer: "Computer",
-    change_device_btn: "Change device",
+    change_device_btn: "Display",
     lang_switch_btn: "Français",
     hero_eyebrow: "Official school tool",
     hero_h1: "Calculate your subject and semester average in seconds",
@@ -616,6 +618,41 @@ const DEVICE_REFERENCE_WIDTHS = {
   ordinateur: 1280
 };
 
+/* Détection automatique de l'appareil à partir de la largeur d'écran.
+   Un utilisateur peut forcer un affichage via le bouton "⚙️ Affichage" ;
+   ce choix est alors mémorisé et prime sur la détection automatique. */
+const DEVICE_PREF_KEY = 'lynaqe_device_pref';
+
+function detectDeviceFromWidth() {
+  const w = window.innerWidth;
+  if (w < 640) return 'phone';
+  if (w < 1080) return 'tablette';
+  return 'ordinateur';
+}
+
+function getStoredDevicePref() {
+  try {
+    const stored = localStorage.getItem(DEVICE_PREF_KEY);
+    return DEVICE_REFERENCE_WIDTHS[stored] ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function setStoredDevicePref(device) {
+  try {
+    if (device) {
+      localStorage.setItem(DEVICE_PREF_KEY, device);
+    } else {
+      localStorage.removeItem(DEVICE_PREF_KEY);
+    }
+  } catch {}
+}
+
+function resolveDevice() {
+  return getStoredDevicePref() || detectDeviceFromWidth();
+}
+
 let currentDevice = null;
 
 function updateViewportScale() {
@@ -687,8 +724,19 @@ function closeDeviceModal() {
   );
 }
 
+function highlightCurrentDeviceOption() {
+  const activePref = getStoredDevicePref();
+  deviceOptions.forEach((button) => {
+    const isCurrent = activePref
+      ? button.dataset.device === activePref
+      : button.dataset.device === 'auto';
+    button.classList.toggle('is-current', isCurrent);
+  });
+}
+
 function openDeviceModal() {
   if (!deviceModal) return;
+  highlightCurrentDeviceOption();
   deviceModal.classList.remove('is-closing');
   deviceModal.style.display = 'flex';
   deviceOptions[0]?.focus();
@@ -697,12 +745,35 @@ function openDeviceModal() {
 deviceOptions.forEach((button) => {
   button.addEventListener('click', () => {
     const device = button.dataset.device;
-    applyDeviceClass(device);
+    if (device === 'auto') {
+      setStoredDevicePref(null);
+      applyDeviceClass(detectDeviceFromWidth());
+    } else {
+      setStoredDevicePref(device);
+      applyDeviceClass(device);
+    }
     closeDeviceModal();
   });
 });
 
 changeDeviceBtn?.addEventListener('click', openDeviceModal);
+
+// Applique immédiatement l'affichage détecté (ou le choix mémorisé) : plus
+// aucune question n'est posée à l'arrivée sur le site.
+applyDeviceClass(resolveDevice());
+
+// Si aucun affichage n'a été forcé manuellement, on réévalue la détection
+// quand la fenêtre change de largeur (redimensionnement, rotation d'écran),
+// pour rester réactif comme un site responsive classique.
+let resizeDetectFrame = null;
+window.addEventListener('resize', () => {
+  if (getStoredDevicePref()) return;
+  if (resizeDetectFrame) clearTimeout(resizeDetectFrame);
+  resizeDetectFrame = setTimeout(() => {
+    const detected = detectDeviceFromWidth();
+    if (detected !== currentDevice) applyDeviceClass(detected);
+  }, 200);
+});
 
 function gradeClass(value) {
   if (value < 10) return 'grade-faible';

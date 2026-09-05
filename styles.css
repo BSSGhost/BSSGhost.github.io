@@ -320,7 +320,7 @@ th {
   position: fixed;
   inset: 0;
   z-index: 100;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   padding: 20px;
@@ -328,6 +328,11 @@ th {
   backdrop-filter: blur(6px);
   animation: rise-in 0.35s ease both;
 }
+
+/* Le modal n'est plus affiché automatiquement à l'arrivée : il ne s'ouvre
+   que via le bouton "⚙️ Affichage" (voir change-device-btn dans script.js).
+   L'affichage par défaut est désormais détecté automatiquement à partir
+   de la largeur de l'écran (window.innerWidth). */
 
 @keyframes modal-pop-in {
   from {
@@ -517,9 +522,15 @@ th {
 
 .device-options {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-top: 26px;
+}
+
+.device-option.is-current {
+  border-color: var(--blue-500);
+  background: #eef1f5;
+  box-shadow: 0 0 0 2px rgba(23, 43, 75, 0.18) inset;
 }
 
 .device-option {

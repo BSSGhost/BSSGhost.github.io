@@ -69,13 +69,21 @@
 
     <div id="device-modal" class="device-modal" role="dialog" aria-modal="true" aria-labelledby="device-modal-title">
       <div class="device-modal-card">
-        <p class="eyebrow" data-i18n="device_modal_eyebrow">Bienvenue sur SUNU MOYENNE</p>
-        <h2 id="device-modal-title" data-i18n="device_modal_title">Quel appareil utilisez-vous ?</h2>
+        <p class="eyebrow" data-i18n="device_modal_eyebrow">Paramètres d'affichage</p>
+        <h2 id="device-modal-title" data-i18n="device_modal_title">Adapter l'affichage</h2>
         <p class="device-modal-subtitle" data-i18n="device_modal_subtitle">
-          Ce choix permet d'adapter automatiquement l'affichage du site à votre écran.
+          Le site détecte automatiquement la taille de votre écran. Vous pouvez forcer un affichage ci-dessous si besoin.
         </p>
 
         <div class="device-options">
+          <button type="button" class="device-option" data-device="auto">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M39 24a15 15 0 1 1-4.4-10.6"></path>
+              <path d="M39 8v9h-9"></path>
+            </svg>
+            <span data-i18n="device_auto">Automatique</span>
+          </button>
+
           <button type="button" class="device-option" data-device="phone">
             <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="14" y="4" width="20" height="40" rx="4"></rect>
@@ -173,12 +181,8 @@
           <span class="son-label">Son activé</span>
         </button>
         <button type="button" id="change-device-btn" class="device-change-btn">
-          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="6" y="9" width="27" height="18" rx="2.5"></rect>
-            <line x1="14" y1="33" x2="25" y2="33"></line>
-            <rect x="34" y="14" width="9" height="16" rx="2"></rect>
-          </svg>
-          <span data-i18n="change_device_btn">Changer d'appareil</span>
+          <span class="settings-icon" aria-hidden="true">⚙️</span>
+          <span data-i18n="change_device_btn">Affichage</span>
         </button>
       </header>
 
