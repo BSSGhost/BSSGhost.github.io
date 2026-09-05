@@ -2394,7 +2394,19 @@ if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
   doc.setTextColor(120, 120, 120);
   doc.text(t('pdf_footer_doc'), pageWidth / 2, pageHeight - 14, { align: "center", maxWidth: pageWidth - 28 });
 
-  doc.save(`Bulletin_${prenom}_${nom}_${classe}_${semestreVal}.pdf`);
+  const nomFichier = `Bulletin_${prenom}_${nom}_${classe}_${semestreVal}.pdf`;
+
+  // Sur iOS (Safari, ou l'app installée en PWA), le téléchargement direct
+  // via doc.save() ne déclenche pas toujours une vraie sauvegarde de fichier,
+  // même en synchrone. On ouvre alors le PDF dans un nouvel onglet : l'élève
+  // peut ensuite l'enregistrer ou le partager via le bouton natif de Safari.
+  const estIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (estIOS) {
+    const blobUrl = doc.output('bloburl');
+    window.open(blobUrl, '_blank');
+  } else {
+    doc.save(nomFichier);
+  }
     return true;
   } catch (e) {
     console.log('Erreur lors de la génération du PDF :', e);
@@ -2482,19 +2494,21 @@ function handleTelechargerBulletinClick() {
     }
   };
 
-  // On laisse le navigateur peindre le spinner et la barre de progression avant de lancer
-  // la génération (synchrone et potentiellement lourde) du PDF, sinon l'UI resterait figée
-  // sans retour visuel.
-  window.setTimeout(() => {
-    try {
-      const success = generatePDFBulletin();
-      finishLoading(success);
-    } catch (error) {
-      console.error('Erreur lors de la génération du PDF :', error);
-      setResult(t('msg_erreur_pdf'), true);
-      finishLoading(false);
-    }
-  }, 30);
+  // Génération lancée de manière SYNCHRONE, dans le même tick que le clic :
+  // sur mobile (Safari iOS notamment, et certains navigateurs Android), un
+  // téléchargement de fichier déclenché après un setTimeout/délai n'est plus
+  // reconnu comme une action directe de l'utilisateur, et le navigateur
+  // bloque le téléchargement silencieusement, sans la moindre erreur visible.
+  // On sacrifie donc le petit temps de pose qui laissait peindre le spinner,
+  // au profit d'un téléchargement qui fonctionne réellement sur tous les appareils.
+  try {
+    const success = generatePDFBulletin();
+    finishLoading(success);
+  } catch (error) {
+    console.error('Erreur lors de la génération du PDF :', error);
+    setResult(t('msg_erreur_pdf'), true);
+    finishLoading(false);
+  }
 }
 
 boutonTelechargerPdf?.addEventListener('click', handleTelechargerBulletinClick);

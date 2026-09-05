@@ -5,7 +5,7 @@
    Incrémenter CACHE_NAME à chaque déploiement pour invalider
    l'ancien cache.
    ========================================================= */
-const CACHE_NAME = 'sunu-moyenne-v11';
+const CACHE_NAME = 'sunu-moyenne-v12';
 
 const PRECACHE_URLS = [
   './',
