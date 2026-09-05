@@ -2580,6 +2580,7 @@ afficherCitationDuJour();
 updateMatieres();
 renderTableMatiere();
 animateHeroPreview();
+revealHeroPreviewGauges();
 
 /* =========================================================
    APERÇU ANIMÉ DU BULLETIN (hero)
@@ -2605,6 +2606,35 @@ function animateHeroPreview() {
   }, { threshold: 0.4 });
 
   observer.observe(heroPreviewValue.closest('.hero-preview'));
+}
+
+/* Joue une seule fois, au premier chargement, l'animation d'apparition
+   des lignes/jauges du mini-aperçu du bulletin, puis retire la classe
+   .is-revealing : le style "visible" (défini dans styles.css) devient
+   alors définitivement le style de repos de ces éléments. Ainsi, changer
+   d'onglet (Résultats, Évolution, ...) puis revenir sur "Calculer" ne
+   dépend plus jamais d'un rejeu de l'animation CSS pour rester visible —
+   certains navigateurs mobiles ne la rejouent pas de façon fiable quand
+   un ancêtre repasse de display:none à display:block, ce qui laissait
+   auparavant cette zone entièrement blanche au retour sur l'écran.
+   ========================================================= */
+function revealHeroPreviewGauges() {
+  if (prefersReducedMotion) return;
+
+  const elements = document.querySelectorAll('.hero-preview-row, .hero-preview-fill');
+  if (!elements.length) return;
+
+  elements.forEach((el) => el.classList.add('is-revealing'));
+
+  const clear = () => elements.forEach((el) => el.classList.remove('is-revealing'));
+
+  elements.forEach((el) => {
+    el.addEventListener('animationend', () => el.classList.remove('is-revealing'), { once: true });
+  });
+
+  // Filet de sécurité si un 'animationend' ne se déclenche pas pour une
+  // raison ou une autre (durée max ~0.9s + délai max ~590ms dans le CSS).
+  setTimeout(clear, 2000);
 }
 
 /* =========================================================

@@ -964,6 +964,18 @@ h1 {
   align-items: center;
   gap: 10px;
   padding: 6px 0;
+  opacity: 1;
+  transform: none;
+}
+
+/* .is-revealing est ajoutée puis retirée par script.js juste après le
+   chargement de la page, le temps d'une seule animation d'entrée. Le
+   style par défaut ci-dessus (opacity: 1) reste donc TOUJOURS la valeur
+   de repos de l'élément : passer l'écran "Calculer" en display:none puis
+   display:block (changement d'onglet) ne peut plus jamais le laisser
+   invisible, même si l'animation ci-dessous ne se rejoue pas (bug connu
+   de certains navigateurs mobiles avec les animations "forwards"). */
+.hero-preview-row.is-revealing {
   opacity: 0;
   transform: translateX(-8px);
   animation: hero-preview-row-in 0.5s ease forwards;
@@ -993,8 +1005,16 @@ h1 {
 .hero-preview-fill {
   display: block;
   height: 100%;
-  width: 0%;
+  width: var(--value, 70%);
   border-radius: 999px;
+}
+
+/* Même logique que .hero-preview-row.is-revealing ci-dessus : la jauge
+   part de 0% uniquement pendant l'unique animation d'entrée au premier
+   chargement, puis la classe est retirée et la largeur définitive
+   (var(--value)) redevient le style de repos permanent de l'élément. */
+.hero-preview-fill.is-revealing {
+  width: 0%;
   animation: hero-preview-fill-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   animation-delay: calc(var(--delay, 0) * 120ms + 350ms);
 }
@@ -1051,12 +1071,12 @@ h1 {
   .hero-preview {
     animation: none;
   }
-  .hero-preview-row {
+  .hero-preview-row.is-revealing {
     opacity: 1;
     transform: none;
     animation: none;
   }
-  .hero-preview-fill {
+  .hero-preview-fill.is-revealing {
     animation: none;
     width: var(--value, 70%);
   }
