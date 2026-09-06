@@ -2411,6 +2411,109 @@ html.dark-mode .bulletin-ready-btn:hover {
   background: rgba(255, 253, 248, 0.92);
 }
 
+/* Badge "Année scolaire" dans l'en-tête du site */
+.annee-scolaire-badge {
+  display: block;
+  margin-top: 2px;
+  color: var(--yellow-500);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* =========================================================
+   OBJECTIF PERSONNEL DE MOYENNE
+   ========================================================= */
+.objectif-widget {
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(78, 113, 170, 0.07);
+  border: 1px solid rgba(29, 59, 106, 0.14);
+}
+
+.objectif-widget-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.objectif-widget-row label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--blue-800);
+}
+
+.objectif-input-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.objectif-input-group input[type="number"] {
+  width: 76px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--soft-border);
+  font-family: var(--font-main);
+  font-size: 0.92rem;
+  color: var(--dark);
+  background: var(--card-strong);
+}
+
+.objectif-unit {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.objectif-progress {
+  margin-top: 14px;
+}
+
+.objectif-progress-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(29, 59, 106, 0.12);
+  overflow: visible;
+}
+
+.objectif-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--copper-400), var(--copper-300));
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+.objectif-progress.is-reached .objectif-progress-fill {
+  background: linear-gradient(90deg, var(--gauge-green-600), var(--gauge-green-400));
+}
+
+.objectif-progress-target {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 16px;
+  background: var(--blue-800);
+  left: 0%;
+  transform: translateX(-1px);
+}
+
+.objectif-progress-text {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.objectif-progress.is-reached .objectif-progress-text {
+  color: var(--gauge-green-700);
+  font-weight: 600;
+}
+
 .subjects-header {
   display: flex;
   justify-content: space-between;
@@ -3984,6 +4087,33 @@ html.dark-mode .advisor-line {
 
 html.dark-mode .advisor-goal {
   background: rgba(46, 63, 90, 0.3);
+}
+
+html.dark-mode .objectif-widget {
+  background: rgba(78, 113, 170, 0.1);
+  border-color: rgba(160, 174, 196, 0.18);
+}
+
+html.dark-mode .objectif-widget-row label {
+  color: #bfcde3;
+}
+
+html.dark-mode .objectif-input-group input[type="number"] {
+  background: #11161d;
+  border-color: rgba(160, 174, 196, 0.22);
+  color: #eef1f5;
+}
+
+html.dark-mode .objectif-progress-track {
+  background: rgba(160, 174, 196, 0.14);
+}
+
+html.dark-mode .objectif-progress-text {
+  color: #dce1e8;
+}
+
+html.dark-mode .objectif-progress.is-reached .objectif-progress-text {
+  color: #bfe6d3;
 }
 
 html.dark-mode .advisor-text strong {

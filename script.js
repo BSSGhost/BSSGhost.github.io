@@ -192,6 +192,12 @@ const translations = {
     advisor_leviers_with_subjects: "augmente principalement tes résultats en {list}.",
     advisor_leviers_none: "continue à consolider l'ensemble de tes matières.",
 
+    objectif_label: "Mon objectif de moyenne",
+    objectif_placeholder: "Ex : 14",
+    objectif_no_data: "Ajoutez des matières ci-dessus pour suivre votre progression vers cet objectif.",
+    objectif_reached: "Objectif atteint ! Moyenne actuelle : {value}/20 🎉",
+    objectif_gap: "Il vous manque {diff} point(s) pour atteindre votre objectif (moyenne actuelle : {value}/20).",
+
     result_pill_semestre: "Moyenne du {semestre}",
     result_pill_annee: "Moyenne annuelle",
     result_coefficient_text: "Coefficient {n}",
@@ -212,6 +218,7 @@ const translations = {
     pdf_semestre2_full: "2ème Semestre",
     pdf_eleve: "Élève : {nom}",
     pdf_classe: "Classe : {classe}",
+    pdf_annee_scolaire: "Année scolaire : {annee}",
     pdf_moyenne_generale: "Moyenne Générale : {value} / 20",
     pdf_th_discipline: "Discipline",
     pdf_th_devoir1: "Devoir 1",
@@ -413,6 +420,12 @@ const translations = {
     advisor_leviers_with_subjects: "mainly improve your results in {list}.",
     advisor_leviers_none: "keep consolidating all your subjects.",
 
+    objectif_label: "My target average",
+    objectif_placeholder: "E.g. 14",
+    objectif_no_data: "Add subjects above to track your progress toward this goal.",
+    objectif_reached: "Goal reached! Current average: {value}/20 🎉",
+    objectif_gap: "You need {diff} more point(s) to reach your goal (current average: {value}/20).",
+
     result_pill_semestre: "{semestre} average",
     result_pill_annee: "Annual average",
     result_coefficient_text: "Coefficient {n}",
@@ -433,6 +446,7 @@ const translations = {
     pdf_semestre2_full: "2nd Semester",
     pdf_eleve: "Student: {nom}",
     pdf_classe: "Grade level: {classe}",
+    pdf_annee_scolaire: "School year: {annee}",
     pdf_moyenne_generale: "Overall Average: {value} / 20",
     pdf_th_discipline: "Subject",
     pdf_th_devoir1: "Assign. 1",
@@ -607,6 +621,100 @@ const EMPTY_SUBJECTS_ROW_HTML = `
     </td>
   </tr>
 `;
+
+/* =========================================================
+   OBJECTIF PERSONNEL DE MOYENNE
+   Permet à l'élève de fixer sa propre cible de moyenne et de
+   suivre visuellement l'écart au fil des matières saisies.
+   ========================================================= */
+const OBJECTIF_PERSONNEL_KEY = 'sunu_moyenne_objectif_personnel';
+
+function getObjectifPersonnel() {
+  try {
+    const stored = localStorage.getItem(OBJECTIF_PERSONNEL_KEY);
+    const value = parseFloat(stored);
+    return Number.isFinite(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function setObjectifPersonnel(value) {
+  try {
+    if (value === null) {
+      localStorage.removeItem(OBJECTIF_PERSONNEL_KEY);
+    } else {
+      localStorage.setItem(OBJECTIF_PERSONNEL_KEY, String(value));
+    }
+  } catch {}
+}
+
+const objectifInput = document.getElementById('objectif-personnel-input');
+const objectifProgress = document.getElementById('objectif-progress');
+const objectifProgressFill = document.getElementById('objectif-progress-fill');
+const objectifProgressTarget = document.getElementById('objectif-progress-target');
+const objectifProgressText = document.getElementById('objectif-progress-text');
+
+/* Recalcule et affiche l'écart entre la moyenne pondérée des
+   matières actuellement renseignées (pour la classe/semestre
+   affiché) et l'objectif personnel choisi par l'élève. */
+function updateObjectifProgress(entries) {
+  if (!objectifProgress || !objectifInput) return;
+
+  const objectif = getObjectifPersonnel();
+  if (objectif === null) {
+    objectifProgress.hidden = true;
+    return;
+  }
+
+  objectifProgress.hidden = false;
+
+  const sommeCoeff = entries.reduce((total, [, data]) => total + Number(data.coefficient), 0);
+  const sommePoints = entries.reduce(
+    (total, [, data]) => total + Number(data.points ?? (data.moyenne * data.coefficient)),
+    0
+  );
+  const moyenneActuelle = sommeCoeff > 0 ? sommePoints / sommeCoeff : 0;
+  const diff = objectif - moyenneActuelle;
+  const reached = entries.length > 0 && diff <= 0;
+
+  objectifProgress.classList.toggle('is-reached', reached);
+  if (objectifProgressFill) {
+    objectifProgressFill.style.width = `${Math.min(100, Math.max(0, (moyenneActuelle / 20) * 100))}%`;
+  }
+  if (objectifProgressTarget) {
+    objectifProgressTarget.style.left = `${Math.min(100, Math.max(0, (objectif / 20) * 100))}%`;
+  }
+  if (objectifProgressText) {
+    if (entries.length === 0) {
+      objectifProgressText.textContent = t('objectif_no_data');
+    } else if (reached) {
+      objectifProgressText.textContent = t('objectif_reached', { value: moyenneActuelle.toFixed(2) });
+    } else {
+      objectifProgressText.textContent = t('objectif_gap', {
+        diff: diff.toFixed(2),
+        value: moyenneActuelle.toFixed(2)
+      });
+    }
+  }
+}
+
+if (objectifInput) {
+  const storedObjectif = getObjectifPersonnel();
+  if (storedObjectif !== null) objectifInput.value = storedObjectif;
+
+  objectifInput.addEventListener('change', () => {
+    const raw = objectifInput.value.trim();
+    if (raw === '') {
+      setObjectifPersonnel(null);
+    } else {
+      const value = Math.min(20, Math.max(0, Number(raw)));
+      objectifInput.value = value;
+      setObjectifPersonnel(value);
+    }
+    renderTableMatiere();
+  });
+}
 
 const classeLabel = document.getElementById('classe-label');
 const nextSubjectBtn = document.getElementById('next-subject-btn');
@@ -1407,6 +1515,7 @@ function renderTableMatiere() {
   if (!entries.length) {
     tableBody.innerHTML = EMPTY_SUBJECTS_ROW_HTML;
     renderRadarChart([]);
+    updateObjectifProgress([]);
     return;
   }
 
@@ -1449,6 +1558,7 @@ function renderTableMatiere() {
   });
 
   renderRadarChart(entries);
+  updateObjectifProgress(entries);
   updateStepsTimeline();
 
   if (comparaisonPanel && !comparaisonPanel.hidden) {
@@ -2233,6 +2343,24 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
   afficherConseillerScolaire(combineMatieresAnnuelles(resultS1, resultS2), moyenneAnnuelle);
 });
 
+/* Renvoie l'année scolaire en cours au format "2025-2026". Avant
+   septembre (mois < 8), on considère qu'on est encore sur l'année
+   scolaire qui a commencé l'année précédente. */
+function getAnneeScolaire() {
+  const aujourdhui = new Date();
+  const annee = aujourdhui.getFullYear();
+  const mois = aujourdhui.getMonth();
+
+  if (mois < 8) {
+    return `${annee - 1}-${annee}`;
+  } else {
+    return `${annee}-${annee + 1}`;
+  }
+}
+
+const anneeScolaireEl = document.getElementById('annee-scolaire');
+if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
+
 // PDF Premium Generation Function
 function generatePDFBulletin() {
   const { jsPDF } = window.jspdf;
@@ -2321,7 +2449,7 @@ function generatePDFBulletin() {
   doc.setFillColor(248, 246, 240);
   doc.setDrawColor(220, 220, 210);
   doc.setLineWidth(0.3);
-  doc.roundedRect(14, 58, pageWidth - 28, 22, 2, 2, 'FD');
+  doc.roundedRect(14, 58, pageWidth - 28, 26, 2, 2, 'FD');
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -2329,29 +2457,23 @@ function generatePDFBulletin() {
   doc.text(t('pdf_eleve', { nom: `${prenom.toUpperCase()} ${nom.toUpperCase()}` }), 18, 65);
   doc.text(t('pdf_classe', { classe }), 18, 72);
 
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8.5);
+  doc.setTextColor(90, 90, 90);
+  doc.text(t('pdf_annee_scolaire', { annee: getAnneeScolaire() }), 18, 78.5);
+
   const totalCoeff = entries.reduce((acc, [, item]) => acc + Number(item.coefficient), 0);
   const totalPoints = entries.reduce((acc, [, item]) => acc + Number(item.points ?? (item.moyenne * item.coefficient)), 0);
   const moyenneGen = totalCoeff > 0 ? (totalPoints / totalCoeff) : 0;
   const mentionObj = getMention(moyenneGen);
 
-function getAnneeScolaire() {
-  const aujourdhui = new Date();
-  const annee = aujourdhui.getFullYear();
-  const mois = aujourdhui.getMonth();
-
-  if (mois < 8) {
-    return `${annee - 1}-${annee}`;
-  } else {
-    return `${annee}-${annee + 1}`;
-  }
-}
-
-const anneeScolaireEl = document.getElementById("annee-scolaire");
-if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(16, 28, 47);
   doc.text(t('pdf_moyenne_generale', { value: moyenneGen.toFixed(2) }), pageWidth - 18, 72, { align: "right" });
 
   // Tableau des Notes Soigné avec Colonne d'Appréciation
-  const startY = 86;
+  const startY = 90;
   const colWidths = [45, 20, 20, 22, 20, 22, 33]; // Somme = 182
   const headers = [t('pdf_th_discipline'), t('pdf_th_devoir1'), t('pdf_th_devoir2'), t('pdf_th_compo'), t('pdf_th_coeff'), t('pdf_th_moyenne'), t('pdf_th_appreciation')];
 
