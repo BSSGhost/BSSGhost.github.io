@@ -3055,6 +3055,10 @@ function showInfoDialog(message) {
     });
     if (!matched) return;
 
+    if (screenName === 'bulletin' && typeof window.refreshBulletinPreview === 'function') {
+      window.refreshBulletinPreview();
+    }
+
     tabs.forEach((tab) => {
       const isActive = tab.dataset.targetScreen === screenName;
       tab.classList.toggle('is-active', isActive);

@@ -818,11 +818,10 @@
         }).join('');
       }
 
-      document.querySelectorAll('.app-tab').forEach((tab) => {
-        if (tab.dataset.targetScreen === 'bulletin') {
-          tab.addEventListener('click', refreshBulletinPreview);
-        }
-      });
+      // Exposée pour que activateScreen() (script.js) puisse rafraîchir
+      // le résumé quel que soit le chemin utilisé pour arriver sur
+      // l'onglet Bulletin (onglet de nav, bouton "Voir mon bulletin", etc.)
+      window.refreshBulletinPreview = refreshBulletinPreview;
     </script>
     <script>
       if ('serviceWorker' in navigator) {
