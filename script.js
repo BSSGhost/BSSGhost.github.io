@@ -45,6 +45,10 @@ const translations = {
     hero_preview_mention: "Très bon travail",
     next_subject_btn: "Matière suivante",
     next_subject_done: "Toutes les matières sont renseignées ✓",
+    back_to_calculer_btn: "Revenir à l'écran calculer",
+    see_evolution_btn: "Voir mon évolution",
+    bulletin_ready_text: "Votre bulletin est prêt ! Vous pouvez le télécharger dans l'onglet Bulletin.",
+    goto_bulletin_btn: "Voir mon bulletin",
     quote_of_day_label: "Conseil du jour",
     calculator_h2: "Formulaire",
     step1_label: "Renseigner les infos",
@@ -262,6 +266,10 @@ const translations = {
     hero_preview_mention: "Very good work",
     next_subject_btn: "Next subject",
     next_subject_done: "All subjects have been entered ✓",
+    back_to_calculer_btn: "Back to the calculator screen",
+    see_evolution_btn: "See my progress",
+    bulletin_ready_text: "Your report card is ready! You can download it from the Report card tab.",
+    goto_bulletin_btn: "View my report card",
     quote_of_day_label: "Tip of the day",
     calculator_h2: "Form",
     step1_label: "Enter your info",
@@ -602,6 +610,19 @@ const EMPTY_SUBJECTS_ROW_HTML = `
 
 const classeLabel = document.getElementById('classe-label');
 const nextSubjectBtn = document.getElementById('next-subject-btn');
+const backToCalculerBtn = document.getElementById('back-to-calculer-btn');
+const seeEvolutionBtn = document.getElementById('see-evolution-btn');
+const bulletinReadyBanner = document.getElementById('bulletin-ready-banner');
+const gotoBulletinBtn = document.getElementById('goto-bulletin-btn');
+
+/* Masque les trois boutons d'action du résultat (matière suivante,
+   revenir au calculateur, voir mon évolution) avant d'afficher un
+   nouveau résultat ou une erreur, pour éviter tout cumul visuel. */
+function hideResultActionButtons() {
+  if (nextSubjectBtn) nextSubjectBtn.hidden = true;
+  if (backToCalculerBtn) backToCalculerBtn.hidden = true;
+  if (seeEvolutionBtn) seeEvolutionBtn.hidden = true;
+}
 const partnerVisuals = document.querySelectorAll('.partner-visual');
 const progressTracker = document.getElementById('progress-tracker');
 const progressTrackerFill = document.getElementById('progress-tracker-fill');
@@ -1606,7 +1627,7 @@ function setResult(message, isError = false) {
     resultat.classList.add('shake');
   }
 
-  if (nextSubjectBtn) nextSubjectBtn.hidden = true;
+  hideResultActionButtons();
   masquerConseillerScolaire();
 }
 
@@ -1619,7 +1640,7 @@ classeSelect.addEventListener('change', function () {
   });
   saveStudentProfile({ classe: classeSelect.value });
   updateMatieres();
-  if (nextSubjectBtn) nextSubjectBtn.hidden = true;
+  hideResultActionButtons();
 });
 
 matiereSelect.addEventListener('change', updateCoefficientSuggestion);
@@ -1763,11 +1784,19 @@ function updateNextSubjectButton(classe) {
   if (!nextSubjectBtn) return;
   const restantes = getMatieresRestantes(classe);
 
+  if (seeEvolutionBtn) seeEvolutionBtn.hidden = true;
+
   if (!restantes.length) {
+    // Toutes les matières de la classe ont une note : plus de
+    // "matière suivante" possible, on propose de revenir au
+    // formulaire de calcul (par ex. pour calculer la moyenne du
+    // semestre ou revoir une matière).
     nextSubjectBtn.hidden = true;
+    if (backToCalculerBtn) backToCalculerBtn.hidden = false;
     return;
   }
 
+  if (backToCalculerBtn) backToCalculerBtn.hidden = true;
   nextSubjectBtn.hidden = false;
   nextSubjectBtn.dataset.nextMatiere = restantes[0];
 }
@@ -1807,6 +1836,31 @@ nextSubjectBtn?.addEventListener('click', () => {
   window.setTimeout(() => {
     document.getElementById('coefficient')?.focus();
   }, prefersReducedMotion ? 0 : 350);
+});
+
+backToCalculerBtn?.addEventListener('click', () => {
+  backToCalculerBtn.hidden = true;
+
+  window.activateScreen?.('calculer');
+
+  const calculatorCard = document.querySelector('.calculator-card');
+  calculatorCard?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+});
+
+seeEvolutionBtn?.addEventListener('click', () => {
+  window.activateScreen?.('evolution');
+
+  if (bulletinReadyBanner) bulletinReadyBanner.hidden = false;
+
+  const subjectsCard = document.querySelector('.subjects-card');
+  subjectsCard?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+});
+
+gotoBulletinBtn?.addEventListener('click', () => {
+  window.activateScreen?.('bulletin');
+
+  const bulletinCard = document.querySelector('.bulletin-screen-card');
+  bulletinCard?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
 });
 
 function escapeXml(str) {
@@ -2127,6 +2181,9 @@ boutonSemestre.addEventListener('click', function () {
     mention: true
   });
 
+  hideResultActionButtons();
+  if (seeEvolutionBtn) seeEvolutionBtn.hidden = false;
+
   afficherConseillerScolaire(result.matieresCalculees, result.value);
 });
 
@@ -2169,6 +2226,9 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
     subtitleText: `${prenom} ${nom} • ${classe}`,
     mention: true
   });
+
+  hideResultActionButtons();
+  if (seeEvolutionBtn) seeEvolutionBtn.hidden = false;
 
   afficherConseillerScolaire(combineMatieresAnnuelles(resultS1, resultS2), moyenneAnnuelle);
 });

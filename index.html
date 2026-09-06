@@ -516,6 +516,20 @@
             <polyline points="12 5 19 12 12 19"></polyline>
           </svg>
         </button>
+        <button type="button" id="back-to-calculer-btn" class="next-subject-button icon-reverse" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span data-i18n="back_to_calculer_btn">Revenir à l'écran calculer</span>
+        </button>
+        <button type="button" id="see-evolution-btn" class="next-subject-button" hidden>
+          <span data-i18n="see_evolution_btn">Voir mon évolution</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3 17 9 11 13 15 21 6"></polyline>
+            <polyline points="14 6 21 6 21 13"></polyline>
+          </svg>
+        </button>
       </section>
 
       <section id="conseiller-scolaire" class="advisor-card" aria-live="polite" hidden>
@@ -541,6 +555,13 @@
       </div>
 
       <div class="app-screen" data-screen="evolution">
+      <div id="bulletin-ready-banner" class="bulletin-ready-banner" hidden>
+        <span class="bulletin-ready-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
+        </span>
+        <span class="bulletin-ready-text" data-i18n="bulletin_ready_text">Votre bulletin est prêt ! Vous pouvez le télécharger dans l'onglet Bulletin.</span>
+        <button type="button" id="goto-bulletin-btn" class="bulletin-ready-btn" data-i18n="goto_bulletin_btn">Voir mon bulletin</button>
+      </div>
       <section id="tableau-matieres" class="subjects-card" aria-live="polite">
         <div class="subjects-header">
           <h3 data-i18n="subjects_h3">Matières enregistrées</h3>
