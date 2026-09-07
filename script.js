@@ -1838,8 +1838,8 @@ function refreshHistoriqueScreen() {
             ${row.moyAnnee !== null ? `<span class="compare-delta historique-delta-annee">${row.moyAnnee.toFixed(2)}/20</span>` : ''}
           </div>
           <div class="compare-bars">
-            ${barLine('S1', row.moyS1, 'compare-bar-s1')}
-            ${barLine('S2', row.moyS2, 'compare-bar-s2')}
+            ${barLine('Sem 1', row.moyS1, 'compare-bar-s1')}
+            ${barLine('Sem 2', row.moyS2, 'compare-bar-s2')}
           </div>
         </div>
       `;
