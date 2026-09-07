@@ -2902,6 +2902,86 @@ th {
 }
 
 /* =========================================================
+   HISTORIQUE MULTI-ANNÉES — "Mon parcours scolaire"
+   Réutilise la structure visuelle de la comparaison Sem1/Sem2
+   (.compare-row, .compare-bar-*) pour rester cohérent, avec
+   quelques ajouts propres à la vue multi-classes.
+   ========================================================= */
+.historique-card {
+  margin-top: 28px;
+  padding: 22px 20px;
+  background: var(--card-strong);
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  animation: rise-in 0.45s ease both;
+}
+
+.historique-chart-wrap {
+  margin-bottom: 18px;
+  padding: 10px 4px 4px;
+  border-radius: 12px;
+  background: rgba(41, 74, 128, 0.045);
+}
+
+.historique-chart-wrap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.historique-grid-line {
+  stroke: rgba(15, 23, 42, 0.1);
+  stroke-width: 1;
+}
+
+.historique-grid-label {
+  font-size: 8px;
+  fill: var(--muted);
+}
+
+.historique-line-segment {
+  stroke: var(--blue-700);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.historique-point {
+  fill: var(--copper-400);
+  stroke: var(--card-strong);
+  stroke-width: 1.5;
+}
+
+.historique-x-label {
+  font-size: 9px;
+  font-weight: 700;
+  fill: var(--muted);
+}
+
+.historique-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.historique-row-empty {
+  opacity: 0.5;
+}
+
+.historique-delta-annee {
+  background: rgba(210, 168, 74, 0.16);
+  color: var(--yellow-500);
+}
+
+.historique-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* =========================================================
    FAQ — Comment ça marche
    ========================================================= */
 .faq-card {
@@ -3998,6 +4078,29 @@ html.dark-mode .compare-bar-track {
 
 html.dark-mode .compare-bar-value {
   color: #dce1e8;
+}
+
+html.dark-mode .historique-card {
+  background: #12161d;
+  color: #e6e9ee;
+  border-color: rgba(160, 174, 196, 0.14);
+}
+
+html.dark-mode .historique-chart-wrap {
+  background: rgba(160, 174, 196, 0.06);
+}
+
+html.dark-mode .historique-grid-line {
+  stroke: rgba(160, 174, 196, 0.16);
+}
+
+html.dark-mode .historique-grid-label,
+html.dark-mode .historique-x-label {
+  fill: #9aa7b8;
+}
+
+html.dark-mode .historique-point {
+  stroke: #12161d;
 }
 
 /* Tous les boutons deviennent visiblement sombres dans le thème sombre. */

@@ -568,6 +568,10 @@
           <h3 data-i18n="subjects_h3">Matières enregistrées</h3>
           <div class="subjects-header-right">
             <span id="classe-label">Aucune classe sélectionnée</span>
+            <button type="button" id="open-historique-btn" class="compare-toggle-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 16 14"></polyline></svg>
+              <span data-i18n="historique_open_btn">Mon parcours</span>
+            </button>
             <button type="button" id="toggle-comparaison-btn" class="compare-toggle-btn" hidden>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
               <span>Comparer Sem1 / Sem2</span>
@@ -641,6 +645,32 @@
           </div>
         </div>
         <div class="comparison-list" id="comparaison-list"></div>
+      </section>
+      </div>
+
+      <div class="app-screen" data-screen="historique">
+      <section id="historique-screen-card" class="historique-card" aria-live="polite">
+        <div class="comparison-header">
+          <span class="comparison-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 16 14"></polyline></svg></span>
+          <div>
+            <h3 data-i18n="historique_h3">Mon parcours scolaire</h3>
+            <span class="comparison-subtitle" data-i18n="historique_subtitle">Votre progression, de la 6e à la Terminale</span>
+          </div>
+        </div>
+
+        <div class="historique-chart-wrap" id="historique-chart-wrap" hidden>
+          <svg id="historique-chart" viewBox="0 0 340 140" role="img" aria-label="Courbe de la moyenne annuelle par classe"></svg>
+        </div>
+
+        <div class="historique-list" id="historique-list"></div>
+
+        <button type="button" id="back-to-evolution-btn" class="next-subject-button icon-reverse">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span data-i18n="historique_back_btn">Revenir à l'écran évolution</span>
+        </button>
       </section>
       </div>
 
@@ -824,9 +854,10 @@
         const semestreEl = document.getElementById('bulletin-preview-semestre');
         if (!rowsEl || !semestreEl || typeof classeSelect === 'undefined') return;
 
+        const tFn = typeof t === 'function' ? t : (key) => key;
         const classe = classeSelect.value.trim();
         const semestreVal = typeof getSemestreActuel === 'function' ? getSemestreActuel() : 'Semestre1';
-        semestreEl.textContent = semestreVal === 'Semestre1' ? '1er Semestre' : '2ème Semestre';
+        semestreEl.textContent = semestreVal === 'Semestre1' ? tFn('table_semestre1_full') : tFn('table_semestre2_full');
 
         const notes = classe && typeof getStoredNotesForClasse === 'function'
           ? getStoredNotesForClasse(classe, semestreVal)
@@ -834,7 +865,7 @@
         const entries = Object.entries(notes || {});
 
         if (!entries.length) {
-          rowsEl.innerHTML = '<p class="bulletin-preview-empty">Vos matières apparaîtront ici au fur et à mesure.</p>';
+          rowsEl.innerHTML = `<p class="bulletin-preview-empty">${tFn('bulletin_preview_empty')}</p>`;
           return;
         }
 

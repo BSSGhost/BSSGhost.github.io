@@ -49,6 +49,7 @@ const translations = {
     see_evolution_btn: "Voir mon évolution",
     bulletin_ready_text: "Votre bulletin est prêt ! Vous pouvez le télécharger dans l'onglet Bulletin.",
     goto_bulletin_btn: "Voir mon bulletin",
+    bulletin_preview_empty: "Vos matières apparaîtront ici au fur et à mesure.",
     quote_of_day_label: "Conseil du jour",
     calculator_h2: "Formulaire",
     step1_label: "Renseigner les infos",
@@ -183,6 +184,12 @@ const translations = {
     compare_new: "Nouveau",
     compare_stable: "— Stable",
 
+    historique_open_btn: "Mon parcours",
+    historique_h3: "Mon parcours scolaire",
+    historique_subtitle: "Votre progression, de la 6e à la Terminale",
+    historique_back_btn: "Revenir à l'écran évolution",
+    historique_empty: "Aucune donnée enregistrée pour le moment sur cet appareil. Renseignez vos matières pour voir apparaître votre parcours ici.",
+
     advisor_points_forts_prefix: "Tes points forts : {list}",
     advisor_points_forts_empty: "Continue tes efforts, aucune matière ne se démarque encore nettement.",
     advisor_a_ameliorer_prefix: "À améliorer : {list}",
@@ -279,6 +286,7 @@ const translations = {
     see_evolution_btn: "See my progress",
     bulletin_ready_text: "Your report card is ready! You can download it from the Report card tab.",
     goto_bulletin_btn: "View my report card",
+    bulletin_preview_empty: "Your subjects will appear here as you add them.",
     quote_of_day_label: "Tip of the day",
     calculator_h2: "Form",
     step1_label: "Enter your info",
@@ -412,6 +420,12 @@ const translations = {
     compare_empty: "No subject to compare yet.",
     compare_new: "New",
     compare_stable: "— Stable",
+
+    historique_open_btn: "My journey",
+    historique_h3: "My school journey",
+    historique_subtitle: "Your progress, from 6th grade to Terminale",
+    historique_back_btn: "Back to the progress screen",
+    historique_empty: "No data saved yet on this device. Enter your subjects to see your journey appear here.",
 
     advisor_points_forts_prefix: "Your strengths: {list}",
     advisor_points_forts_empty: "Keep up your efforts, no subject stands out clearly yet.",
@@ -558,6 +572,13 @@ function refreshDynamicTranslatedTexts() {
     compareToggleBtn.innerHTML = `<span aria-hidden="true">⇄</span> ${t('compare_btn_open')}`;
   }
   setPdfButtonLabel(t('pdf_button_default'));
+  if (typeof window.refreshBulletinPreview === 'function') {
+    window.refreshBulletinPreview();
+  }
+  const historiqueScreen = document.querySelector('.app-screen[data-screen="historique"]');
+  if (historiqueScreen && historiqueScreen.classList.contains('is-active') && typeof window.refreshHistoriqueScreen === 'function') {
+    window.refreshHistoriqueScreen();
+  }
 }
 
 const form = document.getElementById('moyenne-form');
@@ -611,20 +632,23 @@ const boutonReset = document.getElementById('reset-donnees');
 const boutonTelechargerPdf = document.getElementById('telecharger-bulletin');
 const tableBody = document.getElementById('matiere-table-body');
 
-/* Icône + message plus engageant pour le tableau de matières vide,
-   réutilisé ici et identique au contenu statique présent dans le HTML au chargement. */
-const EMPTY_SUBJECTS_ROW_HTML = `
-  <tr>
-    <td colspan="5" class="empty-state">
-      <svg class="empty-state-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M6 14a3 3 0 0 1 3-3h9l3 4h18a3 3 0 0 1 3 3v20a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V14Z"></path>
-        <path d="M18 27l4 4 8-9"></path>
-      </svg>
-      <p class="empty-state-title">Aucune matière enregistrée pour le moment</p>
-      <p class="empty-state-subtitle">Ajoutez votre première matière ci-dessus pour voir apparaître votre tableau.</p>
-    </td>
-  </tr>
-`;
+/* Icône + message plus engageant pour le tableau de matières vide.
+   Générée dynamiquement via t() pour rester traduite après un premier
+   rendu (contrairement à une chaîne HTML statique figée en français). */
+function getEmptySubjectsRowHtml() {
+  return `
+    <tr>
+      <td colspan="5" class="empty-state">
+        <svg class="empty-state-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 14a3 3 0 0 1 3-3h9l3 4h18a3 3 0 0 1 3 3v20a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V14Z"></path>
+          <path d="M18 27l4 4 8-9"></path>
+        </svg>
+        <p class="empty-state-title">${escapeXml(t('empty_state_title'))}</p>
+        <p class="empty-state-subtitle">${escapeXml(t('empty_state_subtitle'))}</p>
+      </td>
+    </tr>
+  `;
+}
 
 /* =========================================================
    OBJECTIF PERSONNEL DE MOYENNE
@@ -730,6 +754,8 @@ const backToCalculerBtn = document.getElementById('back-to-calculer-btn');
 const seeEvolutionBtn = document.getElementById('see-evolution-btn');
 const bulletinReadyBanner = document.getElementById('bulletin-ready-banner');
 const gotoBulletinBtn = document.getElementById('goto-bulletin-btn');
+const openHistoriqueBtn = document.getElementById('open-historique-btn');
+const backToEvolutionBtn = document.getElementById('back-to-evolution-btn');
 
 /* Masque les trois boutons d'action du résultat (matière suivante,
    revenir au calculateur, voir mon évolution) avant d'afficher un
@@ -1429,9 +1455,22 @@ function restoreStudentProfile() {
 
   if (profile.nom && nomInput) nomInput.value = profile.nom;
   if (profile.prenom && prenomInput) prenomInput.value = profile.prenom;
+
+  // Restaurer langue/série AVANT updateMatieres() : la liste des matières
+  // disponibles (et le coefficient officiel suggéré) en dépendent.
+  if (profile.langue) {
+    const langueRadio = document.querySelector(`input[name="langue"][value="${profile.langue}"]`);
+    if (langueRadio) langueRadio.checked = true;
+  }
+  if (profile.serie) {
+    const serieRadio = document.querySelector(`input[name="serie"][value="${profile.serie}"]`);
+    if (serieRadio) serieRadio.checked = true;
+  }
+
   if (profile.classe && classeSelect) {
     classeSelect.value = profile.classe;
     updateMatieres();
+    updateCoefficientSuggestion();
   }
   updateStepsTimeline();
 }
@@ -1521,7 +1560,7 @@ function renderTableMatiere() {
   updateCompareToggleVisibility();
 
   if (!entries.length) {
-    tableBody.innerHTML = EMPTY_SUBJECTS_ROW_HTML;
+    tableBody.innerHTML = getEmptySubjectsRowHtml();
     renderRadarChart([]);
     updateObjectifProgress([]);
     return;
@@ -1685,6 +1724,131 @@ compareToggleBtn?.addEventListener('click', () => {
   }
 });
 
+/* =========================================================
+   HISTORIQUE MULTI-ANNÉES ("Mon parcours scolaire")
+   Contrairement au flux principal (qui exige que toutes les matières
+   officielles d'une classe soient renseignées), cet écran affiche une
+   moyenne pondérée "brute" à partir de ce qui a été rempli pour chaque
+   classe/semestre — pour donner une vue d'ensemble même sur des
+   données partielles ou une classe qu'on ne consulte plus au quotidien.
+   ========================================================= */
+const CLASSES_ORDRE = ['6e', '5e', '4e', '3e', '2nde', '1er', 'Tle'];
+
+function computeMoyenneBrute(notes) {
+  const entries = Object.values(notes || {});
+  if (!entries.length) return null;
+
+  const totalCoeff = entries.reduce((acc, item) => acc + Number(item.coefficient || 0), 0);
+  const totalPoints = entries.reduce(
+    (acc, item) => acc + Number(item.points ?? (item.moyenne * item.coefficient)),
+    0
+  );
+  return totalCoeff > 0 ? totalPoints / totalCoeff : null;
+}
+
+function renderHistoriqueChart(points) {
+  const wrap = document.getElementById('historique-chart-wrap');
+  const svg = document.getElementById('historique-chart');
+  if (!wrap || !svg) return;
+
+  const known = points.filter((p) => p.value !== null);
+  if (known.length < 2) {
+    wrap.hidden = true;
+    svg.innerHTML = '';
+    return;
+  }
+
+  wrap.hidden = false;
+
+  const width = 340;
+  const height = 140;
+  const paddingX = 18;
+  const paddingY = 16;
+  const plotWidth = width - paddingX * 2;
+  const plotHeight = height - paddingY * 2;
+  const stepX = points.length > 1 ? plotWidth / (points.length - 1) : 0;
+
+  const xFor = (i) => paddingX + stepX * i;
+  const yFor = (value) => paddingY + plotHeight - (Math.min(value, 20) / 20) * plotHeight;
+
+  let svgContent = '';
+
+  [0, 10, 20].forEach((mark) => {
+    const y = yFor(mark);
+    svgContent += `<line class="historique-grid-line" x1="${paddingX}" y1="${y}" x2="${width - paddingX}" y2="${y}" />`;
+    svgContent += `<text class="historique-grid-label" x="2" y="${y + 3}">${mark}</text>`;
+  });
+
+  // Ne relie que les classes consécutives ayant toutes deux une moyenne
+  // annuelle connue, pour ne pas tracer un trait trompeur au-dessus
+  // d'une classe sans données.
+  for (let i = 0; i < points.length - 1; i += 1) {
+    if (points[i].value === null || points[i + 1].value === null) continue;
+    svgContent += `<line class="historique-line-segment" x1="${xFor(i)}" y1="${yFor(points[i].value)}" x2="${xFor(i + 1)}" y2="${yFor(points[i + 1].value)}" />`;
+  }
+
+  points.forEach((p, i) => {
+    const x = xFor(i);
+    svgContent += `<text class="historique-x-label" x="${x}" y="${height - 2}" text-anchor="middle">${escapeXml(p.classe)}</text>`;
+    if (p.value !== null) {
+      const y = yFor(p.value);
+      svgContent += `<circle class="historique-point" cx="${x}" cy="${y}" r="4" />`;
+    }
+  });
+
+  svg.innerHTML = svgContent;
+}
+
+function refreshHistoriqueScreen() {
+  const listEl = document.getElementById('historique-list');
+  if (!listEl) return;
+
+  const rows = CLASSES_ORDRE.map((classe) => {
+    const moyS1 = computeMoyenneBrute(getStoredNotesForClasse(classe, 'Semestre1'));
+    const moyS2 = computeMoyenneBrute(getStoredNotesForClasse(classe, 'Semestre2'));
+    const moyAnnee = moyS1 !== null && moyS2 !== null ? (moyS1 + moyS2) / 2 : null;
+    return { classe, moyS1, moyS2, moyAnnee, hasData: moyS1 !== null || moyS2 !== null };
+  });
+
+  renderHistoriqueChart(rows.map((row) => ({ classe: row.classe, value: row.moyAnnee })));
+
+  if (!rows.some((row) => row.hasData)) {
+    listEl.innerHTML = `<p class="historique-empty">${escapeXml(t('historique_empty'))}</p>`;
+    return;
+  }
+
+  const barLine = (label, value, cls) => {
+    const width = value !== null ? Math.min(100, (value / 20) * 100) : 0;
+    return `
+      <div class="compare-bar-line">
+        <span class="compare-bar-label">${label}</span>
+        <div class="compare-bar-track"><div class="compare-bar-fill ${cls}" style="width:${width}%"></div></div>
+        <span class="compare-bar-value">${value !== null ? value.toFixed(2) : '—'}</span>
+      </div>
+    `;
+  };
+
+  listEl.innerHTML = rows
+    .map((row, index) => {
+      const delay = prefersReducedMotion ? '0s' : `${index * 40}ms`;
+      return `
+        <div class="compare-row historique-row${row.hasData ? '' : ' historique-row-empty'}" style="animation-delay:${delay}">
+          <div class="compare-row-head">
+            <span class="compare-subject">${escapeXml(row.classe)}</span>
+            ${row.moyAnnee !== null ? `<span class="compare-delta historique-delta-annee">${row.moyAnnee.toFixed(2)}/20</span>` : ''}
+          </div>
+          <div class="compare-bars">
+            ${barLine('S1', row.moyS1, 'compare-bar-s1')}
+            ${barLine('S2', row.moyS2, 'compare-bar-s2')}
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+window.refreshHistoriqueScreen = refreshHistoriqueScreen;
+
 function updateMatieres() {
   const selectedClasse = classeSelect.value;
 
@@ -1723,7 +1887,10 @@ function updateMatieres() {
   renderTableMatiere();
 }
 
-langueRadios.forEach(radio => radio.addEventListener('change', updateMatieres));
+langueRadios.forEach((radio) => radio.addEventListener('change', () => {
+  saveStudentProfile({ langue: radio.value });
+  updateMatieres();
+}));
 
 document.querySelectorAll('input[name="semestre"]').forEach((radio) => {
   radio.addEventListener('change', renderTableMatiere);
@@ -1756,14 +1923,17 @@ classeSelect.addEventListener('change', function () {
   serieRadios.forEach((radio) => {
     radio.checked = false;
   });
-  saveStudentProfile({ classe: classeSelect.value });
+  saveStudentProfile({ classe: classeSelect.value, langue: null, serie: null });
   updateMatieres();
   hideResultActionButtons();
 });
 
 matiereSelect.addEventListener('change', updateCoefficientSuggestion);
 
-serieRadios.forEach((radio) => radio.addEventListener('change', updateCoefficientSuggestion));
+serieRadios.forEach((radio) => radio.addEventListener('change', () => {
+  saveStudentProfile({ serie: radio.value });
+  updateCoefficientSuggestion();
+}));
 
 coefficientInput.addEventListener('input', hideCoefficientBadge);
 
@@ -1979,6 +2149,17 @@ gotoBulletinBtn?.addEventListener('click', () => {
 
   const bulletinCard = document.querySelector('.bulletin-screen-card');
   bulletinCard?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+});
+
+openHistoriqueBtn?.addEventListener('click', () => {
+  window.activateScreen?.('historique');
+});
+
+backToEvolutionBtn?.addEventListener('click', () => {
+  window.activateScreen?.('evolution');
+
+  const subjectsCard = document.querySelector('.subjects-card');
+  subjectsCard?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
 });
 
 function escapeXml(str) {
@@ -3204,7 +3385,9 @@ function showInfoDialog(message) {
   const screens = Array.from(document.querySelectorAll('.app-screen'));
   if (!tabs.length || !screens.length) return;
 
-  function activateScreen(screenName) {
+  const validScreens = screens.map((screen) => screen.dataset.screen);
+
+  function activateScreen(screenName, { updateHash = true } = {}) {
     let matched = false;
     screens.forEach((screen) => {
       const isMatch = screen.dataset.screen === screenName;
@@ -3216,9 +3399,17 @@ function showInfoDialog(message) {
     if (screenName === 'bulletin' && typeof window.refreshBulletinPreview === 'function') {
       window.refreshBulletinPreview();
     }
+    if (screenName === 'historique' && typeof window.refreshHistoriqueScreen === 'function') {
+      window.refreshHistoriqueScreen();
+    }
 
     tabs.forEach((tab) => {
-      const isActive = tab.dataset.targetScreen === screenName;
+      // L'écran "historique" n'a pas d'onglet dédié dans la barre de
+      // navigation (on y accède depuis "Évolution") : on garde cet
+      // onglet visuellement actif pour ne pas perdre le repère de
+      // navigation pendant que l'élève consulte son parcours.
+      const isActive = tab.dataset.targetScreen === screenName
+        || (screenName === 'historique' && tab.dataset.targetScreen === 'evolution');
       tab.classList.toggle('is-active', isActive);
       if (isActive) {
         tab.setAttribute('aria-current', 'page');
@@ -3227,6 +3418,18 @@ function showInfoDialog(message) {
       }
     });
 
+    // Persiste l'onglet actif dans le hash de l'URL (#evolution, #bulletin…)
+    // pour qu'un rechargement de page (F5, retour depuis une autre appli)
+    // rouvre le même écran plutôt que de revenir systématiquement sur
+    // "Calculer". replaceState évite d'empiler une entrée d'historique
+    // à chaque clic d'onglet.
+    if (updateHash) {
+      const newHash = `#${screenName}`;
+      if (window.location.hash !== newHash) {
+        history.replaceState(null, '', newHash);
+      }
+    }
+
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
   }
 
@@ -3234,7 +3437,23 @@ function showInfoDialog(message) {
     tab.addEventListener('click', () => activateScreen(tab.dataset.targetScreen));
   });
 
+  // Permet aussi la navigation via le bouton précédent/suivant du
+  // navigateur, ou un lien externe pointant directement vers un onglet.
+  window.addEventListener('hashchange', () => {
+    const target = window.location.hash.replace('#', '');
+    if (validScreens.includes(target)) {
+      activateScreen(target, { updateHash: false });
+    }
+  });
+
   // Expose pour permettre aux autres actions (calcul, etc.) de
   // basculer automatiquement l'écran affiché.
   window.activateScreen = activateScreen;
+
+  // Au chargement : si l'URL contient déjà un hash valide (retour sur le
+  // site, rechargement de page), on rouvre directement cet onglet-là.
+  const initialHash = window.location.hash.replace('#', '');
+  if (initialHash && validScreens.includes(initialHash)) {
+    activateScreen(initialHash, { updateHash: false });
+  }
 })();
