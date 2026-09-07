@@ -2401,6 +2401,15 @@ html.dark-mode .bulletin-ready-btn:hover {
   color: var(--blue-800);
 }
 
+.advisor-goal--personnel {
+  border-left-color: var(--copper-400);
+  background: rgba(196, 130, 74, 0.09);
+}
+
+.advisor-goal--personnel .advisor-emoji {
+  color: var(--copper-400);
+}
+
 .advisor-text strong {
   color: var(--dark);
 }
@@ -4087,6 +4096,10 @@ html.dark-mode .advisor-line {
 
 html.dark-mode .advisor-goal {
   background: rgba(46, 63, 90, 0.3);
+}
+
+html.dark-mode .advisor-goal--personnel {
+  background: rgba(196, 130, 74, 0.14);
 }
 
 html.dark-mode .objectif-widget {

@@ -189,6 +189,8 @@ const translations = {
     advisor_a_ameliorer_empty: "Aucune matière en difficulté particulière, bravo pour cet équilibre !",
     advisor_objectif_excellent: "Excellent niveau ({value}/20) : continue sur cette lancée pour viser l'excellence.",
     advisor_objectif_template: "Pour atteindre {objectif}/20 : {leviers}",
+    advisor_objectif_personnel_template: "Pour atteindre ton objectif personnel de {objectif}/20 : {leviers}",
+    advisor_objectif_personnel_atteint: "Bravo, tu as déjà atteint ton objectif personnel de {objectif}/20 (moyenne actuelle : {value}/20) ! Continue sur cette lancée pour viser encore plus haut.",
     advisor_leviers_with_subjects: "augmente principalement tes résultats en {list}.",
     advisor_leviers_none: "continue à consolider l'ensemble de tes matières.",
 
@@ -417,6 +419,8 @@ const translations = {
     advisor_a_ameliorer_empty: "No subject in particular difficulty, well done for this balance!",
     advisor_objectif_excellent: "Excellent level ({value}/20): keep up this momentum to aim for excellence.",
     advisor_objectif_template: "To reach {objectif}/20: {leviers}",
+    advisor_objectif_personnel_template: "To reach your personal goal of {objectif}/20: {leviers}",
+    advisor_objectif_personnel_atteint: "Well done, you've already reached your personal goal of {objectif}/20 (current average: {value}/20)! Keep it up and aim even higher.",
     advisor_leviers_with_subjects: "mainly improve your results in {list}.",
     advisor_leviers_none: "keep consolidating all your subjects.",
 
@@ -713,6 +717,10 @@ if (objectifInput) {
       setObjectifPersonnel(value);
     }
     renderTableMatiere();
+
+    if (dernierConseilContext && advisorSection && !advisorSection.hidden) {
+      afficherConseillerScolaire(dernierConseilContext.matieresCalculees, dernierConseilContext.moyenneGenerale);
+    }
   });
 }
 
@@ -2174,6 +2182,18 @@ function combineMatieresAnnuelles(resultS1, resultS2) {
   return Array.from(map.values());
 }
 
+function computeLeviersPourObjectif(matieresCalculees, objectif) {
+  return [...matieresCalculees]
+    .filter((item) => Number(item.note.moyenne) < objectif)
+    .sort((a, b) => {
+      const coeffDiff = Number(b.note.coefficient) - Number(a.note.coefficient);
+      if (coeffDiff !== 0) return coeffDiff;
+      return Number(a.note.moyenne) - Number(b.note.moyenne);
+    })
+    .slice(0, 2)
+    .map((item) => item.matiere);
+}
+
 function getConseilScolaire(matieresCalculees, moyenneGenerale) {
   const sorted = [...matieresCalculees].sort((a, b) => Number(b.note.moyenne) - Number(a.note.moyenne));
 
@@ -2191,23 +2211,30 @@ function getConseilScolaire(matieresCalculees, moyenneGenerale) {
   }
 
   let objectifText;
+  const objectifPersonnel = getObjectifPersonnel();
+  const isPersonnel = objectifPersonnel !== null;
 
-  if (moyenneGenerale >= 18) {
+  if (isPersonnel) {
+    if (moyenneGenerale >= objectifPersonnel) {
+      objectifText = t('advisor_objectif_personnel_atteint', {
+        objectif: objectifPersonnel,
+        value: moyenneGenerale.toFixed(2)
+      });
+    } else {
+      const leviers = computeLeviersPourObjectif(matieresCalculees, objectifPersonnel);
+      const leviersText = leviers.length
+        ? t('advisor_leviers_with_subjects', { list: leviers.map(translateMatiere).join(getLang() === 'en' ? ' and ' : ' et ') })
+        : t('advisor_leviers_none');
+
+      objectifText = t('advisor_objectif_personnel_template', { objectif: objectifPersonnel, leviers: leviersText });
+    }
+  } else if (moyenneGenerale >= 18) {
     objectifText = t('advisor_objectif_excellent', { value: moyenneGenerale.toFixed(2) });
   } else {
     let objectif = Math.ceil((moyenneGenerale + 1.5) * 2) / 2;
     objectif = Math.min(objectif, 20);
 
-    const leviers = [...matieresCalculees]
-      .filter((item) => Number(item.note.moyenne) < objectif)
-      .sort((a, b) => {
-        const coeffDiff = Number(b.note.coefficient) - Number(a.note.coefficient);
-        if (coeffDiff !== 0) return coeffDiff;
-        return Number(a.note.moyenne) - Number(b.note.moyenne);
-      })
-      .slice(0, 2)
-      .map((item) => item.matiere);
-
+    const leviers = computeLeviersPourObjectif(matieresCalculees, objectif);
     const leviersText = leviers.length
       ? t('advisor_leviers_with_subjects', { list: leviers.map(translateMatiere).join(getLang() === 'en' ? ' and ' : ' et ') })
       : t('advisor_leviers_none');
@@ -2218,7 +2245,8 @@ function getConseilScolaire(matieresCalculees, moyenneGenerale) {
   return {
     pointsForts: pointsForts.map((item) => item.matiere),
     aAmeliorer: aAmeliorer.map((item) => item.matiere),
-    objectifText
+    objectifText,
+    isPersonnel
   };
 }
 
@@ -2227,6 +2255,8 @@ function afficherConseillerScolaire(matieresCalculees, moyenneGenerale) {
     masquerConseillerScolaire();
     return;
   }
+
+  dernierConseilContext = { matieresCalculees, moyenneGenerale };
 
   const conseil = getConseilScolaire(matieresCalculees, moyenneGenerale);
 
@@ -2239,6 +2269,7 @@ function afficherConseillerScolaire(matieresCalculees, moyenneGenerale) {
     : t('advisor_a_ameliorer_empty');
 
   advisorObjectifEl.querySelector('.advisor-text').textContent = conseil.objectifText;
+  advisorObjectifEl.classList.toggle('advisor-goal--personnel', conseil.isPersonnel);
 
   advisorSection.hidden = false;
   advisorSection.classList.remove('is-revealing');
@@ -2249,6 +2280,11 @@ function afficherConseillerScolaire(matieresCalculees, moyenneGenerale) {
 function masquerConseillerScolaire() {
   if (advisorSection) advisorSection.hidden = true;
 }
+
+/* Mémorise le dernier contexte utilisé pour afficher le conseiller
+   scolaire, afin de pouvoir le rafraîchir immédiatement si l'élève
+   modifie son objectif personnel pendant que la carte est visible. */
+let dernierConseilContext = null;
 
 boutonSemestre.addEventListener('click', function () {
   window.activateScreen?.('resultats');
