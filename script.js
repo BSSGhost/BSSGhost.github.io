@@ -51,7 +51,6 @@ const translations = {
     goto_bulletin_btn: "Voir mon bulletin",
     bulletin_preview_empty: "Vos matières apparaîtront ici au fur et à mesure.",
     quote_of_day_label: "Conseil du jour",
-    quote_of_day_next_aria: "Voir une autre citation",
     calculator_h2: "Formulaire",
     step1_label: "Renseigner les infos",
     step2_label: "Ajouter les matières",
@@ -289,7 +288,6 @@ const translations = {
     goto_bulletin_btn: "View my report card",
     bulletin_preview_empty: "Your subjects will appear here as you add them.",
     quote_of_day_label: "Tip of the day",
-    quote_of_day_next_aria: "Show another quote",
     calculator_h2: "Form",
     step1_label: "Enter your info",
     step2_label: "Add subjects",
@@ -2343,11 +2341,6 @@ const CITATIONS_DU_JOUR = {
   ]
 };
 
-/* Décalage manuel (non persisté) permettant de parcourir la banque de
-   citations via le bouton "citation suivante", sans perdre la logique
-   de "citation du jour" par défaut au prochain chargement. */
-let citationOffset = 0;
-
 function afficherCitationDuJour() {
   const quoteEl = document.getElementById('quote-of-day-text');
   const authorEl = document.getElementById('quote-of-day-author');
@@ -2358,9 +2351,7 @@ function afficherCitationDuJour() {
 
   const debutAnnee = new Date(new Date().getFullYear(), 0, 0);
   const diffJours = Math.floor((new Date() - debutAnnee) / 86400000);
-  const total = citations.length;
-  const index = ((diffJours + citationOffset) % total + total) % total;
-  const citation = citations[index];
+  const citation = citations[diffJours % citations.length];
 
   quoteEl.textContent = citation.text;
   if (authorEl) {
@@ -2372,11 +2363,6 @@ function afficherCitationDuJour() {
       authorEl.hidden = true;
     }
   }
-}
-
-function afficherCitationSuivante() {
-  citationOffset += 1;
-  afficherCitationDuJour();
 }
 
 function computeMoyennePonderee(matieres, notes) {
@@ -3072,11 +3058,6 @@ updateMatieres();
 renderTableMatiere();
 animateHeroPreview();
 revealHeroPreviewGauges();
-
-const quoteNextBtn = document.getElementById('quote-of-day-next');
-if (quoteNextBtn) {
-  quoteNextBtn.addEventListener('click', afficherCitationSuivante);
-}
 
 /* =========================================================
    APERÇU ANIMÉ DU BULLETIN (hero)
