@@ -2981,6 +2981,17 @@ th {
   padding: 20px 0;
 }
 
+.historique-card .next-subject-button {
+  background: rgba(60, 72, 88, 0.08);
+  color: var(--dark);
+  border-color: var(--soft-border);
+}
+
+.historique-card .next-subject-button:hover {
+  background: rgba(60, 72, 88, 0.16);
+  border-color: rgba(60, 72, 88, 0.3);
+}
+
 /* =========================================================
    FAQ — Comment ça marche
    ========================================================= */
