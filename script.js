@@ -51,6 +51,7 @@ const translations = {
     goto_bulletin_btn: "Voir mon bulletin",
     bulletin_preview_empty: "Vos matières apparaîtront ici au fur et à mesure.",
     quote_of_day_label: "Conseil du jour",
+    quote_of_day_next_aria: "Voir une autre citation",
     calculator_h2: "Formulaire",
     step1_label: "Renseigner les infos",
     step2_label: "Ajouter les matières",
@@ -288,6 +289,7 @@ const translations = {
     goto_bulletin_btn: "View my report card",
     bulletin_preview_empty: "Your subjects will appear here as you add them.",
     quote_of_day_label: "Tip of the day",
+    quote_of_day_next_aria: "Show another quote",
     calculator_h2: "Form",
     step1_label: "Enter your info",
     step2_label: "Add subjects",
@@ -2246,68 +2248,135 @@ function renderRadarChart(entries) {
   svg.innerHTML = svgContent;
 }
 
+/* Chaque citation est un objet { text, author? }. Les citations sans
+   "author" sont des conseils génériques (pas d'attribution affichée).
+   Les proverbes sénégalais/wolof portent leur source, pour l'ancrage
+   culturel voulu sur ce widget. */
 const CITATIONS_DU_JOUR = {
   fr: [
-    "La réussite est la somme de petits efforts répétés jour après jour.",
-    "Un examen ne mesure pas ton intelligence, seulement ta préparation du moment.",
-    "Relis tes cours le soir même : c’est le moment où la mémoire retient le mieux.",
-    "Une bonne moyenne se construit devoir après devoir, pas la veille de la composition.",
-    "Pose des questions en classe : ce n’est jamais une perte de temps.",
-    "Un planning de révision simple vaut mieux qu’un plan parfait jamais suivi.",
-    "Le sommeil avant un examen compte autant que les révisions.",
-    "Comprendre un exercice vaut mieux que le mémoriser sans le comprendre.",
-    "Chaque matière compte : ne néglige pas celles qui te semblent moins importantes.",
-    "Fixe-toi un petit objectif clair pour chaque séance de révision.",
-    "Les erreurs corrigées sont les meilleures leçons pour le prochain devoir.",
-    "Travailler un peu chaque jour vaut mieux que tout réviser en une nuit.",
-    "Note tes points faibles après chaque devoir pour savoir où progresser.",
-    "La régularité bat le talent quand le talent ne travaille pas régulièrement.",
-    "Un bon élève n’est pas celui qui ne se trompe jamais, mais celui qui persévère.",
-    "Prends soin de ta concentration : coupe les distractions pendant que tu révises.",
-    "Explique un cours à quelqu’un d’autre : c’est la meilleure façon de vérifier que tu l’as compris.",
-    "Chaque semestre est une nouvelle chance de progresser, quel que soit le précédent.",
-    "Ne te compare pas aux autres : compare-toi à toi-même et à tes progrès.",
-    "La confiance en soi se construit par la préparation et la pratique, pas par la chance.",
-    "Même un petit progrès chaque jour finit par faire une grande différence sur le long terme.",
-    "Les révisions actives (exercices, questions) sont plus efficaces que la simple lecture.",
-    "Un esprit reposé retient mieux : n’oublie pas de faire des pauses pendant tes révisions.",
+    { text: "La réussite est la somme de petits efforts répétés jour après jour." },
+    { text: "Un examen ne mesure pas ton intelligence, seulement ta préparation du moment." },
+    { text: "Relis tes cours le soir même : c’est le moment où la mémoire retient le mieux." },
+    { text: "Une bonne moyenne se construit devoir après devoir, pas la veille de la composition." },
+    { text: "Pose des questions en classe : ce n’est jamais une perte de temps." },
+    { text: "Un planning de révision simple vaut mieux qu’un plan parfait jamais suivi." },
+    { text: "Le sommeil avant un examen compte autant que les révisions." },
+    { text: "Comprendre un exercice vaut mieux que le mémoriser sans le comprendre." },
+    { text: "Chaque matière compte : ne néglige pas celles qui te semblent moins importantes." },
+    { text: "Fixe-toi un petit objectif clair pour chaque séance de révision." },
+    { text: "Les erreurs corrigées sont les meilleures leçons pour le prochain devoir." },
+    { text: "Travailler un peu chaque jour vaut mieux que tout réviser en une nuit." },
+    { text: "Note tes points faibles après chaque devoir pour savoir où progresser." },
+    { text: "La régularité bat le talent quand le talent ne travaille pas régulièrement." },
+    { text: "Un bon élève n’est pas celui qui ne se trompe jamais, mais celui qui persévère." },
+    { text: "Prends soin de ta concentration : coupe les distractions pendant que tu révises." },
+    { text: "Explique un cours à quelqu’un d’autre : c’est la meilleure façon de vérifier que tu l’as compris." },
+    { text: "Chaque semestre est une nouvelle chance de progresser, quel que soit le précédent." },
+    { text: "Ne te compare pas aux autres : compare-toi à toi-même et à tes progrès." },
+    { text: "La confiance en soi se construit par la préparation et la pratique, pas par la chance." },
+    { text: "Même un petit progrès chaque jour finit par faire une grande différence sur le long terme." },
+    { text: "Les révisions actives (exercices, questions) sont plus efficaces que la simple lecture." },
+    { text: "Un esprit reposé retient mieux : n’oublie pas de faire des pauses pendant tes révisions." },
+    { text: "Relire un contrôle corrigé t’apprend souvent plus que le contrôle lui-même." },
+    { text: "Un cahier bien tenu fait gagner un temps précieux au moment des révisions." },
+    { text: "Réviser à plusieurs, à condition de rester concentrés, peut renforcer la compréhension." },
+    { text: "La curiosité est le meilleur moteur pour apprendre durablement." },
+    { text: "Un objectif écrit noir sur blanc est plus facile à tenir qu’une simple idée en tête." },
+    { text: "Il vaut mieux dix minutes de révision concentrée qu’une heure distrait par le téléphone." },
+    { text: "Se tromper en classe fait partie de l’apprentissage, pas de l’échec." },
+    { text: "La persévérance transforme les difficultés d’aujourd’hui en réussites de demain." },
+    { text: "Un élève organisé gagne du temps qu’il peut réinvestir dans ses matières faibles." },
+    { text: "Ndank-ndank mooy jàpp golo ci ñaay : c’est doucement, avec patience, qu’on attrape même le singe le plus agile — la persévérance finit toujours par payer.", author: "Proverbe wolof" },
+    { text: "Garab gu mag, du ab bess mooy taqal : un grand arbre ne pousse pas en un jour — les grandes réussites scolaires se construisent, elles ne tombent pas du ciel.", author: "Proverbe wolof" },
+    { text: "Mugn mooy faral, ku mugn a yor loxo : la patience est une force active, et c’est elle qui finit par tenir la victoire.", author: "Proverbe wolof" },
+    { text: "Ku begg a dem toll, war na gis ndank : qui veut aller loin doit avancer doucement mais sûrement, sans se précipiter.", author: "Proverbe wolof" },
+    { text: "Lo doonul talibeem, mënulo doone serignam : on ne devient jamais maître d’une chose qu’on n’a pas d’abord apprise en élève.", author: "Proverbe wolof" },
+    { text: "Kenn du aar sa baat te doo ko làkk : personne ne veille sur tes affaires à ta place — c’est à toi d’agir pour ta propre réussite.", author: "Proverbe wolof" },
+    { text: "Njaboot ak xam-xam, du feeñ ci ab bess : le savoir ne se révèle pas en un jour, il demande du temps, de l’expérience et de l’humilité.", author: "Proverbe wolof" },
+    { text: "Nit nitay garabu nit : l’homme est le remède de l’homme — s’entraider entre camarades de classe fait progresser tout le monde.", author: "Proverbe wolof" },
+    { text: "Ku am mugn am na lenn : celui qui a la patience possède déjà une richesse, plus précieuse que bien des biens matériels.", author: "Proverbe wolof" },
+    { text: "Un Peuple, Un But, Une Foi — la devise du Sénégal rappelle qu’un objectif clair et une volonté commune mènent loin, y compris sur le chemin de la réussite scolaire.", author: "Devise nationale du Sénégal" },
   ],
   en: [
-    "Success is the sum of small efforts repeated day after day.",
-    "An exam doesn't measure your intelligence, only how prepared you are right now.",
-    "Review your lessons the same evening: that's when memory retains best.",
-    "A good average is built assignment after assignment, not the night before the exam.",
-    "Ask questions in class: it's never a waste of time.",
-    "A simple revision plan beats a perfect plan that's never followed.",
-    "Sleep before an exam matters as much as revision.",
-    "Understanding an exercise is worth more than memorizing it without understanding.",
-    "Every subject counts: don't neglect the ones that seem less important.",
-    "Set yourself one clear, small goal for each revision session.",
-    "Corrected mistakes are the best lessons for the next assignment.",
-    "Working a little every day beats cramming everything in one night.",
-    "Note your weak points after each assignment to know where to improve.",
-    "Consistency beats talent when talent doesn't work consistently.",
-    "A good student isn't one who never makes mistakes, but one who perseveres.",
-    "Look after your focus: cut out distractions while you revise.",
-    "Explain a lesson to someone else: it's the best way to check you've understood it.",
-    "Every semester is a new chance to improve, whatever happened before.",
-    "Don't compare yourself to others: compare yourself to your own progress.",
-    "Self-confidence is built through preparation and practice, not luck.",
-    "Even small daily progress adds up to a big difference over time.",
-    "Active revision (exercises, questions) is more effective than simple reading.",
-    "A rested mind retains better: don't forget to take breaks while revising.",
+    { text: "Success is the sum of small efforts repeated day after day." },
+    { text: "An exam doesn't measure your intelligence, only how prepared you are right now." },
+    { text: "Review your lessons the same evening: that's when memory retains best." },
+    { text: "A good average is built assignment after assignment, not the night before the exam." },
+    { text: "Ask questions in class: it's never a waste of time." },
+    { text: "A simple revision plan beats a perfect plan that's never followed." },
+    { text: "Sleep before an exam matters as much as revision." },
+    { text: "Understanding an exercise is worth more than memorizing it without understanding." },
+    { text: "Every subject counts: don't neglect the ones that seem less important." },
+    { text: "Set yourself one clear, small goal for each revision session." },
+    { text: "Corrected mistakes are the best lessons for the next assignment." },
+    { text: "Working a little every day beats cramming everything in one night." },
+    { text: "Note your weak points after each assignment to know where to improve." },
+    { text: "Consistency beats talent when talent doesn't work consistently." },
+    { text: "A good student isn't one who never makes mistakes, but one who perseveres." },
+    { text: "Look after your focus: cut out distractions while you revise." },
+    { text: "Explain a lesson to someone else: it's the best way to check you've understood it." },
+    { text: "Every semester is a new chance to improve, whatever happened before." },
+    { text: "Don't compare yourself to others: compare yourself to your own progress." },
+    { text: "Self-confidence is built through preparation and practice, not luck." },
+    { text: "Even small daily progress adds up to a big difference over time." },
+    { text: "Active revision (exercises, questions) is more effective than simple reading." },
+    { text: "A rested mind retains better: don't forget to take breaks while revising." },
+    { text: "Reviewing a corrected test often teaches you more than the test itself." },
+    { text: "A well-kept notebook saves precious time when revision season comes." },
+    { text: "Studying with others can deepen understanding, as long as you stay focused." },
+    { text: "Curiosity is the best engine for learning that actually lasts." },
+    { text: "A goal written down is easier to stick to than one left as a vague idea." },
+    { text: "Ten focused minutes of revision beat an hour distracted by your phone." },
+    { text: "Making mistakes in class is part of learning, not a sign of failure." },
+    { text: "Perseverance turns today's difficulties into tomorrow's achievements." },
+    { text: "An organized student saves time that can be reinvested in weaker subjects." },
+    { text: "Ndank-ndank mooy jàpp golo ci ñaay: slowly and patiently, one can catch even the swiftest monkey — perseverance always pays off in the end.", author: "Wolof proverb" },
+    { text: "Garab gu mag, du ab bess mooy taqal: a great tree doesn't grow in a day — real academic success is built over time, not overnight.", author: "Wolof proverb" },
+    { text: "Mugn mooy faral, ku mugn a yor loxo: patience is an active strength, and it is patience that ultimately wins.", author: "Wolof proverb" },
+    { text: "Ku begg a dem toll, war na gis ndank: whoever wants to go far must move slowly but surely, without rushing.", author: "Wolof proverb" },
+    { text: "Lo doonul talibeem, mënulo doone serignam: you can never master something you haven't first learned as a student.", author: "Wolof proverb" },
+    { text: "Kenn du aar sa baat te doo ko làkk: no one looks after your interests for you — it's up to you to act for your own success.", author: "Wolof proverb" },
+    { text: "Njaboot ak xam-xam, du feeñ ci ab bess: knowledge doesn't reveal itself in a day — it takes time, experience and humility.", author: "Wolof proverb" },
+    { text: "Nit nitay garabu nit: people are the remedy for people — helping classmates out lifts everyone's progress.", author: "Wolof proverb" },
+    { text: "Ku am mugn am na lenn: whoever has patience already owns a kind of wealth, more valuable than many material things.", author: "Wolof proverb" },
+    { text: "One People, One Goal, One Faith — Senegal's national motto is a reminder that a clear goal and shared determination go a long way, including on the road to academic success.", author: "National motto of Senegal" },
   ]
 };
 
+/* Décalage manuel (non persisté) permettant de parcourir la banque de
+   citations via le bouton "citation suivante", sans perdre la logique
+   de "citation du jour" par défaut au prochain chargement. */
+let citationOffset = 0;
+
 function afficherCitationDuJour() {
   const quoteEl = document.getElementById('quote-of-day-text');
+  const authorEl = document.getElementById('quote-of-day-author');
   if (!quoteEl) return;
+
+  const citations = CITATIONS_DU_JOUR[getLang()] || CITATIONS_DU_JOUR.fr;
+  if (!citations.length) return;
 
   const debutAnnee = new Date(new Date().getFullYear(), 0, 0);
   const diffJours = Math.floor((new Date() - debutAnnee) / 86400000);
-  const citations = CITATIONS_DU_JOUR[getLang()] || CITATIONS_DU_JOUR.fr;
-  const citation = citations[diffJours % citations.length];
-  quoteEl.textContent = citation;
+  const total = citations.length;
+  const index = ((diffJours + citationOffset) % total + total) % total;
+  const citation = citations[index];
+
+  quoteEl.textContent = citation.text;
+  if (authorEl) {
+    if (citation.author) {
+      authorEl.textContent = `— ${citation.author}`;
+      authorEl.hidden = false;
+    } else {
+      authorEl.textContent = '';
+      authorEl.hidden = true;
+    }
+  }
+}
+
+function afficherCitationSuivante() {
+  citationOffset += 1;
+  afficherCitationDuJour();
 }
 
 function computeMoyennePonderee(matieres, notes) {
@@ -3003,6 +3072,11 @@ updateMatieres();
 renderTableMatiere();
 animateHeroPreview();
 revealHeroPreviewGauges();
+
+const quoteNextBtn = document.getElementById('quote-of-day-next');
+if (quoteNextBtn) {
+  quoteNextBtn.addEventListener('click', afficherCitationSuivante);
+}
 
 /* =========================================================
    APERÇU ANIMÉ DU BULLETIN (hero)

@@ -1094,6 +1094,14 @@ h1 {
   max-width: 520px;
 }
 
+.quote-of-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
 .quote-of-day-label {
   display: block;
   font-size: 0.68rem;
@@ -1101,7 +1109,36 @@ h1 {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--blue-700);
-  margin-bottom: 6px;
+}
+
+.quote-of-day-next-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(41, 74, 128, 0.24);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--blue-700);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.35s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.quote-of-day-next-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.quote-of-day-next-btn:hover {
+  background: rgba(41, 74, 128, 0.12);
+  border-color: rgba(41, 74, 128, 0.4);
+}
+
+.quote-of-day-next-btn:active svg {
+  transform: rotate(150deg);
 }
 
 .quote-of-day-text {
@@ -1110,6 +1147,16 @@ h1 {
   font-size: 0.9rem;
   line-height: 1.6;
   font-style: italic;
+}
+
+.quote-of-day-author {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  font-style: normal;
+  color: var(--blue-700);
+  opacity: 0.85;
 }
 
 .calculator-card {
@@ -3912,6 +3959,21 @@ html.dark-mode .confirm-cancel-btn:hover {
 
 html.dark-mode .quote-of-day {
   background: rgba(78, 113, 170, 0.12);
+}
+
+html.dark-mode .quote-of-day-next-btn {
+  background: rgba(245, 241, 232, 0.08);
+  border-color: rgba(160, 174, 196, 0.25);
+  color: #dce1e8;
+}
+
+html.dark-mode .quote-of-day-next-btn:hover {
+  background: rgba(78, 113, 170, 0.2);
+  border-color: rgba(78, 113, 170, 0.4);
+}
+
+html.dark-mode .quote-of-day-author {
+  color: #a9c2ea;
 }
 
 html.dark-mode table {
