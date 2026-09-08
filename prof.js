@@ -658,6 +658,9 @@
 
   els.addStudent.addEventListener('click', addStudent);
 
+  els.exportPdf.addEventListener('click', exportPdf);
+  els.exportCsv.addEventListener('click', exportCsv);
+
   /* ------------- Initialisation / navigation ----------- */
 
   /* Met à jour les textes dynamiques quand la langue change. */
