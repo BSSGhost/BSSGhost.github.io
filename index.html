@@ -208,6 +208,10 @@
           <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
           <span data-i18n="tab_conseils">Conseils</span>
         </button>
+        <button type="button" class="app-tab" data-target-screen="professeur">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path><path d="M22 10v6"></path></svg></span>
+          <span data-i18n="tab_professeur">Prof</span>
+        </button>
       </nav>
 
       <main class="hero app-screen is-active" data-screen="calculer">
@@ -815,6 +819,192 @@
       </section>
       </div>
 
+      <div class="app-screen" data-screen="professeur" id="prof-screen">
+        <section id="prof-login-card" class="prof-card prof-login-card">
+          <span class="prof-login-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path><path d="M22 10v6"></path></svg>
+          </span>
+          <p class="eyebrow" data-i18n="prof_login_eyebrow">Espace réservé</p>
+          <h2 data-i18n="prof_login_title">Espace Professeur</h2>
+          <p class="prof-login-subtitle" data-i18n="prof_login_subtitle">
+            Mode réservé aux enseignants et surveillants : calculez en quelques secondes la moyenne de matière de chaque élève de la classe à partir du relevé de notes (photo ou PDF).
+          </p>
+
+          <form id="prof-login-form" class="prof-login-form">
+            <div class="field-group">
+              <label for="prof-password" data-i18n="prof_password_label">Mot de passe</label>
+              <input
+                type="password"
+                id="prof-password"
+                name="password"
+                autocomplete="current-password"
+                data-i18n-placeholder="prof_password_placeholder"
+                placeholder="Entrez le mot de passe"
+                required
+              />
+            </div>
+            <p class="prof-error" id="prof-login-error" data-i18n="prof_login_error" hidden>
+              Mot de passe incorrect. Veuillez réessayer.
+            </p>
+            <div class="button-row">
+              <button type="submit" class="primary-button" data-i18n="prof_login_btn">Se connecter</button>
+            </div>
+          </form>
+          <p class="prof-login-hint" data-i18n="prof_login_hint">Réservé au corps enseignant du LYNAQE Sédhiou.</p>
+        </section>
+
+        <section id="prof-console" class="prof-console" hidden>
+          <header class="prof-console-header">
+            <div class="prof-console-title">
+              <span class="prof-console-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path><path d="M22 10v6"></path></svg>
+              </span>
+              <div>
+                <h2 data-i18n="prof_console_title">Calcul des moyennes de matière</h2>
+                <p data-i18n="prof_console_subtitle">Indiquez la matière, le coefficient puis chargez le relevé de notes (photo ou PDF). Les moyennes de chaque élève sont calculées instantanément.</p>
+              </div>
+            </div>
+            <button type="button" id="prof-logout-btn" class="ghost-button prof-logout-btn" data-i18n="prof_logout_btn">Se déconnecter</button>
+          </header>
+
+          <div class="prof-settings">
+            <div class="two-columns">
+              <div class="field-group">
+                <label for="prof-classe" data-i18n="label_classe">Classe</label>
+                <div class="select-wrap">
+                  <select id="prof-classe" name="prof-classe">
+                    <option value="" data-i18n="option_classe_default">-- Sélectionner votre classe --</option>
+                    <option value="6e">6e</option>
+                    <option value="5e">5e</option>
+                    <option value="4e">4e</option>
+                    <option value="3e">3e</option>
+                    <option value="2nde">2nde</option>
+                    <option value="1er">1er</option>
+                    <option value="Tle">Tle</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="prof-semestre" data-i18n="legend_semestre">Semestre</label>
+                <div class="select-wrap">
+                  <select id="prof-semestre" name="prof-semestre">
+                    <option value="Semestre1" data-i18n="table_semestre1_full">Semestre 1</option>
+                    <option value="Semestre2" data-i18n="table_semestre2_full">Semestre 2</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="prof-matiere" data-i18n="label_matiere">Matière</label>
+                <div class="select-wrap">
+                  <select id="prof-matiere" name="prof-matiere">
+                    <option value="" data-i18n="option_matiere_default">-- Sélectionner une matière --</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="prof-coefficient" data-i18n="label_coefficient">Coefficient</label>
+                <input
+                  type="number"
+                  id="prof-coefficient"
+                  name="prof-coefficient"
+                  min="1"
+                  max="8"
+                  step="1"
+                  inputmode="numeric"
+                  data-i18n-placeholder="placeholder_coefficient"
+                  placeholder="Ex : 4"
+                />
+              </div>
+            </div>
+
+            <div class="field-group" id="prof-matiere-custom-group" hidden>
+              <label for="prof-matiere-custom" data-i18n="prof_matiere_custom_label">Autre matière</label>
+              <input
+                type="text"
+                id="prof-matiere-custom"
+                maxlength="40"
+                data-i18n-placeholder="prof_matiere_custom_placeholder"
+                placeholder="Saisissez le nom de la matière"
+              />
+            </div>
+
+            <fieldset class="field-group">
+              <legend data-i18n="legend_composition">La matière comporte-t-elle une composition ?</legend>
+              <div class="choice-group" role="radiogroup" aria-label="Composition disponible">
+                <label class="choice-option">
+                  <input type="radio" name="prof-composition" value="oui" checked />
+                  <span data-i18n="radio_oui">Oui</span>
+                </label>
+                <label class="choice-option">
+                  <input type="radio" name="prof-composition" value="non" />
+                  <span data-i18n="radio_non">Non</span>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="prof-upload">
+            <span class="prof-section-label" data-i18n="prof_upload_label">Relevé de notes de la matière</span>
+            <div id="prof-dropzone" class="prof-dropzone" role="button" tabindex="0" data-i18n-aria-label="prof_dropzone_aria">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              <p class="prof-dropzone-title" data-i18n="prof_dropzone_title">Glissez le relevé (photo ou PDF) ici</p>
+              <p class="prof-dropzone-subtitle" data-i18n="prof_dropzone_subtitle">ou cliquez pour parcourir vos fichiers</p>
+              <input type="file" id="prof-file-input" accept="image/*,application/pdf" hidden />
+            </div>
+
+            <div id="prof-file-preview" class="prof-file-preview" hidden>
+              <img id="prof-file-img" alt="Aperçu du relevé de notes" hidden />
+              <iframe id="prof-file-pdf" title="Aperçu PDF du relevé de notes" hidden></iframe>
+              <div class="prof-file-meta">
+                <span id="prof-file-name" class="prof-file-name"></span>
+                <button type="button" id="prof-file-remove" class="ghost-button" data-i18n="prof_file_remove">Retirer</button>
+              </div>
+            </div>
+            <p class="prof-upload-note" data-i18n="prof_upload_note">
+              Le relevé sert d'aide visuelle pour la saisie. Reportez simplement les notes de chaque élève dans le tableau ci-dessous : les moyennes se calculent en direct.
+            </p>
+          </div>
+
+          <div class="prof-students">
+            <div class="prof-students-header">
+              <h3 data-i18n="prof_students_title">Notes des élèves</h3>
+              <button type="button" id="prof-add-student" class="secondary-button prof-add-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span data-i18n="prof_add_student">Ajouter un élève</span>
+              </button>
+            </div>
+            <div class="table-wrap prof-table-wrap">
+              <table class="prof-table">
+                <thead>
+                  <tr>
+                    <th class="prof-col-rank">#</th>
+                    <th class="prof-col-name" data-i18n="prof_th_eleve">Élève</th>
+                    <th data-i18n="label_devoir1">Note de devoir 1</th>
+                    <th data-i18n="label_devoir2">Note de devoir 2</th>
+                    <th id="prof-th-composition" data-i18n="label_composition">Note de composition</th>
+                    <th data-i18n="th_moyenne">Moyenne</th>
+                    <th class="prof-col-del">&nbsp;</th>
+                  </tr>
+                </thead>
+                <tbody id="prof-tbody"></tbody>
+              </table>
+            </div>
+            <p class="prof-empty" id="prof-empty" data-i18n="prof_no_students">
+              Aucun élève ajouté pour le moment. Cliquez sur « Ajouter un élève » puis reportez les notes depuis le relevé.
+            </p>
+          </div>
+
+          <section id="prof-summary" class="prof-summary" hidden>
+            <h3 class="prof-summary-title" data-i18n="prof_summary_title">Résultats de la classe</h3>
+            <div class="prof-summary-stats" id="prof-summary-stats"></div>
+            <div class="button-row">
+              <button type="button" id="prof-export-pdf" class="pdf-button" disabled data-i18n="prof_export_pdf">Télécharger le relevé (PDF)</button>
+              <button type="button" id="prof-export-csv" class="secondary-button" disabled data-i18n="prof_export_csv">Exporter en CSV</button>
+            </div>
+          </section>
+        </section>
+      </div>
+
       <footer class="site-footer">
         <a
           class="official-site-button"
@@ -845,6 +1035,7 @@
 
     <script src="./js/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
+    <script src="prof.js"></script>
     <script>
       // Aperçu miniature sur l'écran "Bulletin" : purement visuel, ne touche
       // pas au moteur de calcul ni à la génération du PDF. Se met à jour à

@@ -252,7 +252,51 @@ const translations = {
     pdf_button_generating: "Génération en cours…",
     pdf_button_success: "Bulletin téléchargé",
     pdf_button_incomplete_title: "Renseignez la moyenne de toutes les matières de la classe pour débloquer le téléchargement",
-    msg_matieres_incompletes: "Le bulletin n'est téléchargeable que lorsque toutes les matières de la classe ont leur moyenne renseignée."
+    msg_matieres_incompletes: "Le bulletin n'est téléchargeable que lorsque toutes les matières de la classe ont leur moyenne renseignée.",
+
+    tab_professeur: "Prof",
+    prof_login_eyebrow: "Espace réservé",
+    prof_login_title: "Espace Professeur",
+    prof_login_subtitle: "Mode réservé aux enseignants et surveillants : calculez en quelques secondes la moyenne de matière de chaque élève de la classe à partir du relevé de notes (photo ou PDF).",
+    prof_password_label: "Mot de passe",
+    prof_password_placeholder: "Entrez le mot de passe",
+    prof_login_btn: "Se connecter",
+    prof_login_error: "Mot de passe incorrect. Veuillez réessayer.",
+    prof_login_hint: "Réservé au corps enseignant du LYNAQE Sédhiou.",
+    prof_console_title: "Calcul des moyennes de matière",
+    prof_console_subtitle: "Indiquez la matière, le coefficient puis chargez le relevé de notes (photo ou PDF). Les moyennes de chaque élève sont calculées instantanément.",
+    prof_logout_btn: "Se déconnecter",
+    prof_upload_label: "Relevé de notes de la matière",
+    prof_dropzone_title: "Glissez le relevé (photo ou PDF) ici",
+    prof_dropzone_subtitle: "ou cliquez pour parcourir vos fichiers",
+    prof_dropzone_aria: "Charger un relevé de notes (photo ou PDF)",
+    prof_file_remove: "Retirer",
+    prof_upload_note: "Le relevé sert d'aide visuelle pour la saisie. Reportez simplement les notes de chaque élève dans le tableau ci-dessous : les moyennes se calculent en direct.",
+    prof_students_title: "Notes des élèves",
+    prof_add_student: "Ajouter un élève",
+    prof_th_eleve: "Élève",
+    prof_no_students: "Aucun élève ajouté pour le moment. Cliquez sur « Ajouter un élève » puis reportez les notes depuis le relevé.",
+    prof_remove_student: "Supprimer l'élève",
+    prof_summary_title: "Résultats de la classe",
+    prof_export_pdf: "Télécharger le relevé (PDF)",
+    prof_export_csv: "Exporter en CSV",
+    prof_matiere_custom_option: "Autre : saisir le nom…",
+    prof_matiere_custom_label: "Autre matière",
+    prof_matiere_custom_placeholder: "Saisissez le nom de la matière",
+    prof_name_placeholder: "Nom",
+    prof_prenom_placeholder: "Prénom",
+    prof_stat_effectifs: "Effectif",
+    prof_stat_classe_avg: "Moyenne de la classe",
+    prof_stat_best: "Meilleure moyenne",
+    prof_stat_worst: "Moyenne la plus basse",
+    prof_file_type_error: "Format non pris en charge. Veuillez charger une photo (JPG, PNG…) ou un fichier PDF.",
+    prof_msg_classe_requise: "Veuillez sélectionner une classe pour calculer les moyennes.",
+    prof_msg_matiere_requise: "Veuillez sélectionner la matière concernée.",
+    prof_msg_coefficient_requis: "Veuillez renseigner un coefficient valide, entre 1 et 8.",
+    prof_msg_aucun_eleve: "Ajoutez au moins un élève avant d'exporter le relevé.",
+    prof_pdf_title: "Relevé de notes — {matiere}",
+    prof_pdf_mention_col: "Mention",
+    prof_pdf_eleve_col: "Élève"
   },
   en: {
     device_modal_eyebrow: "Display settings",
@@ -489,7 +533,51 @@ const translations = {
     pdf_button_generating: "Generating…",
     pdf_button_success: "Report card downloaded",
     pdf_button_incomplete_title: "Fill in the average for every subject in the class to unlock the download",
-    msg_matieres_incompletes: "The report card can only be downloaded once every subject in the class has its average filled in."
+    msg_matieres_incompletes: "The report card can only be downloaded once every subject in the class has its average filled in.",
+
+    tab_professeur: "Teacher",
+    prof_login_eyebrow: "Restricted area",
+    prof_login_title: "Teacher area",
+    prof_login_subtitle: "Restricted to teachers and supervisors: compute the subject average for every student in the class in seconds, from the grade sheet (photo or PDF).",
+    prof_password_label: "Password",
+    prof_password_placeholder: "Enter the password",
+    prof_login_btn: "Sign in",
+    prof_login_error: "Incorrect password. Please try again.",
+    prof_login_hint: "For LYNAQE Sédhiou teaching staff only.",
+    prof_console_title: "Subject averages for the class",
+    prof_console_subtitle: "Enter the subject, the coefficient, then upload the grade sheet (photo or PDF). Every student's average is computed live.",
+    prof_logout_btn: "Sign out",
+    prof_upload_label: "Grade sheet for the subject",
+    prof_dropzone_title: "Drop the grade sheet (photo or PDF) here",
+    prof_dropzone_subtitle: "or click to browse your files",
+    prof_dropzone_aria: "Upload a grade sheet (photo or PDF)",
+    prof_file_remove: "Remove",
+    prof_upload_note: "The sheet is a visual aid for data entry. Simply copy each student's grades into the table below: averages are computed instantly.",
+    prof_students_title: "Student grades",
+    prof_add_student: "Add a student",
+    prof_th_eleve: "Student",
+    prof_no_students: "No student added yet. Click \"Add a student\" then copy the grades from the sheet.",
+    prof_remove_student: "Delete the student",
+    prof_summary_title: "Class results",
+    prof_export_pdf: "Download the grade sheet (PDF)",
+    prof_export_csv: "Export as CSV",
+    prof_matiere_custom_option: "Other: type the name…",
+    prof_matiere_custom_label: "Other subject",
+    prof_matiere_custom_placeholder: "Type the subject name",
+    prof_name_placeholder: "Last name",
+    prof_prenom_placeholder: "First name",
+    prof_stat_effectifs: "Students",
+    prof_stat_classe_avg: "Class average",
+    prof_stat_best: "Best average",
+    prof_stat_worst: "Lowest average",
+    prof_file_type_error: "Unsupported format. Please upload a photo (JPG, PNG…) or a PDF file.",
+    prof_msg_classe_requise: "Please select a class to compute the averages.",
+    prof_msg_matiere_requise: "Please select the relevant subject.",
+    prof_msg_coefficient_requis: "Please enter a valid coefficient, between 1 and 8.",
+    prof_msg_aucun_eleve: "Add at least one student before exporting the sheet.",
+    prof_pdf_title: "Grade sheet — {matiere}",
+    prof_pdf_mention_col: "Grade",
+    prof_pdf_eleve_col: "Student"
   }
 };
 
@@ -578,6 +666,10 @@ function refreshDynamicTranslatedTexts() {
   const historiqueScreen = document.querySelector('.app-screen[data-screen="historique"]');
   if (historiqueScreen && historiqueScreen.classList.contains('is-active') && typeof window.refreshHistoriqueScreen === 'function') {
     window.refreshHistoriqueScreen();
+  }
+  const professeurScreen = document.querySelector('.app-screen[data-screen="professeur"]');
+  if (professeurScreen && professeurScreen.classList.contains('is-active') && typeof window.refreshProfesseurTexts === 'function') {
+    window.refreshProfesseurTexts();
   }
 }
 
