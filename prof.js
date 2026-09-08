@@ -506,9 +506,10 @@
 
     const tableWidth = contentRight - margin;
 
+    const BAND_HEIGHT = 76;
     const drawBrandBand = () => {
       doc.setFillColor(23, 43, 75);
-      doc.rect(0, 0, pageWidth, 76, 'F');
+      doc.rect(0, 0, pageWidth, BAND_HEIGHT, 'F');
       doc.setTextColor(255, 250, 240);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(15);
@@ -525,6 +526,7 @@
         52,
         { align: 'right' }
       );
+      return BAND_HEIGHT;
     };
 
     const drawTableHeader = (y) => {
