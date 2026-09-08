@@ -343,27 +343,27 @@
 
     els.exportPdf.disabled = !ready || !hasRows;
     els.exportCsv.disabled = !ready || !hasRows;
-    els.summary.hidden = !ready || !hasRows;
-    if (!els.summary.hidden && els.summaryStats) {
-      const classAvg = averages.length ? averages.reduce((sum, v) => sum + v, 0) / averages.length : 0;
-      const stats = [
-        { label: 'prof_stat_effectifs', value: rows.length },
-        { label: 'prof_stat_classe_avg', value: averages.length ? classAvg.toFixed(2) : '—' },
-        { label: 'prof_stat_best', value: averages.length ? Math.max(...averages).toFixed(2) : '—' },
-        { label: 'prof_stat_worst', value: averages.length ? Math.min(...averages).toFixed(2) : '—' }
-      ];
-      els.summaryStats.innerHTML = '';
-      stats.forEach((stat) => {
-        const div = document.createElement('div');
-        div.className = 'prof-stat';
-        const strong = document.createElement('strong');
-        strong.textContent = stat.value;
-        const span = document.createElement('span');
-        span.textContent = t(stat.label);
-        div.append(strong, span);
-        els.summaryStats.appendChild(div);
-      });
-    }
+    els.summary.hidden = false;
+
+    if (!els.summaryStats) return;
+    const hasData = averages.length > 0;
+    const stats = [
+      { label: 'prof_stat_effectifs', value: rows.length },
+      { label: 'prof_stat_classe_avg', value: hasData ? (averages.reduce((sum, v) => sum + v, 0) / averages.length).toFixed(2) : '—' },
+      { label: 'prof_stat_best', value: hasData ? Math.max(...averages).toFixed(2) : '—' },
+      { label: 'prof_stat_worst', value: hasData ? Math.min(...averages).toFixed(2) : '—' }
+    ];
+    els.summaryStats.innerHTML = '';
+    stats.forEach((stat) => {
+      const div = document.createElement('div');
+      div.className = 'prof-stat';
+      const strong = document.createElement('strong');
+      strong.textContent = stat.value;
+      const span = document.createElement('span');
+      span.textContent = t(stat.label);
+      div.append(strong, span);
+      els.summaryStats.appendChild(div);
+    });
   }
 
   function exportCheck() {
