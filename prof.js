@@ -669,6 +669,23 @@
   els.exportPdf.addEventListener('click', exportPdf);
   els.exportCsv.addEventListener('click', exportCsv);
 
+  /* ------------- OCR Integration ----------- */
+
+  window.populateProfRows = function (ocrVerifiedRows) {
+    if (!Array.isArray(ocrVerifiedRows) || !ocrVerifiedRows.length) return;
+    ocrVerifiedRows.forEach((r) => {
+      rows.push({
+        nom: r.nom || '',
+        prenom: r.prenom || '',
+        d1: r.d1 || '',
+        d2: r.d2 || '',
+        compo: r.compo || ''
+      });
+    });
+    renderRows();
+    saveRows();
+  };
+
   /* ------------- Initialisation / navigation ----------- */
 
   /* Met à jour les textes dynamiques quand la langue change. */

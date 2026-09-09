@@ -297,7 +297,22 @@ const translations = {
     prof_msg_aucun_eleve: "Ajoutez au moins un élève avant d'exporter le relevé.",
     prof_pdf_title: "Relevé de notes — {matiere}",
     prof_pdf_mention_col: "Mention",
-    prof_pdf_eleve_col: "Élève"
+    prof_pdf_eleve_col: "Élève",
+    prof_ocr_scan_btn: "Scanner le relevé (OCR)",
+    prof_ocr_scanning: "Analyse en cours…",
+    prof_ocr_progress: "Extraction du texte… {pct} %",
+    prof_ocr_verify_title: "Vérifier les données extraites",
+    prof_ocr_verify_subtitle: "Corrigez les erreurs ci-dessous avant d'appliquer au tableau.",
+    prof_ocr_confidence: "Confiance",
+    prof_ocr_apply: "Appliquer au tableau",
+    prof_ocr_cancel: "Annuler",
+    prof_ocr_rescan: "Ré-scanner",
+    prof_ocr_add_row: "Ajouter une ligne",
+    prof_ocr_remove_row: "Supprimer",
+    prof_ocr_no_data: "Aucune donnée extraite. Essayez avec une photo plus nette.",
+    prof_ocr_error: "Erreur lors de l'analyse. Veuillez réessayer.",
+    prof_ocr_only_images: "Le scanner OCR fonctionne uniquement avec les photos (JPG, PNG…).",
+    prof_ocr_loading_deps: "Chargement du module OCR…"
   },
   en: {
     device_modal_eyebrow: "Display settings",
@@ -579,7 +594,22 @@ const translations = {
     prof_msg_aucun_eleve: "Add at least one student before exporting the sheet.",
     prof_pdf_title: "Grade sheet — {matiere}",
     prof_pdf_mention_col: "Grade",
-    prof_pdf_eleve_col: "Student"
+    prof_pdf_eleve_col: "Student",
+    prof_ocr_scan_btn: "Scan the grade sheet (OCR)",
+    prof_ocr_scanning: "Analyzing…",
+    prof_ocr_progress: "Extracting text… {pct} %",
+    prof_ocr_verify_title: "Verify extracted data",
+    prof_ocr_verify_subtitle: "Fix any errors below before applying to the table.",
+    prof_ocr_confidence: "Confidence",
+    prof_ocr_apply: "Apply to table",
+    prof_ocr_cancel: "Cancel",
+    prof_ocr_rescan: "Rescan",
+    prof_ocr_add_row: "Add a row",
+    prof_ocr_remove_row: "Remove",
+    prof_ocr_no_data: "No data extracted. Try a clearer photo.",
+    prof_ocr_error: "Analysis failed. Please try again.",
+    prof_ocr_only_images: "OCR scanning only works with photos (JPG, PNG…).",
+    prof_ocr_loading_deps: "Loading OCR module…"
   }
 };
 

@@ -5003,3 +5003,393 @@ html.dark-mode .prof-del-btn {
     height: 300px;
   }
 }
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* =========================================================
+   OCR SEMI-AUTOMATIQUE — Modal de vérification + bouton scan
+   ========================================================= */
+
+/* Bouton "Scanner le relevé" */
+.prof-ocr-scan-btn {
+  margin-top: 10px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Overlay du modal OCR */
+.prof-ocr-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.prof-ocr-modal[hidden] {
+  display: none;
+}
+
+.prof-ocr-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Card du modal */
+.prof-ocr-modal-card {
+  position: relative;
+  z-index: 1;
+  background: var(--card-strong, #fff);
+  border-radius: 18px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+  width: 100%;
+  max-width: 820px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: rise-in 0.3s ease both;
+}
+
+.prof-ocr-header {
+  padding: 22px 24px 14px;
+  flex-shrink: 0;
+}
+
+.prof-ocr-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.prof-ocr-subtitle {
+  margin: 4px 0 0;
+  color: var(--muted, #6b7280);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Tableau de vérification */
+.prof-ocr-table-wrap {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 0 24px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prof-ocr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.prof-ocr-table th {
+  position: sticky;
+  top: 0;
+  background: var(--card-strong, #fff);
+  z-index: 2;
+  padding: 10px 8px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--blue-800, #1e3a5f);
+  border-bottom: 2px solid var(--soft-border, rgba(15, 23, 42, 0.08));
+  white-space: nowrap;
+}
+
+html.dark-mode .prof-ocr-table th {
+  background: #1a1f2b;
+  color: #cdd5e0;
+}
+
+.prof-ocr-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--soft-border, rgba(15, 23, 42, 0.06));
+}
+
+.prof-ocr-col-rank {
+  width: 32px;
+  text-align: center;
+  color: var(--muted, #6b7280);
+  font-weight: 600;
+}
+
+.prof-ocr-col-del {
+  width: 36px;
+  text-align: center;
+}
+
+.prof-ocr-th-del {
+  width: 36px;
+}
+
+.prof-ocr-th-compo[hidden] {
+  display: none;
+}
+
+.prof-ocr-compo-cell[hidden] {
+  display: none;
+}
+
+/* Inputs du modal OCR */
+.prof-ocr-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid var(--soft-border, rgba(15, 23, 42, 0.12));
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+html.dark-mode .prof-ocr-input {
+  background: #1a1f2b;
+  border-color: rgba(160, 174, 196, 0.18);
+  color: #e6e9ee;
+}
+
+.prof-ocr-input:focus {
+  outline: none;
+  border-color: var(--blue-500, #4e71aa);
+  box-shadow: 0 0 0 3px rgba(78, 113, 170, 0.15);
+}
+
+.prof-ocr-note-input {
+  width: 72px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.prof-ocr-input.is-valid {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.prof-ocr-input.is-invalid {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+/* Badge de confiance */
+.prof-ocr-confidence {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.prof-ocr-conf-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.prof-ocr-conf-badge.conf-high {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+
+.prof-ocr-conf-badge.conf-medium {
+  background: rgba(234, 179, 8, 0.15);
+  color: #a16207;
+}
+
+.prof-ocr-conf-badge.conf-low {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+html.dark-mode .prof-ocr-conf-badge.conf-high {
+  background: rgba(34, 197, 94, 0.18);
+  color: #4ade80;
+}
+
+html.dark-mode .prof-ocr-conf-badge.conf-medium {
+  background: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+}
+
+html.dark-mode .prof-ocr-conf-badge.conf-low {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+}
+
+/* Bouton supprimer ligne OCR */
+.prof-ocr-del-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted, #6b7280);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.prof-ocr-del-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Empty state */
+.prof-ocr-empty {
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--muted, #6b7280);
+}
+
+.prof-ocr-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Actions du modal */
+.prof-ocr-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--soft-border, rgba(15, 23, 42, 0.08));
+  flex-shrink: 0;
+}
+
+.prof-ocr-actions-right {
+  display: flex;
+  gap: 10px;
+}
+
+.prof-ocr-add-btn {
+  flex: 0 0 auto;
+}
+
+/* Barre de progression OCR */
+.prof-ocr-progress-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fade-in 0.2s ease;
+}
+
+.prof-ocr-progress-card {
+  background: var(--card-strong, #fff);
+  border-radius: 18px;
+  padding: 36px 40px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+  min-width: 280px;
+  animation: rise-in 0.3s ease both;
+}
+
+.prof-ocr-progress-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(150deg, var(--blue-800, #1e3a5f), var(--blue-600, #2d5a8e));
+  color: var(--yellow-400, #facc15);
+  margin-bottom: 16px;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(78, 113, 170, 0.3); }
+  50% { box-shadow: 0 0 0 12px rgba(78, 113, 170, 0); }
+}
+
+.prof-ocr-progress-title {
+  margin: 0 0 18px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text, #1a1f2b);
+}
+
+.prof-ocr-progress-bar-wrap {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+html.dark-mode .prof-ocr-progress-bar-wrap {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.prof-ocr-progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--blue-600, #2d5a8e), var(--blue-500, #4e71aa));
+  transition: width 0.3s ease;
+}
+
+.prof-ocr-progress-text {
+  margin: 0;
+  color: var(--muted, #6b7280);
+  font-size: 0.82rem;
+}
+
+/* Responsive mobile */
+@media (max-width: 640px) {
+  .prof-ocr-modal-card {
+    max-height: 92vh;
+    border-radius: 14px;
+  }
+
+  .prof-ocr-header {
+    padding: 16px 16px 10px;
+  }
+
+  .prof-ocr-table-wrap {
+    padding: 0 10px;
+  }
+
+  .prof-ocr-table {
+    font-size: 0.78rem;
+  }
+
+  .prof-ocr-note-input {
+    width: 58px;
+  }
+
+  .prof-ocr-actions {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .prof-ocr-actions-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .prof-ocr-progress-card {
+    padding: 28px 24px;
+    min-width: 240px;
+  }
+}
