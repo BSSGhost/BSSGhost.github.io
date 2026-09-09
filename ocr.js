@@ -551,11 +551,16 @@
     if (preview && !btn.parentElement) {
       preview.insertAdjacentElement('afterend', btn);
     }
+    const labelSpan = btn.querySelector('[data-i18n="prof_ocr_scan_btn"]');
+    if (labelSpan) labelSpan.textContent = t('prof_ocr_scan_btn');
     btn.hidden = false;
   }
 
   function hideScanButton() {
-    if (scanBtnEl) scanBtnEl.hidden = true;
+    if (scanBtnEl) {
+      scanBtnEl.hidden = true;
+      if (scanBtnEl.parentElement) scanBtnEl.parentElement.removeChild(scanBtnEl);
+    }
   }
 
   /* ---------- Progress overlay ---------- */
@@ -599,17 +604,86 @@
     }
   }
 
+  /* ---------- PDF → image conversion ---------- */
+
+  const PDFJS_CDN = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.min.js';
+  const PDFJS_WORKER_CDN = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.worker.min.js';
+  let pdfjsLoaded = false;
+
+  function loadPdfJs() {
+    return new Promise((resolve, reject) => {
+      if (pdfjsLoaded) return resolve();
+      const script = document.createElement('script');
+      script.src = PDFJS_CDN;
+      script.onload = () => {
+        pdfjsLoaded = true;
+        resolve();
+      };
+      script.onerror = () => reject(new Error('Impossible de charger pdf.js'));
+      document.head.appendChild(script);
+    });
+  }
+
+  async function pdfToImageBlob(pdfFile) {
+    await loadPdfJs();
+    const pdfjsLib = window.pdfjsLib;
+    if (!pdfjsLib) throw new Error('pdf.js non disponible');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_CDN;
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 2.0 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Échec de la conversion PDF'));
+      }, 'image/png');
+    });
+  }
+
   /* ---------- Scan principal ---------- */
 
   async function onScanClick() {
     if (scanInProgress) return;
 
+    const classeEl = document.getElementById('prof-classe');
+    const matiereEl = document.getElementById('prof-matiere');
+    const coefficientEl = document.getElementById('prof-coefficient');
+    const customInput = document.getElementById('prof-matiere-custom');
+
+    if (!classeEl?.value) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_classe_requise'));
+      return;
+    }
+    const matiereVal = matiereEl?.value === '__autre__' ? customInput?.value?.trim() : matiereEl?.value;
+    if (!matiereVal) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_matiere_requise'));
+      return;
+    }
+    const coeff = Number(coefficientEl?.value);
+    if (!Number.isInteger(coeff) || coeff < 1 || coeff > 8) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_coefficient_requis'));
+      return;
+    }
+
     const fileInput = els.fileInput;
     const file = fileInput?.files?.[0];
-    if (!file) return;
+    if (!file) {
+      if (typeof showInfoDialog === 'function') {
+        showInfoDialog(t('prof_ocr_no_file'));
+      }
+      return;
+    }
 
     const isImage = /^image\//.test(file.type) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name);
-    if (!isImage) {
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+
+    if (!isImage && !isPdf) {
       if (typeof showInfoDialog === 'function') {
         showInfoDialog(t('prof_ocr_only_images'));
       }
@@ -623,8 +697,23 @@
       updateProgress(5, t('prof_ocr_loading_deps'));
       await loadTesseractScript();
 
+      let imageBlob = file;
+      if (isPdf) {
+        updateProgress(8, t('prof_ocr_pdf_conversion'));
+        try {
+          imageBlob = await pdfToImageBlob(file);
+        } catch (pdfErr) {
+          hideProgress();
+          console.error('PDF conversion error:', pdfErr);
+          if (typeof showInfoDialog === 'function') {
+            showInfoDialog(t('prof_ocr_pdf_error'));
+          }
+          return;
+        }
+      }
+
       updateProgress(10, t('prof_ocr_progress', { pct: '10' }));
-      const ocrData = await runOCR(file, (pct) => {
+      const ocrData = await runOCR(imageBlob, (pct) => {
         const text = t('prof_ocr_progress', { pct: String(10 + Math.round(pct * 0.8)) });
         updateProgress(10 + Math.round(pct * 0.8), text);
       });
@@ -664,7 +753,8 @@
       const file = event.target.files?.[0];
       if (file) {
         const isImage = /^image\//.test(file.type) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name);
-        if (isImage) {
+        const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+        if (isImage || isPdf) {
           lastScannedFile = file;
           setTimeout(showScanButton, 100);
         } else {

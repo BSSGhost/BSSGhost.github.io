@@ -46,7 +46,8 @@
     summary: $('prof-summary'),
     summaryStats: $('prof-summary-stats'),
     exportPdf: $('prof-export-pdf'),
-    exportCsv: $('prof-export-csv')
+    exportCsv: $('prof-export-csv'),
+    saveBtn: $('prof-save-btn')
   };
 
   let rows = [];
@@ -668,6 +669,16 @@
 
   els.exportPdf.addEventListener('click', exportPdf);
   els.exportCsv.addEventListener('click', exportCsv);
+
+  if (els.saveBtn) {
+    els.saveBtn.addEventListener('click', () => {
+      if (!exportCheck()) return;
+      saveRows();
+      if (typeof showInfoDialog === 'function') {
+        showInfoDialog(t('prof_save_success'));
+      }
+    });
+  }
 
   /* ------------- OCR Integration ----------- */
 

@@ -311,8 +311,13 @@ const translations = {
     prof_ocr_remove_row: "Supprimer",
     prof_ocr_no_data: "Aucune donnée extraite. Essayez avec une photo plus nette.",
     prof_ocr_error: "Erreur lors de l'analyse. Veuillez réessayer.",
-    prof_ocr_only_images: "Le scanner OCR fonctionne uniquement avec les photos (JPG, PNG…).",
-    prof_ocr_loading_deps: "Chargement du module OCR…"
+    prof_ocr_only_images: "Le scanner OCR fonctionne uniquement avec les photos (JPG, PNG…) ou les PDF.",
+    prof_ocr_loading_deps: "Chargement du module OCR…",
+    prof_ocr_no_file: "Veuillez charger une photo ou un PDF du relevé de notes avant de lancer le scan.",
+    prof_ocr_pdf_conversion: "Conversion du PDF en image…",
+    prof_ocr_pdf_error: "Impossible de convertir le PDF. Essayez avec une photo du relevé.",
+    prof_save_success: "Notes sauvegardées avec succès !",
+    prof_save_btn: "Sauvegarder les notes"
   },
   en: {
     device_modal_eyebrow: "Display settings",
@@ -608,8 +613,13 @@ const translations = {
     prof_ocr_remove_row: "Remove",
     prof_ocr_no_data: "No data extracted. Try a clearer photo.",
     prof_ocr_error: "Analysis failed. Please try again.",
-    prof_ocr_only_images: "OCR scanning only works with photos (JPG, PNG…).",
-    prof_ocr_loading_deps: "Loading OCR module…"
+    prof_ocr_only_images: "OCR scanning only works with photos (JPG, PNG…) or PDFs.",
+    prof_ocr_loading_deps: "Loading OCR module…",
+    prof_ocr_no_file: "Please upload a photo or PDF of the grade sheet before scanning.",
+    prof_ocr_pdf_conversion: "Converting PDF to image…",
+    prof_ocr_pdf_error: "Could not convert the PDF. Try with a photo of the grade sheet.",
+    prof_save_success: "Notes saved successfully!",
+    prof_save_btn: "Save notes"
   }
 };
 
