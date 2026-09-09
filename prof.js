@@ -1,17 +1,18 @@
 /* =========================================================
    MODE PROFESSEUR — SUNU MOYENNE / LYNAQE Sédhiou
-   Connexion protégée par mot de passe simple. Pour une matière
-   et un coefficient donnés, le professeur ou le surveillant
-   charge le relevé de notes (photo ou PDF) puis saisit les
-   notes de chaque élève : le site calcule instantanément la
+   Accès réservé : authentification par le backend (POST /api/prof/*,
+   mots de passe hashés côté serveur, jeton de session temporaire).
+   Pour une matière et un coefficient donnés, le professeur ou le
+   surveillant charge le relevé de notes (photo ou PDF) puis saisit
+   les notes de chaque élève : le site calcule instantanément la
    moyenne de matière de chacun et permet d'exporter le relevé
    (PDF ou CSV).
    ========================================================= */
 (function () {
   'use strict';
 
-  const PROF_PASSWORD = 'LYNAQE2026';
-  const PROF_AUTH_KEY = 'lynaqe_prof_auth';
+  const PROF_API = '/api/prof';
+  const PROF_AUTH_KEY = 'lynaqe_prof_token';
   const PROF_ROWS_PREFIX = 'lynaqe_prof_rows';
   const NOTE_FIELDS = ['d1', 'd2', 'compo'];
 
@@ -21,8 +22,11 @@
     screen: $('prof-screen'),
     loginCard: $('prof-login-card'),
     loginForm: $('prof-login-form'),
+    username: $('prof-username'),
     password: $('prof-password'),
+    loginBtn: $('prof-login-btn'),
     loginError: $('prof-login-error'),
+    serverError: $('prof-login-server-error'),
     console: $('prof-console'),
     logoutBtn: $('prof-logout-btn'),
     classe: $('prof-classe'),
@@ -55,28 +59,70 @@
 
   /* ----------------- Authentication ----------------- */
 
-  function isAuthenticated() {
+  /* Authentification via le backend : plus aucun mot de passe dans le
+     code client. L'API répond un jeton de session unique et temporaire. */
+  function getStoredToken() {
     try {
-      return sessionStorage.getItem(PROF_AUTH_KEY) === '1';
+      return sessionStorage.getItem(PROF_AUTH_KEY) || '';
     } catch {
-      return false;
+      return '';
     }
   }
 
-  function setAuthenticated(value) {
+  function isAuthenticated() {
+    return Boolean(getStoredToken());
+  }
+
+  function setAuthenticated(token) {
     try {
-      if (value) sessionStorage.setItem(PROF_AUTH_KEY, '1');
+      if (token) sessionStorage.setItem(PROF_AUTH_KEY, token);
       else sessionStorage.removeItem(PROF_AUTH_KEY);
     } catch {}
+  }
+
+  /* Vérifie le jeton auprès du serveur. Ne déconnecte qu'en cas
+     d'échec explicite (401) ; hors-ligne, on maintient la session. */
+  async function validateSession() {
+    const token = getStoredToken();
+    if (!token) return false;
+    try {
+      const res = await fetch(`${PROF_API}/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.status === 401) {
+        setAuthenticated(null);
+        return false;
+      }
+      return res.ok;
+    } catch {
+      return true;
+    }
+  }
+
+  function showLoginError(el, message) {
+    if (!el) return;
+    el.textContent = message;
+    el.hidden = false;
+    el.classList.remove('shake');
+    void el.offsetWidth;
+    el.classList.add('shake');
+  }
+
+  function setLoginBusy(busy) {
+    if (!els.loginBtn) return;
+    els.loginBtn.disabled = busy;
+    els.loginBtn.textContent = busy ? `${t('prof_login_btn')}…` : t('prof_login_btn');
   }
 
   function showLogin() {
     if (!els.loginCard || !els.console) return;
     els.loginCard.hidden = false;
     els.console.hidden = true;
+    els.username.value = '';
     els.password.value = '';
     els.loginError.hidden = true;
-    window.setTimeout(() => els.password.focus(), prefersReducedMotion ? 0 : 200);
+    els.serverError.hidden = true;
+    window.setTimeout(() => els.username.focus(), prefersReducedMotion ? 0 : 200);
   }
 
   function showConsole() {
@@ -598,24 +644,67 @@
 
   /* --------------------- Events ------------------------ */
 
-  els.loginForm.addEventListener('submit', (event) => {
+  els.loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (els.password.value.trim() === PROF_PASSWORD) {
-      setAuthenticated(true);
-      showConsole();
-    } else {
-      els.loginError.hidden = false;
-      els.loginError.classList.remove('shake');
-      void els.loginError.offsetWidth;
-      els.loginError.classList.add('shake');
-      els.password.value = '';
-      els.password.focus();
+    const username = els.username.value.trim();
+    const password = els.password.value;
+    if (!username || !password) {
+      showLoginError(els.loginError, t('prof_login_error'));
+      return;
     }
+
+    els.loginError.hidden = true;
+    els.serverError.hidden = true;
+    setLoginBusy(true);
+
+    let res;
+    try {
+      res = await fetch(`${PROF_API}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+    } catch {
+      setLoginBusy(false);
+      showLoginError(els.serverError, t('prof_login_server_error'));
+      return;
+    }
+
+    let data = null;
+    try {
+      data = await res.json();
+    } catch {}
+
+    setLoginBusy(false);
+
+    if (res.ok && data && data.token) {
+      setAuthenticated(data.token);
+      showConsole();
+      return;
+    }
+
+    if (res.status === 429) {
+      showLoginError(els.serverError, t('prof_login_rate_limited'));
+      return;
+    }
+
+    showLoginError(els.loginError, t('prof_login_error'));
+    els.password.value = '';
+    els.password.focus();
   });
 
-  els.logoutBtn.addEventListener('click', () => {
-    setAuthenticated(false);
+  els.logoutBtn.addEventListener('click', async () => {
+    const token = getStoredToken();
+    setAuthenticated(null);
     showLogin();
+    if (token) {
+      try {
+        await fetch(`${PROF_API}/logout`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch {}
+    }
   });
 
   els.classe.addEventListener('change', () => {
@@ -713,6 +802,9 @@
       els.loginCard.hidden = true;
       els.console.hidden = false;
       if (isActiveScreen) refreshMatiereSelect();
+      validateSession().then((valid) => {
+        if (!valid) showLogin();
+      });
     } else {
       els.loginCard.hidden = false;
       els.console.hidden = true;
