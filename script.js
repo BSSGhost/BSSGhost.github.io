@@ -67,6 +67,12 @@ const translations = {
     legend_langue: "Quelle langue choisissez-vous ?",
     opt_espagnol: "Espagnol",
     opt_arabe: "Arabe",
+    lang_change_title: "Changer de langue",
+    lang_change_message: "Vous avez déjà enregistré des notes en {langue}. Voulez-vous choisir {newLangue} à la place ?",
+    lang_change_replace: "Remplacer",
+    lang_change_keep_both: "Conserver les deux",
+    lang_change_replaced: "Les notes en {langue} ont été supprimées.",
+    lang_change_kept_both: "La langue {langue} est conservée : les deux langues font désormais partie des matières de la classe.",
     legend_serie: "Quelle série suivez-vous ?",
     opt_serie_s1: "S1",
     opt_serie_s2: "S2",
@@ -373,6 +379,12 @@ const translations = {
     legend_langue: "Which language do you choose?",
     opt_espagnol: "Spanish",
     opt_arabe: "Arabic",
+    lang_change_title: "Switch language",
+    lang_change_message: "You already have grades saved in {langue}. Do you want to choose {newLangue} instead?",
+    lang_change_replace: "Replace",
+    lang_change_keep_both: "Keep both",
+    lang_change_replaced: "Grades saved in {langue} have been deleted.",
+    lang_change_kept_both: "The {langue} language is kept: both languages are now part of the class subjects.",
     legend_serie: "Which series are you in?",
     opt_serie_s1: "S1",
     opt_serie_s2: "S2",
@@ -1457,6 +1469,10 @@ const matieresCommunesBase = [
   'ECOFAM'
 ];
 
+/* Langues vivantes proposées (4e → Tle) : la langue choisie est une
+   matière comme les autres, avec un vrai coefficient au bulletin. */
+const LANGUE_OPTIONS = ['Espagnol', 'Arabe'];
+
 /* =========================================================
    COEFFICIENTS OFFICIELS SUGGERES
    Source lycée (S1/S2) : grille des épreuves du Baccalauréat
@@ -1678,12 +1694,43 @@ function getMatieresPourClasse(classe) {
   return baseMatieres;
 }
 
+/* Langues déjà enregistrées dans les notes de la classe (S1 ou S2).
+   Permet de garder une langue même après en avoir choisi une autre :
+   elle reste alors dans la liste des matières de la classe. */
+function getStoredLanguesPourClasse(classe) {
+  if (!classe) return [];
+  const found = [];
+  LANGUE_OPTIONS.forEach((langue) => {
+    const hasNotes =
+      Object.prototype.hasOwnProperty.call(getStoredNotesForClasse(classe, 'Semestre1'), langue) ||
+      Object.prototype.hasOwnProperty.call(getStoredNotesForClasse(classe, 'Semestre2'), langue);
+    if (hasNotes) found.push(langue);
+  });
+  return found;
+}
+
+/* Supprime les notes d'une langue dans la classe (S1 + S2). */
+function removeLangueNotes(classe, langue) {
+  if (!classe) return;
+  ['Semestre1', 'Semestre2'].forEach((semestre) => {
+    const notes = getStoredNotesForClasse(classe, semestre);
+    if (!Object.prototype.hasOwnProperty.call(notes, langue)) return;
+    delete notes[langue];
+    if (Object.keys(notes).length) {
+      localStorage.setItem(getClassStorageKey(classe, semestre), JSON.stringify(notes));
+    } else {
+      localStorage.removeItem(getClassStorageKey(classe, semestre));
+    }
+  });
+}
+
 function getMatieresDisponiblesPourClasse(classe) {
   const selectedLangue = document.querySelector('input[name="langue"]:checked')?.value;
   let matieres = getMatieresPourClasse(classe);
 
-  if (['4e', '3e', '2nde', '1er', 'Tle'].includes(classe) && selectedLangue) {
-    matieres = [...matieres, selectedLangue];
+  if (['4e', '3e', '2nde', '1er', 'Tle'].includes(classe)) {
+    if (selectedLangue) matieres = [...matieres, selectedLangue];
+    matieres = [...matieres, ...getStoredLanguesPourClasse(classe)];
   }
 
   return [...new Set(matieres)];
@@ -2029,9 +2076,70 @@ function updateMatieres() {
   renderTableMatiere();
 }
 
+/* Changement de langue : si une autre langue a déjà des notes dans la
+   classe, on demande à l'élève de préciser l'intention pour éviter de
+   retrouver des notes orphelines ou une matière « manquante » au bulletin.
+   - Remplacer        → supprime les notes de l'ancienne langue.
+   - Conserver les deux → l'ancienne langue reste dans la classe (avec ses notes).
+   - Annuler          → on revient au choix précédent. */
+function requestLangueChange(newLangue) {
+  /* Au moment où le radio change, il est déjà coché à la nouvelle valeur :
+     l'ancienne langue est donc celle encore enregistrée dans le profil. */
+  const oldLangue = getStudentProfile().langue || null;
+  const oldRadio = document.querySelector(`input[name="langue"][value="${oldLangue}"]`);
+  const classe = classeSelect.value;
+
+  const applyChange = () => {
+    saveStudentProfile({ langue: newLangue });
+    updateMatieres();
+  };
+
+  const hasOldRisk = Boolean(oldLangue && oldLangue !== newLangue && classe && getStoredLanguesPourClasse(classe).includes(oldLangue));
+
+  if (!hasOldRisk) {
+    applyChange();
+    return;
+  }
+
+  const doReplace = () => {
+    removeLangueNotes(classe, oldLangue);
+    applyChange();
+    if (typeof showInfoDialog === 'function') {
+      showInfoDialog(t('lang_change_replaced', { langue: translateMatiere(oldLangue) }));
+    }
+  };
+
+  const doKeepBoth = () => {
+    applyChange();
+    if (typeof showInfoDialog === 'function') {
+      showInfoDialog(t('lang_change_kept_both', { langue: translateMatiere(oldLangue) }));
+    }
+  };
+
+  const doCancel = () => {
+    if (oldRadio) oldRadio.checked = true;
+  };
+
+  if (typeof confirmModal !== 'undefined' && confirmModal.el) {
+    confirmModal.show({
+      title: t('lang_change_title'),
+      message: t('lang_change_message', {
+        langue: translateMatiere(oldLangue),
+        newLangue: translateMatiere(newLangue)
+      }),
+      okLabel: t('lang_change_replace'),
+      altLabel: t('lang_change_keep_both'),
+      onConfirm: doReplace,
+      onAlt: doKeepBoth,
+      onDismiss: doCancel
+    });
+  } else {
+    applyChange();
+  }
+}
+
 langueRadios.forEach((radio) => radio.addEventListener('change', () => {
-  saveStudentProfile({ langue: radio.value });
-  updateMatieres();
+  requestLangueChange(radio.value);
 }));
 
 document.querySelectorAll('input[name="semestre"]').forEach((radio) => {
@@ -3494,20 +3602,31 @@ const confirmModal = {
   iconSvg: document.querySelector('#confirm-modal .confirm-modal-icon svg'),
   messageEl: document.getElementById('confirm-modal-message'),
   okBtn: document.getElementById('confirm-modal-ok'),
+  altBtn: document.getElementById('confirm-modal-alt'),
   cancelBtn: document.getElementById('confirm-modal-cancel'),
   onConfirm: null,
+  onAlt: null,
   closing: false,
 
-  show({ message, onConfirm, danger = true, info = false }) {
+  show({ message, onConfirm, onAlt, onDismiss, danger = true, info = false, okLabel, altLabel, title }) {
     if (!this.el) return;
     this.onConfirm = onConfirm || null;
+    this.onAlt = onAlt || null;
+    this.onDismiss = onDismiss || null;
     this.messageEl.textContent = message;
+
+    if (this.altBtn) {
+      this.altBtn.hidden = !altLabel;
+      if (altLabel) this.altBtn.textContent = altLabel;
+    }
+
     this.el.hidden = false;
     this.closing = false;
     this.el.classList.remove('is-closing', 'is-danger-soft', 'is-info');
     if (info) {
       this.el.classList.add('is-info');
       this.cancelBtn.hidden = true;
+      this.altBtn.hidden = true;
       this.okBtn.textContent = t('confirm_modal_close');
       this.titleEl.textContent = t('confirm_modal_info_title');
       this.titleEl.removeAttribute('data-i18n');
@@ -3517,9 +3636,10 @@ const confirmModal = {
         '<line x1="12" y1="8" x2="12.01" y2="8"></line>';
     } else {
       this.cancelBtn.hidden = false;
-      this.okBtn.textContent = t('confirm_modal_ok');
-      this.titleEl.textContent = t('confirm_modal_title');
-      this.titleEl.setAttribute('data-i18n', 'confirm_modal_title');
+      this.okBtn.textContent = okLabel || t('confirm_modal_ok');
+      this.titleEl.textContent = title || t('confirm_modal_title');
+      if (title) this.titleEl.removeAttribute('data-i18n');
+      else this.titleEl.setAttribute('data-i18n', 'confirm_modal_title');
       this.iconSvg.innerHTML =
         '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>' +
         '<line x1="12" y1="9" x2="12" y2="13"></line>' +
@@ -3529,23 +3649,38 @@ const confirmModal = {
     this.okBtn.focus({ preventScroll: true });
   },
 
-  hide() {
+  hide(dismiss = true) {
     if (this.closing || !this.el) return;
     this.closing = true;
     this.el.classList.add('is-closing');
+    const dismissFn = dismiss ? this.onDismiss : null;
+    this.onConfirm = null;
+    this.onAlt = null;
+    this.onDismiss = null;
     const done = () => {
       this.el.hidden = true;
       this.el.classList.remove('is-closing');
       this.closing = false;
-      this.onConfirm = null;
     };
     window.setTimeout(done, prefersReducedMotion ? 0 : 250);
+    if (dismissFn) dismissFn();
   },
 
   confirm() {
     const fn = this.onConfirm;
     this.onConfirm = null;
-    this.hide();
+    this.onAlt = null;
+    this.onDismiss = null;
+    this.hide(false);
+    if (fn) fn();
+  },
+
+  alt() {
+    const fn = this.onAlt;
+    this.onAlt = null;
+    this.onConfirm = null;
+    this.onDismiss = null;
+    this.hide(false);
     if (fn) fn();
   },
 };
@@ -3553,6 +3688,9 @@ const confirmModal = {
 if (confirmModal.el) {
   confirmModal.okBtn.addEventListener('click', () => confirmModal.confirm());
   confirmModal.cancelBtn.addEventListener('click', () => confirmModal.hide());
+  if (confirmModal.altBtn) {
+    confirmModal.altBtn.addEventListener('click', () => confirmModal.alt());
+  }
 
   confirmModal.el.addEventListener('click', (event) => {
     if (event.target === confirmModal.el) confirmModal.hide();
