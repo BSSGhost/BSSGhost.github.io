@@ -4705,6 +4705,12 @@ html.dark-mode .prof-dropzone {
   border-color: rgba(78, 113, 170, 0.5);
 }
 
+.prof-preview-label {
+  display: block;
+  margin-top: 18px;
+  margin-bottom: 10px;
+}
+
 .prof-file-preview {
   display: flex;
   flex-direction: column;
@@ -4713,6 +4719,7 @@ html.dark-mode .prof-dropzone {
   border: 1px solid var(--soft-border);
   border-radius: 12px;
   background: #fffdf8;
+  margin-top: 4px;
 }
 
 .prof-file-preview img {
@@ -4996,4 +5003,3 @@ html.dark-mode .prof-del-btn {
     height: 300px;
   }
 }
-

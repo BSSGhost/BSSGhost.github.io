@@ -33,6 +33,7 @@
     customInput: $('prof-matiere-custom'),
     dropzone: $('prof-dropzone'),
     fileInput: $('prof-file-input'),
+    previewLabel: $('prof-preview-label'),
     filePreview: $('prof-file-preview'),
     fileImg: $('prof-file-img'),
     filePdf: $('prof-file-pdf'),
@@ -411,6 +412,10 @@
       els.fileImg.removeAttribute('src');
     }
     els.filePreview.hidden = false;
+    if (els.previewLabel) els.previewLabel.hidden = false;
+    if (typeof els.filePreview.scrollIntoView === 'function') {
+      els.filePreview.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+    }
   }
 
   function clearFilePreview() {
@@ -423,6 +428,7 @@
     els.filePdf.hidden = true;
     els.filePdf.removeAttribute('src');
     els.filePreview.hidden = true;
+    if (els.previewLabel) els.previewLabel.hidden = true;
   }
 
   /* ---------------------- Exports --------------------- */

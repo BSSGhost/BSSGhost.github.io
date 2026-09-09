@@ -952,14 +952,6 @@
               <input type="file" id="prof-file-input" accept="image/*,application/pdf" hidden />
             </div>
 
-            <div id="prof-file-preview" class="prof-file-preview" hidden>
-              <img id="prof-file-img" alt="Aperçu du relevé de notes" hidden />
-              <iframe id="prof-file-pdf" title="Aperçu PDF du relevé de notes" hidden></iframe>
-              <div class="prof-file-meta">
-                <span id="prof-file-name" class="prof-file-name"></span>
-                <button type="button" id="prof-file-remove" class="ghost-button" data-i18n="prof_file_remove">Retirer</button>
-              </div>
-            </div>
             <p class="prof-upload-note" data-i18n="prof_upload_note">
               Le relevé sert d'aide visuelle pour la saisie. Reportez simplement les notes de chaque élève dans le tableau ci-dessous : les moyennes se calculent en direct.
             </p>
@@ -992,6 +984,16 @@
             <p class="prof-empty" id="prof-empty" data-i18n="prof_no_students">
               Aucun élève ajouté pour le moment. Cliquez sur « Ajouter un élève » puis reportez les notes depuis le relevé.
             </p>
+
+            <span class="prof-section-label prof-preview-label" id="prof-preview-label" data-i18n="prof_preview_label" hidden>Relevé importé</span>
+            <div id="prof-file-preview" class="prof-file-preview" hidden>
+              <img id="prof-file-img" alt="Aperçu du relevé de notes" hidden />
+              <iframe id="prof-file-pdf" title="Aperçu PDF du relevé de notes" hidden></iframe>
+              <div class="prof-file-meta">
+                <span id="prof-file-name" class="prof-file-name"></span>
+                <button type="button" id="prof-file-remove" class="ghost-button" data-i18n="prof_file_remove">Retirer</button>
+              </div>
+            </div>
           </div>
 
           <section id="prof-summary" class="prof-summary" hidden>
