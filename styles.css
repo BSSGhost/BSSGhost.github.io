@@ -2656,6 +2656,8 @@ html.dark-mode .bulletin-ready-btn:hover {
 .table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
 }
 
 table {
@@ -4578,6 +4580,10 @@ html.dark-mode .app-tab.is-active {
   transform: translateY(-50%);
   background: none;
   border: none;
+  box-shadow: none;
+  isolation: auto;
+  overflow: visible;
+  flex: 0 0 auto;
   cursor: pointer;
   padding: 0;
   color: var(--gray-400, #9ca3af);
@@ -4587,41 +4593,63 @@ html.dark-mode .app-tab.is-active {
   transition: color 0.15s, background 0.15s, transform 0.18s ease;
 }
 
-.prof-toggle-password svg {
-  grid-area: 1 / 1;
-  width: 20px;
-  height: 20px;
-  pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+/* Le bouton hérite par défaut du style générique `button` (dégradé bleu,
+   ombre, liseré blanc via ::after) : on neutralise tout ça, sinon un
+   fond/support blanc reste visible derrière l'icône œil. */
+.prof-toggle-password::after {
+  content: none;
 }
 
-.prof-toggle-password .eye-open {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.prof-toggle-password .eye-closed {
-  opacity: 0;
-  transform: scale(0.7);
-}
-
-.prof-toggle-password[aria-pressed="true"] .eye-open {
-  opacity: 0;
-  transform: scale(0.7);
-}
-
-.prof-toggle-password[aria-pressed="true"] .eye-closed {
-  opacity: 1;
-  transform: scale(1);
+/* Le survol générique des boutons (`button:hover`) applique
+   `transform: translateY(-3px)`, ce qui désaligne verticalement ce bouton
+   (centré via translateY(-50%)) — d'où le petit "saut"/glitch visible au
+   tap sur mobile (le tactile déclenche souvent l'état :hover). On rétablit
+   le centrage ici. */
+.prof-toggle-password:hover,
+.prof-toggle-password:focus-visible {
+  transform: translateY(-50%);
+  color: var(--gray-600, #4b5563);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .prof-toggle-password:active {
   transform: translateY(-50%) scale(0.9);
 }
 
-.prof-toggle-password:hover {
-  color: var(--gray-600, #4b5563);
-  background: rgba(0, 0, 0, 0.05);
+.prof-toggle-password .eye-icon {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* ---------- Morphing réel fermé → ouvert ---------- */
+/* Une seule forme (paupière + pupille) dont les coordonnées interpolent
+   en douceur d'un état à l'autre, au lieu d'un changement brutal d'icône. */
+.prof-toggle-password .eye-lid {
+  d: path("M2 12C2 12 7 5 12 5C17 5 22 12 22 12C22 12 17 19 12 19C7 19 2 12 2 12Z");
+  transition: d 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.prof-toggle-password .eye-pupil {
+  transform-origin: 12px 12px;
+  transform: scale(1);
+  transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.prof-toggle-password[aria-pressed="true"] .eye-lid {
+  d: path("M2 12C2 12 7 11 12 11C17 11 22 12 22 12C22 12 17 13 12 13C7 13 2 12 2 12Z");
+}
+
+.prof-toggle-password[aria-pressed="true"] .eye-pupil {
+  transform: scale(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prof-toggle-password .eye-lid,
+  .prof-toggle-password .eye-pupil {
+    transition: none;
+  }
 }
 
 .prof-error {

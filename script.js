@@ -1072,8 +1072,26 @@ function resolveDevice() {
 
 let currentDevice = null;
 
+/* Sur "Téléphone", on n'utilise plus la mise à l'échelle (transform: scale)
+   d'un canevas de largeur fixe (430px) : sur un vrai téléphone, cette astuce
+   forçait un rendu légèrement rétréci et cassait le tactile natif (le défilement
+   horizontal des tableaux, le focus clavier lors de l'ajout d'un élève, les
+   animations). Le rendu est maintenant fluide à 100% de la largeur réelle de
+   l'écran, et ce sont les media queries de styles.css qui gèrent l'adaptation.
+   La mise à l'échelle "canevas figé" reste utile uniquement pour prévisualiser
+   Tablette/Ordinateur (usage à la souris, sans contrainte tactile). */
 function updateViewportScale() {
   if (!deviceViewport || !deviceViewportOuter || !currentDevice) return;
+
+  if (currentDevice === 'phone') {
+    deviceViewport.style.transform = 'none';
+    deviceViewport.style.width = '100%';
+    deviceViewportOuter.style.height = 'auto';
+    deviceViewportOuter.style.overflow = 'visible';
+    return;
+  }
+
+  deviceViewportOuter.style.overflow = 'hidden';
 
   const refWidth = DEVICE_REFERENCE_WIDTHS[currentDevice];
   const actualWidth = deviceViewportOuter.clientWidth;
@@ -1087,9 +1105,17 @@ function updateViewportScale() {
 
 function setDeviceReference(device) {
   currentDevice = device;
-  const refWidth = DEVICE_REFERENCE_WIDTHS[device];
 
-  if (!deviceViewport || !refWidth) return;
+  if (!deviceViewport) return;
+
+  if (device === 'phone') {
+    deviceViewport.style.width = '100%';
+    requestAnimationFrame(updateViewportScale);
+    return;
+  }
+
+  const refWidth = DEVICE_REFERENCE_WIDTHS[device];
+  if (!refWidth) return;
 
   deviceViewport.style.width = `${refWidth}px`;
   requestAnimationFrame(updateViewportScale);

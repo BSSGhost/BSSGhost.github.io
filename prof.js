@@ -713,7 +713,8 @@
 
   function showStudentForm() {
     els.studentForm.hidden = false;
-    window.setTimeout(() => els.studentNom.focus(), prefersReducedMotion ? 0 : 200);
+    els.studentForm.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+    window.setTimeout(() => els.studentNom.focus({ preventScroll: true }), prefersReducedMotion ? 0 : 220);
   }
 
   function submitStudentForm() {
@@ -1153,7 +1154,10 @@
     updateEditBanner();
     const lastRow = els.tbody.lastElementChild;
     const noteInput = lastRow ? lastRow.querySelector('.prof-note') : null;
-    if (noteInput) noteInput.focus();
+    if (noteInput) {
+      lastRow.scrollIntoView({ block: 'nearest', inline: 'end', behavior: 'smooth' });
+      window.setTimeout(() => noteInput.focus({ preventScroll: true }), 60);
+    }
   }
 
   /* ---------- Résumé & exports ---------- */
