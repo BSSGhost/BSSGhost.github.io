@@ -833,36 +833,19 @@
 
           <form id="prof-login-form" class="prof-login-form">
             <div class="field-group">
-              <label for="prof-username" data-i18n="prof_username_label">Nom d'utilisateur</label>
-              <input
-                type="text"
-                id="prof-username"
-                name="username"
-                autocomplete="username"
-                autocapitalize="none"
-                spellcheck="false"
-                data-i18n-placeholder="prof_username_placeholder"
-                placeholder="Entrez votre nom d'utilisateur"
-                required
-              />
-            </div>
-            <div class="field-group">
               <label for="prof-password" data-i18n="prof_password_label">Mot de passe</label>
               <input
-                type="password"
+                type="text"
                 id="prof-password"
                 name="password"
-                autocomplete="current-password"
+                autocomplete="off"
                 data-i18n-placeholder="prof_password_placeholder"
                 placeholder="Entrez le mot de passe"
                 required
               />
             </div>
             <p class="prof-error" id="prof-login-error" data-i18n="prof_login_error" hidden>
-              Identifiants incorrects. Veuillez réessayer.
-            </p>
-            <p class="prof-error" id="prof-login-server-error" data-i18n="prof_login_server_error" hidden>
-              Le serveur d'authentification est indisponible. Vérifiez votre connexion.
+              Mot de passe incorrect. Veuillez réessayer.
             </p>
             <div class="button-row">
               <button type="submit" id="prof-login-btn" class="primary-button" data-i18n="prof_login_btn">Se connecter</button>
