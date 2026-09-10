@@ -912,7 +912,7 @@
       return;
     }
     const coef = Number(els.subjectCoef.value);
-    const composition = document.querySelector('input[name="prof-new-composition"]:checked')?.value === 'oui';
+    const composition = true;
     setSubjectRecord(activeClass, activeSem, matiere, {
       coefficient: Number.isInteger(coef) && coef >= 1 && coef <= 8 ? coef : 1,
       composition,
