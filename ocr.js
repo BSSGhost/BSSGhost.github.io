@@ -9,7 +9,10 @@
 
   /* ---------- Configuration ---------- */
 
-  const TESSERACT_CDN = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+  const TESSERACT_SCRIPT = './vendor/tesseract/tesseract.min.js';
+  const TESSERACT_WORKER = './vendor/tesseract/worker.min.js';
+  const TESSERACT_CORE = './vendor/tesseract';
+  const TESSERACT_LANG_PATH = './vendor/tesseract';
   const CONFIDENCE_THRESHOLD = 0.60;
   const NOTE_PATTERN = /^(\d{1,2})[.,]?(\d{1,2})?$/;
   const MAX_NOTE = 20;
@@ -57,7 +60,7 @@
     return new Promise((resolve, reject) => {
       if (tesseractLoaded) return resolve();
       const script = document.createElement('script');
-      script.src = TESSERACT_CDN;
+      script.src = TESSERACT_SCRIPT;
       script.onload = () => {
         tesseractLoaded = true;
         resolve();
@@ -123,6 +126,9 @@
 
     if (!tesseractWorker) {
       tesseractWorker = await Tesseract.createWorker('fra+eng', 1, {
+        workerPath: TESSERACT_WORKER,
+        corePath: TESSERACT_CORE,
+        langPath: TESSERACT_LANG_PATH,
         logger: (m) => {
           if (m.status === 'recognizing text' && onProgress) {
             onProgress(Math.round((m.progress || 0) * 100));
@@ -606,20 +612,42 @@
 
   /* ---------- PDF → image conversion ---------- */
 
-  const PDFJS_CDN = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.min.js';
-  const PDFJS_WORKER_CDN = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.worker.min.js';
+  const PDFJS_SCRIPT = './vendor/pdfjs/pdf.min.mjs';
+  const PDFJS_WORKER = './vendor/pdfjs/pdf.worker.min.mjs';
   let pdfjsLoaded = false;
 
   function loadPdfJs() {
     return new Promise((resolve, reject) => {
       if (pdfjsLoaded) return resolve();
-      const script = document.createElement('script');
-      script.src = PDFJS_CDN;
-      script.onload = () => {
+
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        window.removeEventListener('pdfjs-ready', onReady);
         pdfjsLoaded = true;
         resolve();
       };
-      script.onerror = () => reject(new Error('Impossible de charger pdf.js'));
+      const fail = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        window.removeEventListener('pdfjs-ready', onReady);
+        reject(new Error('Impossible de charger pdf.js'));
+      };
+      const onReady = () => finish();
+      window.addEventListener('pdfjs-ready', onReady, { once: true });
+
+      const timer = setTimeout(fail, 15000);
+
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.textContent = `
+        import * as pdfjsLib from '${PDFJS_SCRIPT}';
+        window.pdfjsLib = pdfjsLib;
+        window.dispatchEvent(new Event('pdfjs-ready'));
+      `;
       document.head.appendChild(script);
     });
   }
@@ -628,7 +656,7 @@
     await loadPdfJs();
     const pdfjsLib = window.pdfjsLib;
     if (!pdfjsLib) throw new Error('pdf.js non disponible');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_CDN;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
     const arrayBuffer = await pdfFile.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     const page = await pdf.getPage(1);

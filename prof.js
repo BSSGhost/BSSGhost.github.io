@@ -23,6 +23,7 @@
     loginCard: $('prof-login-card'),
     loginForm: $('prof-login-form'),
     password: $('prof-password'),
+    togglePassword: $('prof-toggle-password'),
     loginBtn: $('prof-login-btn'),
     loginError: $('prof-login-error'),
     console: $('prof-console'),
@@ -610,6 +611,17 @@
   }
 
   /* --------------------- Events ------------------------ */
+
+  if (els.togglePassword && els.password) {
+    els.togglePassword.addEventListener('click', () => {
+      const show = els.password.type === 'password';
+      els.password.type = show ? 'text' : 'password';
+      els.togglePassword.querySelector('.eye-open').hidden = !show;
+      els.togglePassword.querySelector('.eye-closed').hidden = show;
+      els.togglePassword.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+      els.password.focus();
+    });
+  }
 
   els.loginForm.addEventListener('submit', (event) => {
     event.preventDefault();

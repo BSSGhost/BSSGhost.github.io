@@ -1970,6 +1970,11 @@ html.dark-mode .result-card.error h3 {
   40%, 60% { transform: translateX(4px); }
 }
 
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 .result-card.shake {
   animation: shake 0.5s ease;
 }
@@ -4550,6 +4555,40 @@ html.dark-mode .app-tab.is-active {
 
 .prof-login-form .button-row > button {
   flex: 1 1 100%;
+}
+
+.prof-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.prof-password-wrap input {
+  flex: 1 1 auto;
+  width: 100%;
+  padding-right: 44px;
+}
+
+.prof-toggle-password {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--gray-400, #9ca3af);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.prof-toggle-password:hover {
+  color: var(--gray-600, #4b5563);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .prof-error {

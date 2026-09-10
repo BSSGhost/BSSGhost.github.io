@@ -61,7 +61,6 @@ function isForbiddenStaticFile(filePath) {
     normalize(join(ROOT, 'node_modules')),
     normalize(join(ROOT, '.git')),
     normalize(join(ROOT, 'server.js')),
-    normalize(join(ROOT, 'create-account.js')),
     normalize(join(ROOT, 'package.json')),
     normalize(join(ROOT, 'package-lock.json'))
   ];

@@ -834,15 +834,21 @@
           <form id="prof-login-form" class="prof-login-form">
             <div class="field-group">
               <label for="prof-password" data-i18n="prof_password_label">Mot de passe</label>
-              <input
-                type="text"
-                id="prof-password"
-                name="password"
-                autocomplete="off"
-                data-i18n-placeholder="prof_password_placeholder"
-                placeholder="Entrez le mot de passe"
-                required
-              />
+              <div class="prof-password-wrap">
+                <input
+                  type="password"
+                  id="prof-password"
+                  name="password"
+                  autocomplete="off"
+                  data-i18n-placeholder="prof_password_placeholder"
+                  placeholder="Entrez le mot de passe"
+                  required
+                />
+                <button type="button" id="prof-toggle-password" class="prof-toggle-password" aria-label="Afficher le mot de passe" tabindex="-1">
+                  <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" hidden><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                </button>
+              </div>
             </div>
             <p class="prof-error" id="prof-login-error" data-i18n="prof_login_error" hidden>
               Mot de passe incorrect. Veuillez réessayer.
@@ -1079,14 +1085,47 @@
       window.refreshBulletinPreview = refreshBulletinPreview;
     </script>
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js').catch(() => {
-            // Echec silencieux : le site reste utilisable normalement,
-            // simplement sans le mode hors-ligne.
+      (function () {
+        if (!('serviceWorker' in navigator)) return;
+
+        var updateRequested = false;
+
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('sw.js').then(function (reg) {
+            reg.addEventListener('updatefound', function () {
+              var newWorker = reg.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener('statechange', function () {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  showUpdateBanner();
+                }
+              });
+            });
+          }).catch(function () {});
+
+          navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (updateRequested && !sessionStorage.getItem('sunu_sw_reloaded')) {
+              sessionStorage.setItem('sunu_sw_reloaded', '1');
+              window.location.reload();
+            }
           });
         });
-      }
+
+        function showUpdateBanner() {
+          if (document.getElementById('sw-update-banner')) return;
+          var banner = document.createElement('div');
+          banner.id = 'sw-update-banner';
+          banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1a1a2e;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:center;gap:12px;font-family:inherit;font-size:14px;box-shadow:0 -2px 12px rgba(0,0,0,.3);animation:slideUp .3s ease;';
+          banner.innerHTML = '<span>&#128260; Une nouvelle version de SUNU MOYENNE est disponible.</span><button id="sw-update-btn" style="background:#e63946;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Actualiser</button>';
+          document.body.appendChild(banner);
+          document.getElementById('sw-update-btn').addEventListener('click', function () {
+            updateRequested = true;
+            if (navigator.serviceWorker.controller) {
+              navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        }
+      })();
     </script>
   </body>
   
