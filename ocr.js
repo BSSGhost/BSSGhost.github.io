@@ -31,7 +31,12 @@
     fileRemove: $('prof-file-remove'),
     tbody: $('prof-tbody'),
     empty: $('prof-empty'),
-    thComposition: $('prof-th-composition')
+    thComposition: $('prof-th-composition'),
+    imgTools: $('prof-img-tools'),
+    imgRotL: $('prof-img-rot-l'),
+    imgRotR: $('prof-img-rot-r'),
+    imgCrop: $('prof-img-crop'),
+    imgEnhance: $('prof-img-enhance')
   };
 
   /* ---------- État ---------- */
@@ -42,6 +47,14 @@
   let lastScannedFile = null;
   let ocrModalEl = null;
   let scanBtnEl = null;
+
+  /* ---------- État de prétraitement d'image ---------- */
+
+  let imgRotationDeg = 0;
+  let imgCropRect = null; /* {x, y, w, h} en pixels du canvas "rotation appliquée" */
+  let imgEnhanceEnabled = true;
+  let imgSourceCanvas = null; /* canvas de l'image originale (dimensions natives) */
+  let currentPdfBlob = null; /* pour PDF : blob converti en image */
 
   /* ---------- Utilitaires ---------- */
 
@@ -70,12 +83,12 @@
     });
   }
 
-  /* ---------- Prétraitement image ---------- */
+  /* ---------- Prétraitement image : pipeline (rotation, recadrage, amélioration) ---------- */
 
-  function preprocessImage(file) {
+  function loadCanvasFromBlob(blob) {
     return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
       const img = new Image();
-      const url = URL.createObjectURL(file);
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const maxDim = 2000;
@@ -91,25 +104,7 @@
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
         URL.revokeObjectURL(url);
-
-        const imageData = ctx.getImageData(0, 0, w, h);
-        const data = imageData.data;
-
-        for (let i = 0; i < data.length; i += 4) {
-          let gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-          gray = ((gray / 255 - 0.5) * 1.6 + 0.5) * 255;
-          gray = Math.max(0, Math.min(255, gray));
-          const bin = gray > 140 ? 255 : 0;
-          data[i] = bin;
-          data[i + 1] = bin;
-          data[i + 2] = bin;
-        }
-
-        ctx.putImageData(imageData, 0, 0);
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Échec du prétraitement'));
-        }, 'image/png');
+        resolve(canvas);
       };
       img.onerror = () => {
         URL.revokeObjectURL(url);
@@ -117,6 +112,234 @@
       };
       img.src = url;
     });
+  }
+
+  function rotatedCanvas(canvas) {
+    const deg = ((imgRotationDeg % 360) + 360) % 360;
+    if (!deg) return canvas;
+    const swap = deg % 180 !== 0;
+    const out = document.createElement('canvas');
+    out.width = swap ? canvas.height : canvas.width;
+    out.height = swap ? canvas.width : canvas.height;
+    const ctx = out.getContext('2d');
+    ctx.translate(out.width / 2, out.height / 2);
+    ctx.rotate((deg * Math.PI) / 180);
+    ctx.drawImage(canvas, -canvas.width / 2, -canvas.height / 2);
+    return out;
+  }
+
+  function croppedCanvas(canvas) {
+    if (!imgCropRect) return canvas;
+    const { x, y, w, h } = imgCropRect;
+    const rx = Math.max(0, Math.min(canvas.width, Math.round(x)));
+    const ry = Math.max(0, Math.min(canvas.height, Math.round(y)));
+    const rw = Math.max(1, Math.min(canvas.width - rx, Math.round(w)));
+    const rh = Math.max(1, Math.min(canvas.height - ry, Math.round(h)));
+    const out = document.createElement('canvas');
+    out.width = rw;
+    out.height = rh;
+    const ctx = out.getContext('2d');
+    ctx.drawImage(canvas, rx, ry, rw, rh, 0, 0, rw, rh);
+    return out;
+  }
+
+  function enhanceCanvas(canvas) {
+    if (!imgEnhanceEnabled) return canvas;
+    const out = document.createElement('canvas');
+    out.width = canvas.width;
+    out.height = canvas.height;
+    const ctx = out.getContext('2d');
+    ctx.drawImage(canvas, 0, 0);
+    const imageData = ctx.getImageData(0, 0, out.width, out.height);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      let gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      gray = ((gray / 255 - 0.5) * 1.6 + 0.5) * 255;
+      gray = Math.max(0, Math.min(255, gray));
+      const bin = gray > 140 ? 255 : 0;
+      data[i] = bin;
+      data[i + 1] = bin;
+      data[i + 2] = bin;
+    }
+    ctx.putImageData(imageData, 0, 0);
+    return out;
+  }
+
+  function pipelineCanvas() {
+    if (!imgSourceCanvas) return null;
+    let canvas = imgSourceCanvas;
+    canvas = rotatedCanvas(canvas);
+    canvas = croppedCanvas(canvas);
+    canvas = enhanceCanvas(canvas);
+    return canvas;
+  }
+
+  function pipelineBlob() {
+    return new Promise((resolve, reject) => {
+      const canvas = pipelineCanvas();
+      if (!canvas) return reject(new Error('Aucune image'));
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Échec du prétraitement'));
+      }, 'image/png');
+    });
+  }
+
+  function renderImagePreview() {
+    const canvas = pipelineCanvas();
+    if (!canvas || !els.fileImg) return;
+    els.fileImg.src = canvas.toDataURL('image/png');
+    els.fileImg.hidden = false;
+    if (els.filePdf) {
+      els.filePdf.hidden = true;
+      els.filePdf.removeAttribute('src');
+    }
+    if (els.imgEnhance) {
+      els.imgEnhance.classList.toggle('is-on', imgEnhanceEnabled);
+    }
+  }
+
+  /* ---------- Modal de recadrage ---------- */
+
+  let cropModalEl = null;
+
+  function openCropModal() {
+    if (!imgSourceCanvas) return;
+    const rotated = rotatedCanvas(imgSourceCanvas);
+    const maxW = Math.min(860, window.innerWidth - 48);
+    const maxH = Math.min(520, window.innerHeight - 240);
+    const scale = Math.min(maxW / rotated.width, maxH / rotated.height, 1);
+    const dispW = Math.max(1, Math.round(rotated.width * scale));
+    const dispH = Math.max(1, Math.round(rotated.height * scale));
+
+    closeCropModal();
+
+    const modal = document.createElement('div');
+    modal.className = 'prof-crop-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = `
+      <div class="prof-crop-overlay"></div>
+      <div class="prof-crop-card">
+        <div class="prof-crop-header">
+          <h3>${t('prof_crop_title')}</h3>
+          <p class="prof-crop-hint">${t('prof_crop_hint')}</p>
+        </div>
+        <div class="prof-crop-stage" style="width:${dispW}px;height:${dispH}px">
+          <canvas width="${dispW}" height="${dispH}"></canvas>
+          <div class="prof-crop-rect" hidden></div>
+        </div>
+        <div class="prof-crop-actions">
+          <button type="button" class="ghost-button" data-act="reset">${t('prof_crop_reset')}</button>
+          <div class="prof-crop-actions-right">
+            <button type="button" class="ghost-button" data-act="cancel">${t('prof_crop_cancel')}</button>
+            <button type="button" class="primary-button" data-act="apply" disabled>${t('prof_crop_apply')}</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    cropModalEl = modal;
+    document.body.style.overflow = 'hidden';
+
+    const cv = modal.querySelector('canvas');
+    const cctx = cv.getContext('2d');
+    cctx.drawImage(rotated, 0, 0, dispW, dispH);
+
+    const rectEl = modal.querySelector('.prof-crop-rect');
+    const applyBtn = modal.querySelector('[data-act="apply"]');
+    let dragStart = null;
+    let dragCurrent = null;
+
+    const toSourceRect = () => {
+      if (!dragStart || !dragCurrent) return null;
+      const x = Math.min(dragStart.x, dragCurrent.x) / scale;
+      const y = Math.min(dragStart.y, dragCurrent.y) / scale;
+      const w = Math.abs(dragCurrent.x - dragStart.x) / scale;
+      const h = Math.abs(dragCurrent.y - dragStart.y) / scale;
+      if (w < 4 / scale || h < 4 / scale) return null;
+      return { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };
+    };
+
+    const updateRectEl = () => {
+      if (!dragStart || !dragCurrent) {
+        rectEl.hidden = true;
+        return;
+      }
+      const x = Math.min(dragStart.x, dragCurrent.x);
+      const y = Math.min(dragStart.y, dragCurrent.y);
+      const w = Math.abs(dragCurrent.x - dragStart.x);
+      const h = Math.abs(dragCurrent.y - dragStart.y);
+      rectEl.hidden = false;
+      rectEl.style.left = x + 'px';
+      rectEl.style.top = y + 'px';
+      rectEl.style.width = w + 'px';
+      rectEl.style.height = h + 'px';
+      const rect = toSourceRect();
+      applyBtn.disabled = !rect;
+    };
+
+    const posFromEvent = (e) => {
+      const rect = cv.getBoundingClientRect();
+      return {
+        x: Math.max(0, Math.min(dispW, e.clientX - rect.left)),
+        y: Math.max(0, Math.min(dispH, e.clientY - rect.top))
+      };
+    };
+
+    cv.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      cv.setPointerCapture && cv.setPointerCapture(e.pointerId);
+      dragStart = posFromEvent(e);
+      dragCurrent = posFromEvent(e);
+      updateRectEl();
+    });
+
+    cv.addEventListener('pointermove', (e) => {
+      if (!dragStart) return;
+      e.preventDefault();
+      dragCurrent = posFromEvent(e);
+      updateRectEl();
+    });
+
+    const stopDrag = (e) => {
+      if (!dragStart) return;
+      dragCurrent = posFromEvent(e);
+      updateRectEl();
+      dragStart = null;
+      dragCurrent = null;
+    };
+
+    cv.addEventListener('pointerup', stopDrag);
+    cv.addEventListener('pointercancel', stopDrag);
+
+    modal.querySelector('[data-act="apply"]').addEventListener('click', () => {
+      const rect = toSourceRect();
+      if (!rect) return;
+      imgCropRect = rect;
+      closeCropModal();
+      renderImagePreview();
+    });
+
+    modal.querySelector('[data-act="reset"]').addEventListener('click', () => {
+      imgCropRect = null;
+      renderImagePreview();
+    });
+
+    modal.querySelector('[data-act="cancel"]').addEventListener('click', closeCropModal);
+    modal.querySelector('.prof-crop-overlay').addEventListener('click', closeCropModal);
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeCropModal();
+    });
+  }
+
+  function closeCropModal() {
+    if (cropModalEl) {
+      cropModalEl.remove();
+      cropModalEl = null;
+      document.body.style.overflow = '';
+    }
   }
 
   /* ---------- OCR via Tesseract.js ---------- */
@@ -137,7 +360,7 @@
       });
     }
 
-    const processedBlob = await preprocessImage(file);
+    const processedBlob = await pipelineBlob();
     const result = await tesseractWorker.recognize(processedBlob);
     return result.data;
   }
@@ -725,11 +948,11 @@
       updateProgress(5, t('prof_ocr_loading_deps'));
       await loadTesseractScript();
 
-      let imageBlob = file;
+      let ocrInputBlob = file;
       if (isPdf) {
         updateProgress(8, t('prof_ocr_pdf_conversion'));
         try {
-          imageBlob = await pdfToImageBlob(file);
+          ocrInputBlob = await pdfToImageBlob(file);
         } catch (pdfErr) {
           hideProgress();
           console.error('PDF conversion error:', pdfErr);
@@ -740,8 +963,12 @@
         }
       }
 
+      if (!imgSourceCanvas) {
+        imgSourceCanvas = await loadCanvasFromBlob(ocrInputBlob);
+      }
+
       updateProgress(10, t('prof_ocr_progress', { pct: '10' }));
-      const ocrData = await runOCR(imageBlob, (pct) => {
+      const ocrData = await runOCR(ocrInputBlob, (pct) => {
         const text = t('prof_ocr_progress', { pct: String(10 + Math.round(pct * 0.8)) });
         updateProgress(10 + Math.round(pct * 0.8), text);
       });
@@ -770,12 +997,60 @@
     }
   }
 
+  /* ---------- Hooks exposés (appelés par prof.js) ---------- */
+
+  window.onProfFileSelected = async function (file, isImage) {
+    resetImageState();
+    if (isImage) {
+      try {
+        imgSourceCanvas = await loadCanvasFromBlob(file);
+      } catch (err) {
+        console.error('Image load error:', err);
+        imgSourceCanvas = null;
+      }
+    }
+    if (els.imgTools) els.imgTools.hidden = !isImage || !imgSourceCanvas;
+  };
+
+  window.onProfFileCleared = function () {
+    resetImageState();
+    if (els.imgTools) els.imgTools.hidden = true;
+    closeCropModal();
+  };
+
+  function resetImageState() {
+    imgRotationDeg = 0;
+    imgCropRect = null;
+    imgEnhanceEnabled = true;
+    imgSourceCanvas = null;
+  }
+
+  function initImageTools() {
+    if (!els.imgTools) return;
+
+    els.imgRotL?.addEventListener('click', () => {
+      imgRotationDeg = ((imgRotationDeg - 90) % 360 + 360) % 360;
+      renderImagePreview();
+    });
+
+    els.imgRotR?.addEventListener('click', () => {
+      imgRotationDeg = ((imgRotationDeg + 90) % 360 + 360) % 360;
+      renderImagePreview();
+    });
+
+    els.imgCrop?.addEventListener('click', () => openCropModal());
+
+    els.imgEnhance?.addEventListener('click', () => {
+      imgEnhanceEnabled = !imgEnhanceEnabled;
+      if (els.imgEnhance) els.imgEnhance.classList.toggle('is-on', imgEnhanceEnabled);
+      renderImagePreview();
+    });
+  }
+
   /* ---------- Hook sur l'upload ---------- */
 
   function hookFileUpload() {
     if (!els.fileInput) return;
-
-    const originalHandler = els.fileInput.onchange;
 
     els.fileInput.addEventListener('change', (event) => {
       const file = event.target.files?.[0];
@@ -807,6 +1082,7 @@
 
   function init() {
     hookFileUpload();
+    initImageTools();
   }
 
   if (document.readyState === 'loading') {

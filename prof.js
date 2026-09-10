@@ -1,20 +1,25 @@
 /* =========================================================
    MODE PROFESSEUR — SUNU MOYENNE / LYNAQE Sédhiou
-   Accès réservé : authentification par le backend (POST /api/prof/*,
-   mots de passe hashés côté serveur, jeton de session temporaire).
-   Pour une matière et un coefficient donnés, le professeur ou le
-   surveillant charge le relevé de notes (photo ou PDF) puis saisit
-   les notes de chaque élève : le site calcule instantanément la
-   moyenne de matière de chacun et permet d'exporter le relevé
-   (PDF ou CSV).
+   Accès réservé : mot de passe (LYNAQE2026), vérification locale.
+   Gestion complète par classe :
+   - "Mes classes" : créer, renommer, supprimer une classe.
+   - Élèves de la classe (liste réutilisée pour toutes les matières) :
+     ajouter, modifier, supprimer, voir le bulletin.
+   - Matières du semestre : ajouter, saisir les notes, supprimer.
+   - Édition d'une matière : modifications "staged" jusqu'à
+     [Enregistrer] ; [Annuler] restaure la valeur précédente
+     (Ancienne valeur → Nouvelle valeur).
+   - Relevé de notes (photo/PDF), OCR, export PDF/CSV.
    ========================================================= */
 (function () {
   'use strict';
 
   const PROF_PASSWORD = 'LYNAQE2026';
   const PROF_AUTH_KEY = 'lynaqe_prof_token';
+  const PROF_STORE_KEY = 'lynaqe_prof_classes';
   const PROF_ROWS_PREFIX = 'lynaqe_prof_rows';
   const NOTE_FIELDS = ['d1', 'd2', 'compo'];
+  const SEMESTER_NAMES = ['Semestre1', 'Semestre2'];
 
   const $ = (id) => document.getElementById(id);
 
@@ -28,6 +33,42 @@
     loginError: $('prof-login-error'),
     console: $('prof-console'),
     logoutBtn: $('prof-logout-btn'),
+
+    backBtn: $('prof-back-btn'),
+    backLabel: $('prof-back-label'),
+    breadcrumbText: $('prof-breadcrumb-text'),
+
+    viewHome: $('prof-view-home'),
+    viewClass: $('prof-view-class'),
+    viewSubject: $('prof-view-subject'),
+
+    classesGrid: $('prof-classes-grid'),
+    newClass: $('prof-new-class'),
+    addClassBtn: $('prof-add-class-btn'),
+
+    classTitle: $('prof-class-name'),
+    classMeta: $('prof-class-meta'),
+    semesterTabs: $('prof-semester-tabs'),
+
+    studentAdd: $('prof-student-add'),
+    studentForm: $('prof-student-form'),
+    studentNom: $('prof-student-nom'),
+    studentPrenom: $('prof-student-prenom'),
+    studentFormOk: $('prof-student-form-ok'),
+    studentFormCancel: $('prof-student-form-cancel'),
+    studentsTbody: $('prof-students-tbody'),
+    studentsEmpty: $('prof-students-empty'),
+
+    subjectAdd: $('prof-subject-add'),
+    subjectForm: $('prof-subject-form'),
+    subjectSelect: $('prof-subject-select'),
+    subjectCoef: $('prof-subject-coef'),
+    subjectFormOk: $('prof-subject-form-ok'),
+    subjectFormCancel: $('prof-subject-form-cancel'),
+    subjectsList: $('prof-subjects-list'),
+    subjectsEmpty: $('prof-subjects-empty'),
+
+    context: $('prof-subject-context'),
     classe: $('prof-classe'),
     semestre: $('prof-semestre'),
     matiere: $('prof-matiere'),
@@ -50,13 +91,27 @@
     summaryStats: $('prof-summary-stats'),
     exportPdf: $('prof-export-pdf'),
     exportCsv: $('prof-export-csv'),
-    saveBtn: $('prof-save-btn')
+    saveBtn: $('prof-save-btn'),
+
+    editBanner: $('prof-edit-banner'),
+    editTitle: $('prof-edit-title'),
+    editValues: $('prof-edit-values'),
+    editCancel: $('prof-edit-cancel'),
+    editSave: $('prof-edit-save')
   };
 
-  let rows = [];
-  let fileObjectUrl = null;
+  /* ------------------ État global ------------------ */
 
-  /* ----------------- Authentication ----------------- */
+  let store = null; /* { [classe]: { eleves: [], semestres: { Semestre1: {}, Semestre2: {} } } } */
+  let activeClass = null;
+  let activeSem = SEMESTER_NAMES[0];
+  let activeSubject = null;
+  let currentRows = []; /* lignes de travail de l'éditeur : {id, nom, prenom, d1, d2, compo} */
+  let snapshot = null; /* { coefficient, composition, notes } = état sauvegardé de la matière */
+  let fileObjectUrl = null;
+  let editingStudentId = null; /* élève en cours de modification (formulaire) */
+
+  /* ------------------ Authentification ------------------ */
 
   const PROF_AUTH_VALUE = 'ok';
 
@@ -97,103 +152,139 @@
     if (!els.loginCard || !els.console) return;
     els.loginCard.hidden = true;
     els.console.hidden = false;
-    refreshMatiereSelect();
+    renderHome();
   }
 
-  /* -------------------- Context ---------------------- */
+  /* -------------------- Stockage -------------------- */
 
-  function hasComposition() {
-    return document.querySelector('input[name="prof-composition"]:checked')?.value === 'oui';
+  function defaultClass() {
+    return { eleves: [], semestres: { Semestre1: {}, Semestre2: {} } };
   }
 
-  function getMatiereNom() {
-    if (els.matiere.value === '__autre__') {
-      return els.customInput.value.trim();
-    }
-    return els.matiere.value;
-  }
-
-  function validCoefficient() {
-    const value = Number(els.coefficient.value);
-    return Number.isInteger(value) && value >= 1 && value <= 8;
-  }
-
-  function getContextReady() {
-    return Boolean(els.classe.value && getMatiereNom() && validCoefficient());
-  }
-
-  function getRowsStorageKey() {
-    const classe = els.classe.value || 'none';
-    const matiere = getMatiereNom() || 'none';
-    return `${PROF_ROWS_PREFIX}_${classe}_${els.semestre.value}_${matiere.replace(/\s+/g, '_')}`;
-  }
-
-  function saveRows() {
+  function loadStore() {
     try {
-      const key = getRowsStorageKey();
-      if (rows.length) localStorage.setItem(key, JSON.stringify(rows));
-      else localStorage.removeItem(key);
+      const raw = localStorage.getItem(PROF_STORE_KEY);
+      store = raw ? JSON.parse(raw) : null;
+    } catch {
+      store = null;
+    }
+    if (!store || typeof store !== 'object') store = {};
+
+    const migrated = migrateLegacyRows();
+    if (migrated) saveStore();
+
+    if (!Object.keys(store).length) {
+      ['2nde S04', '2nde S03', '1ère S1', 'Terminale S2'].forEach((name) => {
+        store[name] = defaultClass();
+      });
+      saveStore();
+    }
+  }
+
+  function saveStore() {
+    try {
+      localStorage.setItem(PROF_STORE_KEY, JSON.stringify(store));
     } catch {}
   }
 
-  function loadRows() {
+  /* Migration des anciennes clés plates (lynaqe_prof_rows_*) vers le
+     nouveau modèle par classe + élèves + notes par identifiant. */
+  function migrateLegacyRows() {
+    let any = false;
     try {
-      const key = getRowsStorageKey();
-      const raw = localStorage.getItem(key);
-      rows = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(rows)) rows = [];
-      rows.forEach((row) => {
-        ['nom', 'prenom', 'd1', 'd2', 'compo'].forEach((field) => {
-          if (typeof row[field] !== 'string') row[field] = '';
+      Object.keys(localStorage).forEach((key) => {
+        if (!key.startsWith(PROF_ROWS_PREFIX + '_')) return;
+        const rest = key.slice(PROF_ROWS_PREFIX.length + 1);
+        const m = rest.match(/^(.+)_(Semestre[12])_(.+)$/);
+        if (!m) return;
+        const classe = m[1];
+        const sem = m[2];
+        const matiere = m[3].replace(/_/g, ' ');
+        let rows = [];
+        try { rows = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+        if (!Array.isArray(rows) || !rows.length) {
+          localStorage.removeItem(key);
+          return;
+        }
+        if (!store[classe]) store[classe] = defaultClass();
+        if (!store[classe].semestres[sem]) store[classe].semestres[sem] = {};
+        const record = { coefficient: 1, composition: true, notes: {} };
+        rows.forEach((r) => {
+          const nom = String(r.nom || '').trim();
+          const prenom = String(r.prenom || '').trim();
+          if (!nom && !prenom) return;
+          const found = store[classe].eleves.find(
+            (e) => e.nom === nom && e.prenom === prenom
+          );
+          let id;
+          if (found) id = found.id;
+          else {
+            id = newId();
+            store[classe].eleves.push({ id, nom, prenom });
+          }
+          const note = {};
+          NOTE_FIELDS.forEach((f) => {
+            note[f] = typeof r[f] === 'string' ? r[f] : '';
+          });
+          record.notes[id] = note;
         });
+        store[classe].semestres[sem][matiere] = record;
+        localStorage.removeItem(key);
+        any = true;
       });
-    } catch {
-      rows = [];
-    }
-    renderRows();
+    } catch {}
+    return any;
   }
 
-  /* ------------------ Subject list ------------------- */
-
-  function refreshMatiereSelect() {
-    const previous = els.matiere.value;
-    els.matiere.innerHTML = '';
-
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = t('option_matiere_default');
-    els.matiere.appendChild(defaultOption);
-
-    if (els.classe.value && typeof getMatieresPourClasse === 'function') {
-      getMatieresPourClasse(els.classe.value).forEach((matiere) => {
-        const option = document.createElement('option');
-        option.value = matiere;
-        option.textContent = typeof translateMatiere === 'function' ? translateMatiere(matiere) : matiere;
-        els.matiere.appendChild(option);
-      });
-    }
-
-    const autre = document.createElement('option');
-    autre.value = '__autre__';
-    autre.textContent = t('prof_matiere_custom_option');
-    els.matiere.appendChild(autre);
-
-    if (previous && [...els.matiere.options].some((option) => option.value === previous)) {
-      els.matiere.value = previous;
-    }
-    updateCustomGroupVisibility();
-    updateSummary();
+  function newId() {
+    return (
+      's_' +
+      Date.now().toString(36) +
+      '_' +
+      Math.random().toString(36).slice(2, 7)
+    );
   }
 
-  function updateCustomGroupVisibility() {
-    const isCustom = els.matiere.value === '__autre__';
-    els.customGroup.hidden = !isCustom;
-    if (isCustom) {
-      window.setTimeout(() => els.customInput.focus(), prefersReducedMotion ? 0 : 200);
+  function getSubjectRecord(classe, sem, matiere) {
+    return store[classe]?.semestres?.[sem]?.[matiere] || null;
+  }
+
+  function setSubjectRecord(classe, sem, matiere, record) {
+    if (!store[classe]) store[classe] = defaultClass();
+    if (!store[classe].semestres[sem]) store[classe].semestres[sem] = {};
+    store[classe].semestres[sem][matiere] = record;
+    saveStore();
+  }
+
+  function deleteSubjectRecord(classe, sem, matiere) {
+    const semObj = store[classe]?.semestres?.[sem];
+    if (semObj && Object.prototype.hasOwnProperty.call(semObj, matiere)) {
+      delete semObj[matiere];
+      saveStore();
     }
   }
 
-  /* ------------------- Calculation ------------------- */
+  /* ------------------ Utilitaires ------------------ */
+
+  function semLabel(sem) {
+    return sem === 'Semestre1' ? t('table_semestre1_full') : t('table_semestre2_full');
+  }
+
+  function inferLevel(classe) {
+    const c = String(classe || '').toLowerCase();
+    if (c.includes('2nde') || /(^|\s)2\b/.test(c)) return '2nde';
+    if (c.includes('1ere') || c.includes('1ère') || /(^|\s)1\b/.test(c)) return '1er';
+    if (c.includes('terminale') || c.includes('tle') || /(^|\s)t\b/.test(c)) return 'Tle';
+    if (c.includes('5e') || c.includes('5ᵉ') || /(^|\s)5\b/.test(c)) return '5e';
+    if (c.includes('4e') || c.includes('4ᵉ') || /(^|\s)4\b/.test(c)) return '4e';
+    if (c.includes('3e') || c.includes('3ᵉ') || /(^|\s)3\b/.test(c)) return '3e';
+    if (c.includes('6e') || c.includes('6ᵉ') || /(^|\s)6\b/.test(c)) return '6e';
+    return null;
+  }
+
+  function isSameString(a, b) {
+    return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  }
 
   function parseNote(raw) {
     const value = String(raw ?? '').trim();
@@ -206,40 +297,674 @@
     return { empty: false, valid: true, value: Number(value.replace(',', '.')) };
   }
 
-  /* Moyenne de matière identique au mode élève :
-     - sans composition : (d1 + d2) / 2
-     - avec composition : ((d1 + d2) / 2 + compo) / 2   */
-  function createAverage(row) {
-    const d1 = parseNote(row.d1);
-    const d2 = parseNote(row.d2);
+  function moyenneFromNotes(notes, composition) {
+    const d1 = parseNote(notes?.d1);
+    const d2 = parseNote(notes?.d2);
     if (!d1.valid || !d2.valid || d1.empty || d2.empty) return null;
     const moyDevoirs = (d1.value + d2.value) / 2;
-    if (!hasComposition()) return moyDevoirs;
-    const compo = parseNote(row.compo);
+    if (!composition) return moyDevoirs;
+    const compo = parseNote(notes?.compo);
     if (!compo.valid || compo.empty) return null;
     return (moyDevoirs + compo.value) / 2;
   }
 
-  function noteFeedback(input) {
-    const raw = input.value.trim();
-    input.classList.remove('is-valid', 'is-invalid');
-    if (!raw) return;
-    input.classList.toggle('is-valid', parseNote(raw).valid);
-    input.classList.toggle('is-invalid', !parseNote(raw).valid);
+  function hasComposition() {
+    return document.querySelector('input[name="prof-composition"]:checked')?.value === 'oui';
   }
 
-  function refreshAverageCell(cell, row) {
-    const avg = createAverage(row);
-    if (avg === null) {
-      cell.textContent = '—';
-      cell.className = 'prof-moyenne-cell';
+  function validCoefficient() {
+    const value = Number(els.coefficient.value);
+    return Number.isInteger(value) && value >= 1 && value <= 8;
+  }
+
+  function getAvailableMatieres(classe) {
+    const level = inferLevel(classe);
+    const list = [];
+    if (level && typeof getMatieresPourClasse === 'function') {
+      list.push(...getMatieresPourClasse(level));
+    } else if (typeof matieresCommunesBase !== 'undefined') {
+      list.push(...matieresCommunesBase);
+    }
+    const semObj = store[classe]?.semestres?.[activeSem] || {};
+    Object.keys(semObj).forEach((m) => list.push(m));
+    const seen = new Set();
+    return list.filter((m) => !seen.has(m) && seen.add(m));
+  }
+
+  function showMatiere(matiere) {
+    return typeof translateMatiere === 'function' ? translateMatiere(matiere) : matiere;
+  }
+
+  function getStudentName(row) {
+    return [row.prenom, row.nom].filter(Boolean).join(' ').trim() || '—';
+  }
+
+  /* --------------- Moyennes & rangs par élève --------------- */
+
+  function studentSemesterAverage(eleveId) {
+    const semObj = store[activeClass]?.semestres?.[activeSem] || {};
+    let sum = 0;
+    let coef = 0;
+    Object.values(semObj).forEach((record) => {
+      if (!record || !record.coefficient) return;
+      const moy = moyenneFromNotes(record.notes ? record.notes[eleveId] : null, record.composition);
+      if (moy === null) return;
+      sum += moy * record.coefficient;
+      coef += record.coefficient;
+    });
+    if (!coef) return null;
+    return sum / coef;
+  }
+
+  function rankClass() {
+    const students = (store[activeClass]?.eleves || []).slice();
+    const decorated = students
+      .map((s) => ({ id: s.id, avg: studentSemesterAverage(s.id) }))
+      .filter((s) => s.avg !== null)
+      .sort((a, b) => b.avg - a.avg);
+    const rankById = {};
+    decorated.forEach((s, i) => {
+      rankById[s.id] = i + 1;
+    });
+    return rankById;
+  }
+
+  function classeAverageForSubject(record) {
+    if (!record) return null;
+    const avg = (store[activeClass]?.eleves || [])
+      .map((e) => moyenneFromNotes(record.notes ? record.notes[e.id] : null, record.composition))
+      .filter((v) => v !== null);
+    if (!avg.length) return null;
+    return avg.reduce((s, v) => s + v, 0) / avg.length;
+  }
+
+  /* ================= Navigation (3 vues) ================= */
+
+  function setBackLabel(key) {
+    els.backLabel.textContent = t(key);
+    els.backLabel.setAttribute('data-i18n', key);
+  }
+
+  function showHome() {
+    els.backBtn.hidden = true;
+    if (els.breadcrumbText) els.breadcrumbText.textContent = '';
+    els.viewHome.hidden = false;
+    els.viewClass.hidden = true;
+    els.viewSubject.hidden = true;
+    renderHome();
+  }
+
+  function showClassView() {
+    els.backBtn.hidden = false;
+    setBackLabel('prof_back_classes');
+    if (els.breadcrumbText) els.breadcrumbText.textContent = activeClass;
+    els.viewHome.hidden = true;
+    els.viewClass.hidden = false;
+    els.viewSubject.hidden = true;
+    renderClassView();
+  }
+
+  function showSubjectView() {
+    els.backBtn.hidden = false;
+    setBackLabel('prof_back_class');
+    if (els.breadcrumbText) els.breadcrumbText.textContent = `${activeClass} › ${semLabel(activeSem)} › ${showMatiere(activeSubject)}`;
+    els.viewHome.hidden = true;
+    els.viewClass.hidden = true;
+    els.viewSubject.hidden = false;
+  }
+
+  /* ================= Vue 1 : Mes classes ================= */
+
+  function renderHome() {
+    if (!els.classesGrid) return;
+    els.classesGrid.innerHTML = '';
+    els.classesGrid.classList.remove('has-none');
+    Object.keys(store).forEach((classe) => {
+      const nbStudents = (store[classe].eleves || []).length;
+      const nbSubjects =
+        Object.keys(store[classe].semestres.Semestre1).length +
+        Object.keys(store[classe].semestres.Semestre2).length;
+
+      const card = document.createElement('article');
+      card.className = 'prof-class-card';
+      const body = document.createElement('button');
+      body.type = 'button';
+      body.className = 'prof-class-card-body';
+      body.setAttribute('aria-label', t('prof_class_open') + ' ' + classe);
+      body.innerHTML = `
+        <span class="prof-class-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path><path d="M22 10v6"></path></svg>
+        </span>
+        <span class="prof-class-card-name" data-name>${escHtml(classe)}</span>
+        <span class="prof-class-card-meta">${t('prof_stat_effectifs')} : ${nbStudents} • Matières : ${nbSubjects}</span>
+      `;
+      body.addEventListener('click', () => openClass(classe));
+
+      const actions = document.createElement('div');
+      actions.className = 'prof-class-card-actions';
+      actions.innerHTML = `
+        <button type="button" class="ghost-button" data-act="rename">${t('prof_rename_class')}</button>
+        <button type="button" class="ghost-button prof-danger-text" data-act="delete">${t('prof_delete_class')}</button>
+      `;
+      actions.querySelector('[data-act="rename"]').addEventListener('click', () => startRenameClass(card, classe));
+      actions.querySelector('[data-act="delete"]').addEventListener('click', () => deleteClass(classe));
+
+      card.append(body, actions);
+      els.classesGrid.appendChild(card);
+    });
+  }
+
+  function escHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = String(value);
+    return div.innerHTML;
+  }
+
+  function startRenameClass(card, classe) {
+    const nameEl = card.querySelector('[data-name]');
+    const labelEl = card.querySelector('.prof-class-card-meta');
+    const actionsEl = card.querySelector('.prof-class-card-actions');
+    if (!nameEl) return;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 30;
+    input.value = classe;
+    input.className = 'prof-class-rename-input';
+    nameEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    if (labelEl) labelEl.hidden = true;
+    actionsEl.classList.add('is-renaming');
+    actionsEl.innerHTML = `
+      <button type="button" class="primary-button prof-inline-ok" data-act="ok">${t('prof_student_form_ok')}</button>
+      <button type="button" class="ghost-button prof-inline-cancel" data-act="cancel">${t('prof_ocr_cancel')}</button>
+    `;
+
+    const finish = (ok) => {
+      if (ok) {
+        const newName = input.value.trim();
+        if (newName && newName !== classe) {
+          if (store[newName]) {
+            if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_class_exists'));
+            startRenameClass(card, classe);
+            return;
+          }
+          store[newName] = store[classe];
+          delete store[classe];
+          saveStore();
+          renderHome();
+          return;
+        }
+      }
+      renderHome();
+    };
+
+    actionsEl.querySelector('[data-act="ok"]').addEventListener('click', () => finish(true));
+    actionsEl.querySelector('[data-act="cancel"]').addEventListener('click', () => finish(false));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') finish(true);
+      if (e.key === 'Escape') finish(false);
+    });
+  }
+
+  function addClass() {
+    const name = els.newClass.value.trim();
+    if (!name) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_class_name_empty'));
       return;
     }
-    cell.textContent = avg.toFixed(2);
-    cell.className = 'prof-moyenne-cell ' + (typeof gradeClass === 'function' ? gradeClass(avg) : '');
+    if (store[name]) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_class_exists'));
+      return;
+    }
+    store[name] = defaultClass();
+    saveStore();
+    els.newClass.value = '';
+    renderHome();
   }
 
-  /* --------------------- Rendering -------------------- */
+  function deleteClass(classe) {
+    if (typeof confirmModal !== 'undefined' && confirmModal.el) {
+      confirmModal.show({
+        message: t('prof_confirm_delete_class', { classe }),
+        onConfirm: () => {
+          delete store[classe];
+          saveStore();
+          if (activeClass === classe) {
+            activeClass = null;
+            showHome();
+          } else {
+            renderHome();
+          }
+        }
+      });
+    } else if (window.confirm(t('prof_confirm_delete_class', { classe }))) {
+      delete store[classe];
+      saveStore();
+      renderHome();
+    }
+  }
+
+  function openClass(classe) {
+    activeClass = classe;
+    activeSubject = null;
+    if (els.editBanner) els.editBanner.hidden = true;
+    showClassView();
+  }
+
+  /* ================= Vue 2 : Détail de la classe ================= */
+
+  function renderSemesterTabs() {
+    els.semesterTabs.innerHTML = '';
+    SEMESTER_NAMES.forEach((sem) => {
+      const count = Object.keys(store[activeClass]?.semestres?.[sem] || {}).length;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'prof-semester-tab' + (sem === activeSem ? ' is-active' : '');
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', String(sem === activeSem));
+      btn.innerHTML = `${semLabel(sem)} <span class="prof-semester-tab-count">${count}</span>`;
+      btn.addEventListener('click', () => {
+        activeSem = sem;
+        renderClassView();
+      });
+      els.semesterTabs.appendChild(btn);
+    });
+  }
+
+  function renderClassView() {
+    const classeData = store[activeClass] || defaultClass();
+    els.classTitle.textContent = activeClass;
+    els.classMeta.textContent = `${t('prof_stat_effectifs')} : ${classeData.eleves.length}`;
+
+    els.studentForm.hidden = true;
+    els.studentNom.value = '';
+    els.studentPrenom.value = '';
+    editingStudentId = null;
+    els.studentFormOk.textContent = t('prof_student_form_ok');
+
+    renderSemesterTabs();
+    renderStudentsTable(classeData);
+    renderSubjectsList(classeData);
+  }
+
+  function renderStudentsTable(classeData) {
+    const students = classeData.eleves;
+    els.studentsEmpty.hidden = students.length > 0;
+    els.studentsEmpty.textContent = t('prof_students_empty');
+    els.studentsTbody.innerHTML = '';
+    const ranks = rankClass();
+
+    students.forEach((student, index) => {
+      const tr = document.createElement('tr');
+      const avg = studentSemesterAverage(student.id);
+
+      const rankCell = document.createElement('td');
+      rankCell.className = 'prof-col-rank';
+      rankCell.textContent = String(index + 1);
+
+      const nomCell = document.createElement('td');
+      nomCell.textContent = student.nom;
+
+      const prenomCell = document.createElement('td');
+      prenomCell.textContent = student.prenom;
+
+      const avgCell = document.createElement('td');
+      avgCell.className = 'prof-moyenne-cell';
+      avgCell.textContent = avg === null ? '—' : avg.toFixed(2);
+      if (avg !== null && typeof gradeClass === 'function') avgCell.classList.add(gradeClass(avg));
+
+      const rangCell = document.createElement('td');
+      rangCell.className = 'prof-moyenne-cell';
+      rangCell.textContent = ranks[student.id] ? String(ranks[student.id]) : '—';
+
+      const actionsCell = document.createElement('td');
+      actionsCell.className = 'prof-col-actions';
+      actionsCell.innerHTML = `
+        <button type="button" class="ghost-button prof-row-action" data-act="bulletin">${t('prof_student_bulletin')}</button>
+        <button type="button" class="ghost-button prof-row-action" data-act="edit">${t('prof_student_edit')}</button>
+        <button type="button" class="ghost-button prof-row-action prof-danger-text" data-act="delete">${t('prof_student_delete')}</button>
+      `;
+      actionsCell.querySelector('[data-act="bulletin"]').addEventListener('click', () => showBulletin(student));
+      actionsCell.querySelector('[data-act="edit"]').addEventListener('click', () => startEditStudent(student));
+      actionsCell.querySelector('[data-act="delete"]').addEventListener('click', () => deleteStudent(student));
+
+      tr.append(rankCell, nomCell, prenomCell, avgCell, rangCell, actionsCell);
+      els.studentsTbody.appendChild(tr);
+    });
+  }
+
+  function showStudentForm() {
+    els.studentForm.hidden = false;
+    window.setTimeout(() => els.studentNom.focus(), prefersReducedMotion ? 0 : 200);
+  }
+
+  function submitStudentForm() {
+    const nom = els.studentNom.value.trim();
+    const prenom = els.studentPrenom.value.trim();
+    if (!nom && !prenom) return;
+    const classeData = store[activeClass] || defaultClass();
+
+    if (editingStudentId) {
+      const student = classeData.eleves.find((s) => s.id === editingStudentId);
+      if (student) {
+        student.nom = nom;
+        student.prenom = prenom;
+      }
+    } else {
+      classeData.eleves.push({ id: newId(), nom, prenom });
+    }
+    saveStore();
+    els.studentForm.hidden = true;
+    els.studentNom.value = '';
+    els.studentPrenom.value = '';
+    editingStudentId = null;
+    renderClassView();
+  }
+
+  function startEditStudent(student) {
+    editingStudentId = student.id;
+    els.studentNom.value = student.nom;
+    els.studentPrenom.value = student.prenom;
+    els.studentFormOk.textContent = t('prof_student_form_ok');
+    showStudentForm();
+  }
+
+  function deleteStudent(student) {
+    if (typeof confirmModal !== 'undefined' && confirmModal.el) {
+      confirmModal.show({
+        message: t('prof_confirm_delete_student'),
+        onConfirm: () => {
+          const classeData = store[activeClass] || defaultClass();
+          classeData.eleves = classeData.eleves.filter((s) => s.id !== student.id);
+          ['Semestre1', 'Semestre2'].forEach((sem) => {
+            const semObj = store[activeClass]?.semestres?.[sem] || {};
+            Object.values(semObj).forEach((record) => {
+              if (record.notes && record.notes[student.id]) delete record.notes[student.id];
+            });
+          });
+          saveStore();
+          renderClassView();
+        }
+      });
+    }
+  }
+
+  /* ---------- Bulletin d'un élève (modale) ---------- */
+
+  function showBulletin(student) {
+    const modal = document.createElement('div');
+    modal.className = 'prof-ocr-modal prof-bulletin-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    const semObj = store[activeClass]?.semestres?.[activeSem] || {};
+    const rows = Object.keys(semObj).map((matiere) => {
+      const record = semObj[matiere];
+      const moy = moyenneFromNotes(record.notes ? record.notes[student.id] : null, record.composition);
+      return {
+        matiere,
+        coef: record.coefficient || 1,
+        moy
+      };
+    });
+    const withMoy = rows.filter((r) => r.moy !== null);
+    const semesterAvg =
+      withMoy.length && withMoy.reduce((s, r) => s + r.moy * r.coef, 0) / withMoy.reduce((s, r) => s + r.coef, 0);
+
+    const body = rows.length
+      ? `<div class="prof-bulletin-table-wrap"><table class="prof-bulletin-table">
+           <thead><tr><th>${t('prof_pdf_eleve_col')}</th><th>${t('label_coefficient')}</th><th>${t('th_moyenne')}</th></tr></thead>
+           <tbody>${rows
+             .map(
+               (r) =>
+                 `<tr><td>${escHtml(showMatiere(r.matiere))}</td><td class="prof-ocr-col-rank">${r.coef}</td><td class="prof-moyenne-cell">${
+                   r.moy === null ? '—' : r.moy.toFixed(2)
+                 }</td></tr>`
+             )
+             .join('')}
+           </tbody>
+         </table></div>
+         <div class="prof-bulletin-avg">
+           <span>${t('prof_bulletin_semester_avg')}</span>
+           <strong>${semesterAvg === null || semesterAvg === undefined ? '—' : semesterAvg.toFixed(2)}</strong>
+           ${semesterAvg !== null && semesterAvg !== undefined && typeof getMention === 'function'
+             ? `<span class="prof-bulletin-mention">${escHtml(getMention(semesterAvg).label)}</span>`
+             : ''}
+         </div>`
+      : `<p class="prof-empty">${t('prof_subjects_empty')}</p>`;
+
+    modal.innerHTML = `
+      <div class="prof-ocr-overlay"></div>
+      <div class="prof-ocr-modal-card">
+        <div class="prof-ocr-header">
+          <h3>${escHtml(t('prof_bulletin_title', { eleve: getStudentName(student) }))}</h3>
+          <p class="prof-ocr-subtitle">${escHtml(activeClass)} • ${escHtml(semLabel(activeSem))}</p>
+        </div>
+        <div class="prof-ocr-table-wrap">${body}</div>
+        <div class="prof-ocr-actions">
+          <div class="prof-ocr-actions-right">
+            <button type="button" class="primary-button" data-close>${t('prof_bulletin_close')}</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    const close = () => {
+      modal.remove();
+      document.body.style.overflow = '';
+    };
+    modal.querySelector('[data-close]').addEventListener('click', close);
+    modal.querySelector('.prof-ocr-overlay').addEventListener('click', close);
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close();
+    });
+    document.body.style.overflow = 'hidden';
+  }
+
+  /* ---------- Matières du semestre ---------- */
+
+  function fillSubjectSelect() {
+    els.subjectSelect.innerHTML = '';
+    getAvailableMatieres(activeClass).forEach((matiere) => {
+      const opt = document.createElement('option');
+      opt.value = matiere;
+      opt.textContent = showMatiere(matiere);
+      els.subjectSelect.appendChild(opt);
+    });
+    if (!els.subjectSelect.options.length) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = t('option_matiere_default');
+      els.subjectSelect.appendChild(opt);
+    }
+  }
+
+  function renderSubjectsList(classeData) {
+    const semObj = classeData.semestres[activeSem] || {};
+    const names = Object.keys(semObj);
+    els.subjectsEmpty.hidden = names.length > 0;
+    els.subjectsEmpty.textContent = t('prof_subjects_empty');
+    els.subjectsList.innerHTML = '';
+
+    names.forEach((matiere) => {
+      const record = semObj[matiere];
+      const avg = classeAverageForSubject(record);
+      const item = document.createElement('div');
+      item.className = 'prof-subject-item';
+      item.innerHTML = `
+        <div class="prof-subject-item-main">
+          <span class="prof-subject-item-name">${escHtml(showMatiere(matiere))}</span>
+          <span class="prof-subject-item-meta">${t('label_coefficient')} : ${record.coefficient || 1} • ${
+        record.composition ? t('radio_oui') : t('radio_non')
+      } ${t('legend_composition')}</span>
+          <span class="prof-subject-item-avg"><span>${t('th_moyenne')} :</span> ${
+        avg === null ? '—' : avg.toFixed(2)
+      }</span>
+        </div>
+        <div class="prof-subject-item-actions">
+          <button type="button" class="secondary-button prof-add-btn" data-act="open">${t('prof_subject_open')}</button>
+          <button type="button" class="ghost-button prof-danger-text" data-act="delete">${t('prof_subject_delete')}</button>
+        </div>
+      `;
+      item.querySelector('[data-act="open"]').addEventListener('click', () => openSubject(matiere));
+      item.querySelector('[data-act="delete"]').addEventListener('click', () => deleteSubject(matiere));
+      els.subjectsList.appendChild(item);
+    });
+  }
+
+  function deleteSubject(matiere) {
+    if (typeof confirmModal !== 'undefined' && confirmModal.el) {
+      confirmModal.show({
+        message: t('prof_confirm_delete_subject', { matiere: showMatiere(matiere) }),
+        onConfirm: () => {
+          deleteSubjectRecord(activeClass, activeSem, matiere);
+          renderClassView();
+        }
+      });
+    }
+  }
+
+  function createSubject() {
+    const matiere = els.subjectSelect.value;
+    if (!matiere) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_subject_select'));
+      return;
+    }
+    if (getSubjectRecord(activeClass, activeSem, matiere)) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_subject_exists'));
+      return;
+    }
+    const coef = Number(els.subjectCoef.value);
+    const composition = document.querySelector('input[name="prof-new-composition"]:checked')?.value === 'oui';
+    setSubjectRecord(activeClass, activeSem, matiere, {
+      coefficient: Number.isInteger(coef) && coef >= 1 && coef <= 8 ? coef : 1,
+      composition,
+      notes: {}
+    });
+    els.subjectForm.hidden = true;
+    openSubject(matiere);
+  }
+
+  /* ================= Vue 3 : Éditeur de matière ================= */
+
+  function refreshMatiereSelect() {
+    const previous = els.matiere.value;
+    els.matiere.innerHTML = '';
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = t('option_matiere_default');
+    els.matiere.appendChild(defaultOption);
+
+    getAvailableMatieres(activeClass).forEach((matiere) => {
+      const option = document.createElement('option');
+      option.value = matiere;
+      option.textContent = typeof translateMatiere === 'function' ? translateMatiere(matiere) : matiere;
+      els.matiere.appendChild(option);
+    });
+
+    const autre = document.createElement('option');
+    autre.value = '__autre__';
+    autre.textContent = t('prof_matiere_custom_option');
+    els.matiere.appendChild(autre);
+
+    if (previous === '__autre__' || [...els.matiere.options].some((option) => option.value === previous)) {
+      els.matiere.value = previous;
+    }
+    updateCustomGroupVisibility();
+  }
+
+  function updateCustomGroupVisibility() {
+    const isCustom = els.matiere.value === '__autre__';
+    if (!els.customGroup) return;
+    els.customGroup.hidden = !isCustom;
+    if (isCustom && activeSubject) {
+      els.customInput.value = activeSubject;
+    }
+  }
+
+  function buildSnapshot(record) {
+    const snap = {
+      coefficient: record ? record.coefficient : 1,
+      composition: record ? record.composition : true,
+      notes: {}
+    };
+    if (record && record.notes) {
+      Object.keys(record.notes).forEach((id) => {
+        snap.notes[id] = Object.assign({}, record.notes[id]);
+      });
+    }
+    return snap;
+  }
+
+  function openSubject(matiere) {
+    activeSubject = matiere;
+    refreshMatiereSelect();
+    syncHiddenSelects();
+    const record = getSubjectRecord(activeClass, activeSem, activeSubject);
+    els.coefficient.value = record ? record.coefficient : 1;
+    const radio = document.querySelector(
+      record && record.composition === false
+        ? 'input[name="prof-composition"][value="non"]'
+        : 'input[name="prof-composition"][value="oui"]'
+    );
+    if (radio) radio.checked = true;
+    snapshot = buildSnapshot(record);
+
+    if (els.context) updateContextLine();
+    loadEditorRows();
+    clearFilePreview();
+    renderRows();
+    updateSummary();
+    updateEditBanner();
+    showSubjectView();
+  }
+
+  function syncHiddenSelects() {
+    if (els.classe) {
+      if (![...els.classe.options].some((o) => o.value === activeClass)) {
+        const opt = document.createElement('option');
+        opt.value = activeClass;
+        opt.textContent = activeClass;
+        els.classe.appendChild(opt);
+      }
+      els.classe.value = activeClass;
+    }
+    if (els.semestre) els.semestre.value = activeSem;
+    if (els.matiere) {
+      if (![...els.matiere.options].some((o) => o.value === activeSubject)) {
+        const opt = document.createElement('option');
+        opt.value = activeSubject;
+        opt.textContent = activeSubject;
+        els.matiere.appendChild(opt);
+      }
+      els.matiere.value = activeSubject;
+    }
+  }
+
+  function loadEditorRows() {
+    const record = getSubjectRecord(activeClass, activeSem, activeSubject);
+    const notes = record && record.notes ? record.notes : {};
+    currentRows = (store[activeClass]?.eleves || []).map((eleve) => {
+      const n = notes[eleve.id] || {};
+      return {
+        id: eleve.id,
+        nom: eleve.nom,
+        prenom: eleve.prenom,
+        d1: typeof n.d1 === 'string' ? n.d1 : '',
+        d2: typeof n.d2 === 'string' ? n.d2 : '',
+        compo: typeof n.compo === 'string' ? n.compo : ''
+      };
+    });
+  }
+
+  function updateContextLine() {
+    els.context.textContent = `${activeClass} • ${semLabel(activeSem)} • ${showMatiere(activeSubject)}`;
+  }
+
+  /* ---------- Rendu du tableau de notes ---------- */
 
   function createTextInput(row, field, placeholder) {
     const input = document.createElement('input');
@@ -266,19 +991,42 @@
     return input;
   }
 
+  function noteFeedback(input) {
+    const raw = input.value.trim();
+    input.classList.remove('is-valid', 'is-invalid');
+    if (!raw) return;
+    input.classList.toggle('is-valid', parseNote(raw).valid);
+    input.classList.toggle('is-invalid', !parseNote(raw).valid);
+  }
+
+  function refreshAverageCell(cell, row) {
+    const avg = createAverage(row);
+    if (avg === null) {
+      cell.textContent = '—';
+      cell.className = 'prof-moyenne-cell';
+      return;
+    }
+    cell.textContent = avg.toFixed(2);
+    cell.className = 'prof-moyenne-cell ' + (typeof gradeClass === 'function' ? gradeClass(avg) : '');
+  }
+
+  function createAverage(row) {
+    return moyenneFromNotes(row, hasComposition());
+  }
+
   function onCellInput(event) {
     const input = event.currentTarget;
     const tr = input.closest('tr');
     const index = tr ? Array.prototype.indexOf.call(els.tbody.children, tr) : -1;
-    if (index < 0 || index >= rows.length) return;
+    if (index < 0 || index >= currentRows.length) return;
     const field = input.dataset.field;
     if (!field) return;
-    rows[index][field] = input.value;
+    currentRows[index][field] = input.value;
     if (NOTE_FIELDS.includes(field)) noteFeedback(input);
     const avgCell = tr.querySelector('.prof-moyenne-cell');
-    if (avgCell) refreshAverageCell(avgCell, rows[index]);
-    saveRows();
+    if (avgCell) refreshAverageCell(avgCell, currentRows[index]);
     updateSummary();
+    updateEditBanner();
   }
 
   function renderRows() {
@@ -286,9 +1034,9 @@
     els.tbody.innerHTML = '';
     const showCompo = hasComposition();
     els.thComposition.hidden = !showCompo;
-    els.empty.hidden = rows.length > 0;
+    els.empty.hidden = currentRows.length > 0;
 
-    rows.forEach((row, index) => {
+    currentRows.forEach((row, index) => {
       const tr = document.createElement('tr');
       tr.className = 'prof-row';
 
@@ -298,8 +1046,7 @@
 
       const nameCell = document.createElement('td');
       nameCell.className = 'prof-col-name prof-name-cells';
-      nameCell.appendChild(createTextInput(row, 'nom', t('prof_name_placeholder')));
-      nameCell.appendChild(createTextInput(row, 'prenom', t('prof_prenom_placeholder')));
+      nameCell.textContent = getStudentName(row);
 
       const d1Cell = document.createElement('td');
       d1Cell.appendChild(createNoteInput(row, 'd1'));
@@ -314,21 +1061,7 @@
       avgCell.className = 'prof-moyenne-cell';
       refreshAverageCell(avgCell, row);
 
-      const delCell = document.createElement('td');
-      delCell.className = 'prof-col-del';
-      const delBtn = document.createElement('button');
-      delBtn.type = 'button';
-      delBtn.className = 'prof-del-btn';
-      delBtn.setAttribute('aria-label', t('prof_remove_student'));
-      delBtn.innerHTML =
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
-      delBtn.addEventListener('click', () => {
-        const i = Array.prototype.indexOf.call(els.tbody.children, tr);
-        if (i >= 0) removeStudent(i);
-      });
-      delCell.appendChild(delBtn);
-
-      tr.append(rankCell, nameCell, d1Cell, d2Cell, compoCell, avgCell, delCell);
+      tr.append(rankCell, nameCell, d1Cell, d2Cell, compoCell, avgCell);
       els.tbody.appendChild(tr);
     });
 
@@ -336,35 +1069,33 @@
   }
 
   function addStudent() {
-    rows.push({ nom: '', prenom: '', d1: '', d2: '', compo: '' });
+    const eleves = store[activeClass].eleves;
+    const id = newId();
+    eleves.push({ id, nom: '', prenom: '' });
+    saveStore();
+    currentRows.push({ id, nom: '', prenom: '', d1: '', d2: '', compo: '' });
     renderRows();
-    saveRows();
+    updateEditBanner();
     const lastRow = els.tbody.lastElementChild;
-    const firstInput = lastRow ? lastRow.querySelector('.prof-text') : null;
-    if (firstInput) firstInput.focus();
+    const noteInput = lastRow ? lastRow.querySelector('.prof-note') : null;
+    if (noteInput) noteInput.focus();
   }
 
-  function removeStudent(index) {
-    rows.splice(index, 1);
-    renderRows();
-    saveRows();
-  }
-
-  /* ---------------------- Summary --------------------- */
+  /* ---------- Résumé & exports ---------- */
 
   function updateSummary() {
-    const ready = getContextReady();
-    const hasRows = rows.length > 0;
-    const averages = rows.map(createAverage).filter((value) => value !== null);
+    const hasRows = currentRows.length > 0 && Boolean(activeSubject);
+    const ready = Boolean(activeSubject) && validCoefficient();
+    const averages = currentRows.map(createAverage).filter((value) => value !== null);
 
-    els.exportPdf.disabled = !ready || !hasRows;
-    els.exportCsv.disabled = !ready || !hasRows;
+    els.exportPdf.disabled = !ready || !hasRows || !averages.length;
+    els.exportCsv.disabled = !ready || !hasRows || !averages.length;
     els.summary.hidden = false;
 
     if (!els.summaryStats) return;
     const hasData = averages.length > 0;
     const stats = [
-      { label: 'prof_stat_effectifs', value: rows.length },
+      { label: 'prof_stat_effectifs', value: currentRows.length },
       { label: 'prof_stat_classe_avg', value: hasData ? (averages.reduce((sum, v) => sum + v, 0) / averages.length).toFixed(2) : '—' },
       { label: 'prof_stat_best', value: hasData ? Math.max(...averages).toFixed(2) : '—' },
       { label: 'prof_stat_worst', value: hasData ? Math.min(...averages).toFixed(2) : '—' }
@@ -382,69 +1113,140 @@
     });
   }
 
-  function exportCheck() {
-    if (!els.classe.value) {
-      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_classe_requise'));
-      return false;
-    }
-    if (!getMatiereNom()) {
-      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_matiere_requise'));
-      return false;
-    }
-    if (!validCoefficient()) {
-      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_coefficient_requis'));
-      return false;
-    }
-    if (!rows.length) {
-      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_aucun_eleve'));
-      return false;
-    }
-    return true;
+  function getWorkingNotesMap() {
+    const notes = {};
+    currentRows.forEach((row) => {
+      notes[row.id] = {
+        d1: row.d1 || '',
+        d2: row.d2 || '',
+        compo: row.compo || ''
+      };
+    });
+    return notes;
   }
 
-  /* ------------------- File preview ------------------- */
+  function notesEqual(a, b) {
+    const keysA = Object.keys(a).sort();
+    const keysB = Object.keys(b).sort();
+    if (keysA.length !== keysB.length) return false;
+    return keysA.every((k, i) => {
+      if (k !== keysB[i]) return false;
+      const na = a[k];
+      const nb = b[k];
+      return NOTE_FIELDS.every((f) => String(na ? na[f] || '' : '') === String(nb ? nb[f] || '' : ''));
+    });
+  }
 
-  function handleFile(file) {
-    if (!file) return;
-    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
-    const isImage = /^image\//.test(file.type) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name);
-    if (!isPdf && !isImage) {
-      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_file_type_error'));
+  /* ---------- Bannière "Ancienne / Nouvelle valeur" ---------- */
+
+  function computeAverage(notes, composition) {
+    const avg = (store[activeClass]?.eleves || [])
+      .map((e) => moyenneFromNotes(notes[e.id], composition))
+      .filter((v) => v !== null);
+    if (!avg.length) return null;
+    return avg.reduce((s, v) => s + v, 0) / avg.length;
+  }
+
+  function updateEditBanner() {
+    if (!els.editBanner) return;
+    const hasChanges =
+      !snapshot ||
+      Number(els.coefficient.value) !== snapshot.coefficient ||
+      hasComposition() !== snapshot.composition ||
+      !notesEqual(getWorkingNotesMap(), snapshot.notes || {});
+
+    const oldAvg = snapshot ? computeAverage(snapshot.notes || {}, snapshot.composition) : null;
+    const newAvg = hasChanges && activeSubject ? computeAverage(getWorkingNotesMap(), hasComposition()) : null;
+    const show = Boolean(activeSubject) && hasChanges;
+
+    els.editBanner.hidden = !show;
+    if (!show) {
+      els.editBanner.classList.remove('is-visible');
       return;
     }
-    clearFilePreview();
-    fileObjectUrl = URL.createObjectURL(file);
-    els.fileName.textContent = file.name;
-    if (isImage) {
-      els.fileImg.src = fileObjectUrl;
-      els.fileImg.hidden = false;
-      els.filePdf.hidden = true;
-      els.filePdf.removeAttribute('src');
-    } else {
-      els.filePdf.src = fileObjectUrl;
-      els.filePdf.hidden = false;
-      els.fileImg.hidden = true;
-      els.fileImg.removeAttribute('src');
-    }
-    els.filePreview.hidden = false;
-    if (els.previewLabel) els.previewLabel.hidden = false;
-    if (typeof els.filePreview.scrollIntoView === 'function') {
-      els.filePreview.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' });
-    }
+    els.editTitle.textContent = t('prof_edit_banner_title', { matiere: showMatiere(activeSubject) });
+    els.editValues.innerHTML =
+      `<span>${t('prof_edit_old_value', { v: oldAvg === null ? '—' : oldAvg.toFixed(2) })}</span>` +
+      `<span class="prof-edit-arrow">→</span>` +
+      `<span>${t('prof_edit_new_value', { v: newAvg === null ? '—' : newAvg.toFixed(2) })}</span>`;
+    void els.editBanner.offsetWidth;
+    els.editBanner.classList.add('is-visible');
   }
 
-  function clearFilePreview() {
-    if (fileObjectUrl) {
-      URL.revokeObjectURL(fileObjectUrl);
-      fileObjectUrl = null;
-    }
-    els.fileImg.hidden = true;
-    els.fileImg.removeAttribute('src');
-    els.filePdf.hidden = true;
-    els.filePdf.removeAttribute('src');
-    els.filePreview.hidden = true;
-    if (els.previewLabel) els.previewLabel.hidden = true;
+  function commitSubject() {
+    if (!activeSubject) return;
+    setSubjectRecord(activeClass, activeSem, activeSubject, {
+      coefficient: validCoefficient() ? Number(els.coefficient.value) : 1,
+      composition: hasComposition(),
+      notes: getWorkingNotesMap()
+    });
+    snapshot = {
+      coefficient: Number(els.coefficient.value),
+      composition: hasComposition(),
+      notes: getWorkingNotesMap()
+    };
+    updateEditBanner();
+    if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_save_success'));
   }
+
+  function cancelSubjectChanges() {
+    if (!snapshot) return;
+    els.coefficient.value = snapshot.coefficient;
+    const radio = document.querySelector(
+      snapshot.composition === false
+        ? 'input[name="prof-composition"][value="non"]'
+        : 'input[name="prof-composition"][value="oui"]'
+    );
+    if (radio) radio.checked = true;
+    loadEditorRows();
+    renderRows();
+    updateSummary();
+    updateEditBanner();
+  }
+
+  window.populateProfRows = function (ocrVerifiedRows) {
+    if (!Array.isArray(ocrVerifiedRows) || !ocrVerifiedRows.length) return;
+    const classeData = store[activeClass] || defaultClass();
+    let added = false;
+    ocrVerifiedRows.forEach((r) => {
+      const nom = String(r.nom || '').trim();
+      const prenom = String(r.prenom || '').trim();
+      if (!nom && !prenom) return;
+      let eleve = classeData.eleves.find((e) => isSameString(e.nom, nom) && isSameString(e.prenom, prenom));
+      if (!eleve) {
+        eleve = { id: newId(), nom, prenom };
+        classeData.eleves.push(eleve);
+        added = true;
+      }
+      const row = currentRows.find((x) => x.id === eleve.id);
+      if (row) {
+        row.d1 = r.d1 || '';
+        row.d2 = r.d2 || '';
+        row.compo = r.compo || '';
+      } else {
+        currentRows.push({
+          id: eleve.id,
+          nom: eleve.nom,
+          prenom: eleve.prenom,
+          d1: r.d1 || '',
+          d2: r.d2 || '',
+          compo: r.compo || ''
+        });
+      }
+    });
+    if (added) saveStore();
+    renderRows();
+    updateEditBanner();
+  };
+
+  window.getProfContext = function () {
+    return {
+      classe: activeClass || '',
+      semestre: activeSem,
+      matiere: activeSubject || '',
+      coefficient: validCoefficient() ? Number(els.coefficient.value) : 0
+    };
+  };
 
   /* ---------------------- Exports --------------------- */
 
@@ -469,8 +1271,25 @@
     window.setTimeout(() => URL.revokeObjectURL(url), 4000);
   }
 
-  function getStudentName(row) {
-    return [row.prenom, row.nom].filter(Boolean).join(' ').trim() || '—';
+  function exportCheck() {
+    if (!activeClass) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_classe_requise'));
+      return false;
+    }
+    if (!activeSubject) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_matiere_requise'));
+      return false;
+    }
+    if (!validCoefficient()) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_coefficient_requis'));
+      return false;
+    }
+    const hasData = currentRows.some((r) => r.d1 || r.d2 || r.compo);
+    if (!hasData) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_msg_aucun_eleve'));
+      return false;
+    }
+    return true;
   }
 
   function exportCsv() {
@@ -479,18 +1298,19 @@
     if (hasComposition()) headers.push(t('label_composition'));
     headers.push(t('th_moyenne'), t('prof_pdf_mention_col'));
 
-    const lines = rows.map((row, index) => {
+    const csvRow = (arr) => arr.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';');
+
+    const lines = currentRows.map((row, index) => {
       const avg = createAverage(row);
       const cells = [index + 1, getStudentName(row), row.d1 || '', row.d2 || ''];
       if (hasComposition()) cells.push(row.compo || '');
       cells.push(avg === null ? '' : avg.toFixed(2));
       cells.push(avg === null ? '' : typeof getMention === 'function' ? getMention(avg).label : '');
-      return cells.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';');
+      return csvRow(cells);
     });
 
-    const csvRow = (arr) => arr.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';');
     const content = '\uFEFF' + [csvRow(headers), ...lines].join('\r\n');
-    downloadBlob(new Blob([content], { type: 'text/csv;charset=utf-8;' }), `releve_${slugify(getMatiereNom())}_${els.classe.value}.csv`);
+    downloadBlob(new Blob([content], { type: 'text/csv;charset=utf-8;' }), `releve_${slugify(activeSubject)}_${activeClass}.csv`);
   }
 
   function exportPdf() {
@@ -507,9 +1327,9 @@
     const margin = 40;
     const contentRight = pageWidth - margin;
 
-    const matiere = getMatiereNom();
-    const classe = els.classe.value;
-    const semestreLabel = els.semestre.value === 'Semestre1' ? t('table_semestre1_full') : t('table_semestre2_full');
+    const matiere = activeSubject;
+    const classe = activeClass;
+    const semestreLabel = semLabel(activeSem);
     const coefficient = Number(els.coefficient.value);
     const showCompo = hasComposition();
 
@@ -526,8 +1346,8 @@
     cols.push({ label: t('prof_pdf_mention_col'), x: mentionX, width: contentRight - mentionX, align: 'left' });
 
     const tableWidth = contentRight - margin;
-
     const BAND_HEIGHT = 76;
+
     const drawBrandBand = () => {
       doc.setFillColor(23, 43, 75);
       doc.rect(0, 0, pageWidth, BAND_HEIGHT, 'F');
@@ -567,7 +1387,7 @@
     y = drawTableHeader(y + 12);
 
     doc.setFontSize(9);
-    rows.forEach((row, index) => {
+    currentRows.forEach((row, index) => {
       if (y > pageHeight - 64) {
         doc.addPage();
         y = drawBrandBand();
@@ -610,7 +1430,55 @@
     doc.save(`releve_${slugify(matiere)}_${classe}.pdf`);
   }
 
-  /* --------------------- Events ------------------------ */
+  /* ------------------- Preview fichier ------------------- */
+
+  function handleFile(file) {
+    if (!file) return;
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    const isImage = /^image\//.test(file.type) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name);
+    if (!isPdf && !isImage) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_file_type_error'));
+      return;
+    }
+    clearFilePreview();
+    fileObjectUrl = URL.createObjectURL(file);
+    els.fileName.textContent = file.name;
+    if (isImage) {
+      els.fileImg.src = fileObjectUrl;
+      els.fileImg.hidden = false;
+      els.filePdf.hidden = true;
+      els.filePdf.removeAttribute('src');
+    } else {
+      els.filePdf.src = fileObjectUrl;
+      els.filePdf.hidden = false;
+      els.fileImg.hidden = true;
+      els.fileImg.removeAttribute('src');
+    }
+    els.filePreview.hidden = false;
+    if (els.previewLabel) els.previewLabel.hidden = false;
+    if (typeof els.filePreview.scrollIntoView === 'function') {
+      els.filePreview.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+    }
+    if (typeof window.onProfFileSelected === 'function') {
+      window.onProfFileSelected(file, isImage);
+    }
+  }
+
+  function clearFilePreview() {
+    if (fileObjectUrl) {
+      URL.revokeObjectURL(fileObjectUrl);
+      fileObjectUrl = null;
+    }
+    els.fileImg.hidden = true;
+    els.fileImg.removeAttribute('src');
+    els.filePdf.hidden = true;
+    els.filePdf.removeAttribute('src');
+    els.filePreview.hidden = true;
+    if (els.previewLabel) els.previewLabel.hidden = true;
+    if (typeof window.onProfFileCleared === 'function') window.onProfFileCleared();
+  }
+
+  /* ===================== Events ===================== */
 
   if (els.togglePassword && els.password) {
     els.togglePassword.addEventListener('click', () => {
@@ -623,53 +1491,155 @@
     });
   }
 
-  els.loginForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const password = els.password.value;
-    if (!password) {
+  if (els.loginForm) {
+    els.loginForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const password = els.password.value;
+      if (!password) {
+        showLoginError(els.loginError, t('prof_login_error'));
+        return;
+      }
+      els.loginError.hidden = true;
+      if (password === PROF_PASSWORD) {
+        setAuthenticated(PROF_AUTH_VALUE);
+        showConsole();
+        return;
+      }
       showLoginError(els.loginError, t('prof_login_error'));
-      return;
-    }
+      els.password.value = '';
+      els.password.focus();
+    });
+  }
 
-    els.loginError.hidden = true;
+  if (els.logoutBtn) {
+    els.logoutBtn.addEventListener('click', () => {
+      setAuthenticated(null);
+      showLogin();
+    });
+  }
 
-    if (password === PROF_PASSWORD) {
-      setAuthenticated(PROF_AUTH_VALUE);
-      showConsole();
-      return;
-    }
+  if (els.backBtn) {
+    els.backBtn.addEventListener('click', () => {
+      if (!els.viewSubject.hidden && activeSubject) {
+        const pending = !els.editBanner.hidden;
+        if (pending && typeof confirmModal !== 'undefined' && confirmModal.el) {
+          confirmModal.show({
+            message: t('prof_edit_banner_title', { matiere: showMatiere(activeSubject) }),
+            okLabel: t('prof_edit_annuler'),
+            danger: true,
+            onConfirm: () => showClassView()
+          });
+        } else {
+          showClassView();
+        }
+      } else if (!els.viewClass.hidden) {
+        showHome();
+      } else {
+        showHome();
+      }
+    });
+  }
 
-    showLoginError(els.loginError, t('prof_login_error'));
-    els.password.value = '';
-    els.password.focus();
+  if (els.addClassBtn) {
+    els.addClassBtn.addEventListener('click', addClass);
+    els.newClass.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addClass();
+    });
+  }
+
+  if (els.studentAdd) {
+    els.studentAdd.addEventListener('click', () => {
+      if (editingStudentId) {
+        startEditStudent(store[activeClass].eleves.find((s) => s.id === editingStudentId));
+      } else {
+        editingStudentId = null;
+        els.studentNom.value = '';
+        els.studentPrenom.value = '';
+        els.studentFormOk.textContent = t('prof_student_form_ok');
+        showStudentForm();
+      }
+    });
+  }
+
+  if (els.studentForm) {
+    els.studentForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitStudentForm();
+    });
+    els.studentFormCancel.addEventListener('click', () => {
+      els.studentForm.hidden = true;
+      els.studentNom.value = '';
+      els.studentPrenom.value = '';
+      editingStudentId = null;
+    });
+  }
+
+  if (els.subjectAdd) {
+    els.subjectAdd.addEventListener('click', () => {
+      fillSubjectSelect();
+      els.subjectCoef.value = '';
+      els.subjectForm.hidden = !els.subjectForm.hidden;
+      if (!els.subjectForm.hidden) {
+        window.setTimeout(() => els.subjectSelect.focus(), prefersReducedMotion ? 0 : 200);
+      }
+    });
+  }
+
+  if (els.subjectFormOk) {
+    els.subjectFormOk.addEventListener('click', createSubject);
+    els.subjectFormCancel.addEventListener('click', () => {
+      els.subjectForm.hidden = true;
+    });
+  }
+
+  if (els.editCancel) {
+    els.editCancel.addEventListener('click', cancelSubjectChanges);
+    els.editSave.addEventListener('click', commitSubject);
+  }
+
+  els.coefficient.addEventListener('input', () => {
+    updateSummary();
+    updateEditBanner();
   });
-
-  els.logoutBtn.addEventListener('click', () => {
-    setAuthenticated(null);
-    showLogin();
-  });
-
-  els.classe.addEventListener('change', () => {
-    refreshMatiereSelect();
-    loadRows();
-  });
-
-  els.semestre.addEventListener('change', loadRows);
-
-  els.matiere.addEventListener('change', () => {
-    updateCustomGroupVisibility();
-    loadRows();
-  });
-
-  els.customInput.addEventListener('input', updateSummary);
-
-  els.coefficient.addEventListener('input', updateSummary);
 
   document.querySelectorAll('input[name="prof-composition"]').forEach((radio) => {
     radio.addEventListener('change', () => {
       renderRows();
+      updateEditBanner();
     });
   });
+
+  if (els.matiere) {
+    els.matiere.addEventListener('change', () => {
+      const value = els.matiere.value;
+      if (value === '' || value === '__autre__') {
+        updateCustomGroupVisibility();
+        return;
+      }
+      if (value !== activeSubject && value) {
+        activeSubject = value;
+        updateCustomGroupVisibility();
+        const record = getSubjectRecord(activeClass, activeSem, activeSubject);
+        els.coefficient.value = record ? record.coefficient : 1;
+        const radio = document.querySelector(
+          record && record.composition === false
+            ? 'input[name="prof-composition"][value="non"]'
+            : 'input[name="prof-composition"][value="oui"]'
+        );
+        if (radio) radio.checked = true;
+        snapshot = buildSnapshot(record);
+        if (els.context) updateContextLine();
+        loadEditorRows();
+        renderRows();
+        updateSummary();
+        updateEditBanner();
+      }
+    });
+  }
+
+  if (els.customInput) {
+    els.customInput.addEventListener('input', updateSummary);
+  }
 
   els.dropzone.addEventListener('click', () => els.fileInput.click());
   els.dropzone.addEventListener('keydown', (event) => {
@@ -696,54 +1666,42 @@
     els.fileInput.value = '';
   });
 
-  els.addStudent.addEventListener('click', addStudent);
-
-  els.exportPdf.addEventListener('click', exportPdf);
-  els.exportCsv.addEventListener('click', exportCsv);
-
-  if (els.saveBtn) {
-    els.saveBtn.addEventListener('click', () => {
-      if (!exportCheck()) return;
-      saveRows();
-      if (typeof showInfoDialog === 'function') {
-        showInfoDialog(t('prof_save_success'));
-      }
-    });
+  if (els.addStudent) {
+    els.addStudent.addEventListener('click', addStudent);
   }
 
-  /* ------------- OCR Integration ----------- */
+  if (els.exportPdf) els.exportPdf.addEventListener('click', exportPdf);
+  if (els.exportCsv) els.exportCsv.addEventListener('click', exportCsv);
 
-  window.populateProfRows = function (ocrVerifiedRows) {
-    if (!Array.isArray(ocrVerifiedRows) || !ocrVerifiedRows.length) return;
-    ocrVerifiedRows.forEach((r) => {
-      rows.push({
-        nom: r.nom || '',
-        prenom: r.prenom || '',
-        d1: r.d1 || '',
-        d2: r.d2 || '',
-        compo: r.compo || ''
-      });
-    });
-    renderRows();
-    saveRows();
-  };
+  if (els.saveBtn) {
+    els.saveBtn.addEventListener('click', commitSubject);
+  }
 
-  /* ------------- Initialisation / navigation ----------- */
+  /* ------- OCR / i18n : hooks ------- */
 
-  /* Met à jour les textes dynamiques quand la langue change. */
   window.refreshProfesseurTexts = function () {
-    refreshMatiereSelect();
-    renderRows();
+    if (!isAuthenticated()) return;
+    if (!els.screen.classList.contains('is-active')) return;
+    if (activeSubject) {
+      refreshMatiereSelect();
+      renderRows();
+      updateSummary();
+      updateEditBanner();
+    } else if (activeClass) {
+      renderClassView();
+    } else {
+      renderHome();
+    }
   };
 
   function init() {
     if (!els.screen || !els.loginCard || !els.console) return;
-
+    loadStore();
     const isActiveScreen = els.screen.classList.contains('is-active');
     if (isAuthenticated()) {
       els.loginCard.hidden = true;
       els.console.hidden = false;
-      if (isActiveScreen) refreshMatiereSelect();
+      if (isActiveScreen) renderHome();
     } else {
       els.loginCard.hidden = false;
       els.console.hidden = true;
