@@ -171,7 +171,8 @@
     if (!store || typeof store !== 'object') store = {};
 
     const migrated = migrateLegacyRows();
-    if (migrated) saveStore();
+    const normalized = normalizeStore();
+    if (migrated || normalized) saveStore();
 
     if (!Object.keys(store).length) {
       ['2nde S04', '2nde S03', '1ère S1', 'Terminale S2'].forEach((name) => {
@@ -179,6 +180,59 @@
       });
       saveStore();
     }
+  }
+
+  /* Répare une entrée du store qui ne respecte pas le schéma attendu
+     { eleves: [], semestres: { Semestre1: {}, Semestre2: {} } }.
+     Prend en charge les anciens formats (liste plate de lignes, ou
+     entrée sans semestres) pour que l'écran d'accueil ne plante plus
+     et que l'ajout de classe fonctionne toujours. */
+  function normalizeStore() {
+    let changed = false;
+    Object.keys(store).forEach((name) => {
+      const entry = store[name];
+
+      if (Array.isArray(entry)) {
+        const fresh = defaultClass();
+        entry.forEach((r) => {
+          const nom = String((r && r.nom) || '').trim();
+          const prenom = String((r && r.prenom) || '').trim();
+          if (!nom && !prenom) return;
+          fresh.eleves.push({ id: newId(), nom, prenom });
+        });
+        store[name] = fresh;
+        changed = true;
+        return;
+      }
+
+      if (!entry || typeof entry !== 'object') {
+        store[name] = defaultClass();
+        changed = true;
+        return;
+      }
+
+      if (!Array.isArray(entry.eleves)) {
+        entry.eleves = [];
+        changed = true;
+      } else {
+        entry.eleves = entry.eleves.filter(
+          (e) => e && typeof e === 'object' && (e.nom || e.prenom)
+        );
+      }
+
+      if (!entry.semestres || typeof entry.semestres !== 'object') {
+        entry.semestres = { Semestre1: {}, Semestre2: {} };
+        changed = true;
+      } else {
+        SEMESTER_NAMES.forEach((sem) => {
+          if (!entry.semestres[sem] || typeof entry.semestres[sem] !== 'object') {
+            entry.semestres[sem] = {};
+            changed = true;
+          }
+        });
+      }
+    });
+    return changed;
   }
 
   function saveStore() {
@@ -420,10 +474,11 @@
     els.classesGrid.innerHTML = '';
     els.classesGrid.classList.remove('has-none');
     Object.keys(store).forEach((classe) => {
-      const nbStudents = (store[classe].eleves || []).length;
+      const entry = store[classe] || defaultClass();
+      const nbStudents = Array.isArray(entry.eleves) ? entry.eleves.length : 0;
       const nbSubjects =
-        Object.keys(store[classe].semestres.Semestre1).length +
-        Object.keys(store[classe].semestres.Semestre2).length;
+        Object.keys(entry.semestres?.Semestre1 || {}).length +
+        Object.keys(entry.semestres?.Semestre2 || {}).length;
 
       const card = document.createElement('article');
       card.className = 'prof-class-card';
