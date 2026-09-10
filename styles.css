@@ -5616,6 +5616,7 @@ html.dark-mode .prof-breadcrumb-text {
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
+  flex: none;
   text-align: left;
   padding: 0;
   margin: 0;
