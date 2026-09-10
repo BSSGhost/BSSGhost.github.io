@@ -175,13 +175,6 @@
     const migrated = migrateLegacyRows();
     const normalized = normalizeStore();
     if (migrated || normalized) saveStore();
-
-    if (!Object.keys(store).length) {
-      ['2nde S04', '2nde S03', '1ère S1', 'Terminale S2'].forEach((name) => {
-        store[name] = defaultClass();
-      });
-      saveStore();
-    }
   }
 
   /* Répare une entrée du store qui ne respecte pas le schéma attendu
