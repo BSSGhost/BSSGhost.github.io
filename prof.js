@@ -45,6 +45,8 @@
     classesGrid: $('prof-classes-grid'),
     newClass: $('prof-new-class'),
     addClassBtn: $('prof-add-class-btn'),
+    addClassCard: $('prof-add-class-card'),
+    headStats: $('prof-classes-head-stats'),
 
     classTitle: $('prof-class-name'),
     classMeta: $('prof-class-meta'),
@@ -469,10 +471,33 @@
 
   /* ================= Vue 1 : Mes classes ================= */
 
+  function classSerie(classe) {
+    const m = String(classe || '').match(/(?:^|\s)(S\d{1,2})\b/i);
+    return m ? m[1].toUpperCase() : null;
+  }
+
+  function classTone(classe) {
+    const serie = classSerie(classe);
+    if (!serie) return 'tone-default';
+    const n = parseInt(serie.slice(1), 10) || 0;
+    return n ? 'tone-' + ((n % 8) || 8) : 'tone-default';
+  }
+
   function renderHome() {
     if (!els.classesGrid) return;
-    els.classesGrid.innerHTML = '';
+    els.classesGrid.querySelectorAll('.prof-class-card').forEach((node) => node.remove());
     els.classesGrid.classList.remove('has-none');
+
+    if (els.headStats) {
+      let totalStudents = 0;
+      Object.keys(store).forEach((classe) => {
+        const entry = store[classe] || defaultClass();
+        if (Array.isArray(entry.eleves)) totalStudents += entry.eleves.length;
+      });
+      const nb = Object.keys(store).length;
+      els.headStats.textContent = `${nb} ${t(nb === 1 ? 'prof_stat_class' : 'prof_stat_classes')} • ${totalStudents} ${t('prof_stat_eleves')}`;
+    }
+
     Object.keys(store).forEach((classe) => {
       const entry = store[classe] || defaultClass();
       const nbStudents = Array.isArray(entry.eleves) ? entry.eleves.length : 0;
@@ -487,9 +512,7 @@
       body.className = 'prof-class-card-body';
       body.setAttribute('aria-label', t('prof_class_open') + ' ' + classe);
       body.innerHTML = `
-        <span class="prof-class-card-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path><path d="M22 10v6"></path></svg>
-        </span>
+        <span class="prof-class-card-badge ${classTone(classe)}" aria-hidden="true">${escHtml(classSerie(classe) || inferLevel(classe) || '—')}</span>
         <span class="prof-class-card-name" data-name>${escHtml(classe)}</span>
         <span class="prof-class-card-meta">${t('prof_stat_effectifs')} : ${nbStudents} • Matières : ${nbSubjects}</span>
       `;
@@ -507,6 +530,10 @@
       card.append(body, actions);
       els.classesGrid.appendChild(card);
     });
+
+    if (els.addClassCard && els.classesGrid.lastElementChild !== els.addClassCard) {
+      els.classesGrid.appendChild(els.addClassCard);
+    }
   }
 
   function escHtml(value) {
@@ -1539,8 +1566,7 @@
     els.togglePassword.addEventListener('click', () => {
       const show = els.password.type === 'password';
       els.password.type = show ? 'text' : 'password';
-      els.togglePassword.querySelector('.eye-open').hidden = !show;
-      els.togglePassword.querySelector('.eye-closed').hidden = show;
+      els.togglePassword.setAttribute('aria-pressed', String(show));
       els.togglePassword.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
       els.password.focus();
     });

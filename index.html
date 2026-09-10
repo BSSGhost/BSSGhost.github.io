@@ -844,9 +844,9 @@
                   placeholder="Entrez le mot de passe"
                   required
                 />
-                <button type="button" id="prof-toggle-password" class="prof-toggle-password" aria-label="Afficher le mot de passe" tabindex="-1">
-                  <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                  <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" hidden><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                <button type="button" id="prof-toggle-password" class="prof-toggle-password" aria-label="Afficher le mot de passe" tabindex="-1" aria-pressed="false">
+                  <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
                 </button>
               </div>
             </div>
@@ -889,17 +889,26 @@
                 <h3 data-i18n="prof_classes_title">Mes classes</h3>
                 <p class="prof-view-subtitle" data-i18n="prof_classes_subtitle">Choisissez une classe, puis ouvrez vos élèves et vos matières.</p>
               </div>
+              <div class="prof-view-head-stats" id="prof-classes-head-stats" aria-live="polite"></div>
             </div>
-            <div id="prof-classes-grid" class="prof-classes-grid"></div>
-            <div class="prof-add-class">
-              <input
-                type="text"
-                id="prof-new-class"
-                maxlength="30"
-                data-i18n-placeholder="prof_new_class_placeholder"
-                placeholder="Nouvelle classe (ex : 2nde S04)"
-              />
-              <button type="button" id="prof-add-class-btn" class="secondary-button" data-i18n="prof_add_class">Ajouter</button>
+            <div id="prof-classes-grid" class="prof-classes-grid">
+              <div class="prof-add-card" id="prof-add-class-card">
+                <form class="prof-add-card-form" data-role="add">
+                  <span class="prof-add-card-plus" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  </span>
+                  <div class="prof-add-card-fields">
+                    <input
+                      type="text"
+                      id="prof-new-class"
+                      maxlength="30"
+                      data-i18n-placeholder="prof_new_class_placeholder"
+                      placeholder="Nouvelle classe (ex : 2nde S04)"
+                    />
+                    <button type="button" id="prof-add-class-btn" class="secondary-button" data-i18n="prof_add_class">Ajouter</button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
 

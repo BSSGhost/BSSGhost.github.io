@@ -4573,17 +4573,50 @@ html.dark-mode .app-tab.is-active {
   position: absolute;
   right: 6px;
   top: 50%;
+  width: 36px;
+  height: 36px;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 0;
   color: var(--gray-400, #9ca3af);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  transition: color 0.15s, background 0.15s;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  transition: color 0.15s, background 0.15s, transform 0.18s ease;
+}
+
+.prof-toggle-password svg {
+  grid-area: 1 / 1;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.prof-toggle-password .eye-open {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.prof-toggle-password .eye-closed {
+  opacity: 0;
+  transform: scale(0.7);
+}
+
+.prof-toggle-password[aria-pressed="true"] .eye-open {
+  opacity: 0;
+  transform: scale(0.7);
+}
+
+.prof-toggle-password[aria-pressed="true"] .eye-closed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.prof-toggle-password:active {
+  transform: translateY(-50%) scale(0.9);
 }
 
 .prof-toggle-password:hover {
@@ -4643,7 +4676,7 @@ html.dark-mode .prof-error {
 
 .prof-console-title {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 14px;
   min-width: 0;
 }
@@ -4653,16 +4686,17 @@ html.dark-mode .prof-error {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
   background: linear-gradient(150deg, var(--blue-800), var(--blue-600));
   color: var(--yellow-400);
+  box-shadow: 0 8px 18px rgba(23, 43, 75, 0.18);
 }
 
 .prof-console-icon svg {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
 }
 
 .prof-console-title h2 {
@@ -5593,15 +5627,52 @@ html.dark-mode .prof-breadcrumb-text {
   width: 100%;
 }
 
-.prof-class-card-icon {
+/* Pastille de série (Vue 1) */
+.prof-class-card-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+
+.prof-class-card-badge.tone-default {
   background: linear-gradient(150deg, var(--blue-800), var(--blue-600));
   color: var(--yellow-400);
+}
+
+.prof-class-card-badge.tone-1 { background: #2563eb; box-shadow: 0 6px 14px rgba(37, 99, 235, 0.32); }
+.prof-class-card-badge.tone-2 { background: #059669; box-shadow: 0 6px 14px rgba(5, 150, 105, 0.32); }
+.prof-class-card-badge.tone-3 { background: #d97706; box-shadow: 0 6px 14px rgba(217, 119, 6, 0.32); }
+.prof-class-card-badge.tone-4 { background: #7c3aed; box-shadow: 0 6px 14px rgba(124, 58, 237, 0.32); }
+.prof-class-card-badge.tone-5 { background: #0e7490; box-shadow: 0 6px 14px rgba(14, 116, 144, 0.32); }
+.prof-class-card-badge.tone-6 { background: #db2777; box-shadow: 0 6px 14px rgba(219, 39, 119, 0.32); }
+.prof-class-card-badge.tone-7 { background: #ea580c; box-shadow: 0 6px 14px rgba(234, 88, 12, 0.32); }
+.prof-class-card-badge.tone-8 { background: #475569; box-shadow: 0 6px 14px rgba(71, 85, 105, 0.32); }
+
+.prof-view-head-stats {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(41, 74, 128, 0.08);
+  border: 1px solid rgba(41, 74, 128, 0.14);
+  color: var(--dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+html.dark-mode .prof-view-head-stats {
+  background: rgba(134, 159, 200, 0.1);
+  border-color: rgba(134, 159, 200, 0.18);
+  color: #e6e9ee;
 }
 
 .prof-class-rename-input {
@@ -5731,20 +5802,69 @@ html.dark-mode .prof-subject-item-avg span {
   box-shadow: 0 13px 24px rgba(23, 43, 75, 0.3);
 }
 
-/* Barre "nouvelle classe" */
-.prof-add-class {
+/* Carte fantôme "Ajouter une classe" (Vue 1) */
+.prof-add-card {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: 14px 16px;
-  background: var(--card-strong);
-  border: 1px dashed rgba(41, 74, 128, 0.25);
-  border-radius: 14px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: rgba(41, 74, 128, 0.035);
+  border: 1.8px dashed rgba(41, 74, 128, 0.32);
+  border-radius: 16px;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
 
-.prof-add-class input {
-  flex: 1 1 220px;
+.prof-add-card:hover,
+.prof-add-card:focus-within {
+  border-color: var(--blue-500);
+  background: rgba(41, 74, 128, 0.07);
+}
+
+html.dark-mode .prof-add-card {
+  background: rgba(134, 159, 200, 0.05);
+  border-color: rgba(160, 174, 196, 0.28);
+}
+
+html.dark-mode .prof-add-card:hover,
+html.dark-mode .prof-add-card:focus-within {
+  border-color: rgba(139, 168, 216, 0.6);
+  background: rgba(134, 159, 200, 0.09);
+}
+
+.prof-add-card-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+}
+
+.prof-add-card-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(41, 74, 128, 0.09);
+  color: var(--blue-700);
+  flex: 0 0 auto;
+}
+
+html.dark-mode .prof-add-card-plus {
+  background: rgba(134, 159, 200, 0.12);
+  color: #9db8e0;
+}
+
+.prof-add-card-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.prof-add-card-fields input {
+  flex: 1 1 160px;
   min-width: 0;
   padding: 10px 12px;
   border: 1.5px solid var(--soft-border);
@@ -5754,13 +5874,13 @@ html.dark-mode .prof-subject-item-avg span {
   background: rgba(255, 255, 255, 0.85);
 }
 
-html.dark-mode .prof-add-class input {
+html.dark-mode .prof-add-card-fields input {
   background: #1a1f2b;
   color: #e6e9ee;
   border-color: rgba(160, 174, 196, 0.18);
 }
 
-.prof-add-class .secondary-button {
+.prof-add-card .secondary-button {
   flex: 0 0 auto;
 }
 
