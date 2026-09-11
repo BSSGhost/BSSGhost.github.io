@@ -876,6 +876,11 @@
             <button type="button" id="prof-logout-btn" class="ghost-button prof-logout-btn" data-i18n="prof_logout_btn">Se déconnecter</button>
           </header>
 
+          <nav class="prof-console-tabs" aria-label="Navigation principale du mode professeur">
+            <button type="button" id="prof-tab-dash" class="prof-console-tab is-active" data-i18n="prof_tab_dash">Tableau de bord</button>
+            <button type="button" id="prof-tab-classes" class="prof-console-tab" data-i18n="prof_tab_classes">Mes classes</button>
+          </nav>
+
           <nav class="prof-breadcrumb" aria-label="Navigation du mode professeur">
             <button type="button" id="prof-back-btn" class="ghost-button prof-back-btn" hidden>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -883,6 +888,73 @@
             </button>
             <span id="prof-breadcrumb-text" class="prof-breadcrumb-text" aria-live="polite"></span>
           </nav>
+
+          <!-- ===== VUE 0 : TABLEAU DE BORD ===== -->
+          <div id="prof-view-dash" class="prof-view" hidden>
+            <div class="prof-view-head prof-dash-welcome">
+              <div>
+                <h3 data-i18n="prof_dash_greeting">Bonjour, Professeur 👋</h3>
+                <p class="prof-view-subtitle" data-i18n="prof_dash_subtitle">Voici un aperçu complet de votre espace : suivez les moyennes, les classements et les élèves à aider.</p>
+              </div>
+              <div class="prof-dash-head-stats" id="prof-dash-head-stats" aria-live="polite"></div>
+            </div>
+
+            <div class="prof-dash-quick" id="prof-dash-quick"></div>
+
+            <div class="prof-dash-main">
+              <div class="prof-dash-col">
+                <section class="prof-panel prof-dash-panel" id="prof-dash-rank-panel">
+                  <div class="prof-panel-head">
+                    <h4 data-i18n="prof_dash_rank_title">Classement des élèves</h4>
+                  </div>
+                  <div class="prof-dash-toolbar">
+                    <div class="select-wrap"><select id="prof-dash-rank-class" aria-label="Classe"></select></div>
+                    <div class="select-wrap"><select id="prof-dash-rank-subject" aria-label="Matière"></select></div>
+                  </div>
+                  <div id="prof-dash-rank-body"></div>
+                </section>
+
+                <section class="prof-panel prof-dash-panel" id="prof-dash-stats-panel">
+                  <div class="prof-panel-head">
+                    <h4 data-i18n="prof_dash_stats_title">Statistiques de la classe</h4>
+                    <div class="select-wrap prof-dash-stats-select"><select id="prof-dash-stats-class" aria-label="Classe"></select></div>
+                  </div>
+                  <div id="prof-dash-stats-body"></div>
+                </section>
+              </div>
+
+              <div class="prof-dash-col">
+                <section class="prof-panel prof-dash-panel" id="prof-dash-students-panel">
+                  <div class="prof-panel-head">
+                    <h4 data-i18n="prof_dash_students_title">Mes élèves</h4>
+                  </div>
+                  <div class="prof-dash-toolbar prof-dash-students-toolbar">
+                    <div class="select-wrap"><select id="prof-dash-filter-class" aria-label="Classe"></select></div>
+                    <div class="select-wrap"><select id="prof-dash-filter-perf" aria-label="Performance"></select></div>
+                    <div class="select-wrap"><select id="prof-dash-filter-rank" aria-label="Rang"></select></div>
+                  </div>
+                  <input type="search" id="prof-dash-search" class="prof-dash-search" data-i18n-placeholder="prof_dash_search_placeholder" placeholder="🔍 Rechercher un élève…" autocomplete="off" />
+                  <div class="table-wrap prof-table-wrap prof-dash-clickable">
+                    <table class="prof-table prof-dash-students-table">
+                      <thead>
+                        <tr>
+                          <th class="prof-col-rank" data-i18n="prof_dash_rank_col_rank">Rang</th>
+                          <th data-i18n="prof_dash_rank_col_student">Élève</th>
+                          <th data-i18n="prof_dash_quick_classes">Classe</th>
+                          <th data-i18n="prof_dash_rank_col_avg">Moyenne</th>
+                          <th data-i18n="prof_dash_rank_col_mention">Mention</th>
+                        </tr>
+                      </thead>
+                      <tbody id="prof-dash-students-tbody"></tbody>
+                    </table>
+                  </div>
+                  <p id="prof-dash-students-empty" class="prof-empty" hidden></p>
+                </section>
+              </div>
+            </div>
+
+            <aside class="prof-dash-profile" id="prof-dash-profile" hidden></aside>
+          </div>
 
           <!-- ===== VUE 1 : MES CLASSES ===== -->
           <div id="prof-view-home" class="prof-view">

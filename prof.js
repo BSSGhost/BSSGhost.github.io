@@ -120,7 +120,28 @@
     editTitle: $('prof-edit-title'),
     editValues: $('prof-edit-values'),
     editCancel: $('prof-edit-cancel'),
-    editSave: $('prof-edit-save')
+    editSave: $('prof-edit-save'),
+
+    viewDash: $('prof-view-dash'),
+    tabDash: $('prof-tab-dash'),
+    tabClasses: $('prof-tab-classes'),
+    dashHeadStats: $('prof-dash-head-stats'),
+    dashQuick: $('prof-dash-quick'),
+    dashRankPanel: $('prof-dash-rank-panel'),
+    dashStatsPanel: $('prof-dash-stats-panel'),
+    dashStudentsPanel: $('prof-dash-students-panel'),
+    dashRankClassSel: $('prof-dash-rank-class'),
+    dashRankSubjectSel: $('prof-dash-rank-subject'),
+    dashRankBody: $('prof-dash-rank-body'),
+    dashStatsClassSel: $('prof-dash-stats-class'),
+    dashStatsBody: $('prof-dash-stats-body'),
+    dashSearch: $('prof-dash-search'),
+    dashFilterClass: $('prof-dash-filter-class'),
+    dashFilterPerf: $('prof-dash-filter-perf'),
+    dashFilterRank: $('prof-dash-filter-rank'),
+    dashStudentsTbody: $('prof-dash-students-tbody'),
+    dashStudentsEmpty: $('prof-dash-students-empty'),
+    dashProfile: $('prof-dash-profile')
   };
 
   /* ------------------ État global ------------------ */
@@ -133,6 +154,10 @@
   let snapshot = null; /* { coefficient, composition, notes } = état sauvegardé de la matière */
   let fileObjectUrl = null;
   let editingStudentId = null; /* élève en cours de modification (formulaire) */
+  let dashRankClass = null; /* classe sélectionnée dans le classement */
+  let dashRankSubject = null; /* matière sélectionnée dans le classement (null = moyenne générale) */
+  let dashStatsClass = null; /* classe sélectionnée dans les statistiques */
+  let dashSelectedStudent = null; /* { classe, id } profil élève affiché */
 
   /* ------------------ Authentification ------------------ */
 
@@ -175,7 +200,7 @@
     if (!els.loginCard || !els.console) return;
     els.loginCard.hidden = true;
     els.console.hidden = false;
-    renderHome();
+    showDash();
   }
 
   /* -------------------- Stockage -------------------- */
@@ -478,9 +503,11 @@
   function showHome() {
     els.backBtn.hidden = true;
     if (els.breadcrumbText) els.breadcrumbText.textContent = '';
+    els.viewDash.hidden = true;
     els.viewHome.hidden = false;
     els.viewClass.hidden = true;
     els.viewSubject.hidden = true;
+    setProfTab('classes');
     renderHome();
   }
 
@@ -488,6 +515,7 @@
     els.backBtn.hidden = false;
     setBackLabel('prof_back_classes');
     if (els.breadcrumbText) els.breadcrumbText.textContent = activeClass;
+    els.viewDash.hidden = true;
     els.viewHome.hidden = true;
     els.viewClass.hidden = false;
     els.viewSubject.hidden = true;
@@ -498,9 +526,761 @@
     els.backBtn.hidden = false;
     setBackLabel('prof_back_class');
     if (els.breadcrumbText) els.breadcrumbText.textContent = `${activeClass} › ${semLabel(activeSem)} › ${showMatiere(activeSubject)}`;
+    els.viewDash.hidden = true;
     els.viewHome.hidden = true;
     els.viewClass.hidden = true;
     els.viewSubject.hidden = false;
+  }
+
+  /* ================= Vue 0 : Tableau de bord ================= */
+
+  const ICON_CLASSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
+  const ICON_AVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17l-5.9 3 1.3-6.6L2.5 8.9l6.6-.8L12 2Z"/></svg>';
+  const ICON_BARS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/></svg>';
+  const ICON_ORDER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>';
+  const ICON_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M10.3 3.8 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+  const ICON_TROPHY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v4a5 5 0 0 1-10 0Z"/><path d="M17 5h2a2 2 0 0 1 2 2c0 2.2-2 4-4 4"/><path d="M7 5H5a2 2 0 0 0-2 2c0 2.2 2 4 4 4"/></svg>';
+
+  function dashClassNames() {
+    return Object.keys(store).filter((name) => store[name] && Array.isArray(store[name].eleves));
+  }
+
+  function dashSemAvg(classeData, sem, eleveId) {
+    const semObj = (classeData && classeData.semestres && classeData.semestres[sem]) || {};
+    let sum = 0;
+    let coef = 0;
+    Object.values(semObj).forEach((record) => {
+      if (!record || !record.coefficient) return;
+      const moy = moyenneFromNotes(record.notes ? record.notes[eleveId] : null, record.composition);
+      if (moy === null) return;
+      sum += moy * record.coefficient;
+      coef += record.coefficient;
+    });
+    return coef ? sum / coef : null;
+  }
+
+  function dashAnnualAvg(classeData, eleveId) {
+    const s1 = dashSemAvg(classeData, 'Semestre1', eleveId);
+    const s2 = dashSemAvg(classeData, 'Semestre2', eleveId);
+    if (s1 === null && s2 === null) return null;
+    if (s1 === null) return s2;
+    if (s2 === null) return s1;
+    return (s1 + s2) / 2;
+  }
+
+  function dashSubjectUnion(classeData) {
+    const set = new Set();
+    SEMESTER_NAMES.forEach((sem) => {
+      const semObj = (classeData && classeData.semestres && classeData.semestres[sem]) || {};
+      Object.keys(semObj).forEach((m) => set.add(m));
+    });
+    return Array.from(set);
+  }
+
+  function dashSubjectRecordAvg(classeData, sem, matiere, eleveId) {
+    const record =
+      classeData && classeData.semestres && classeData.semestres[sem]
+        ? classeData.semestres[sem][matiere]
+        : null;
+    return record
+      ? moyenneFromNotes(record.notes ? record.notes[eleveId] : null, record.composition)
+      : null;
+  }
+
+  function dashSubjectStudentAvg(classeData, matiere, eleveId) {
+    const vals = SEMESTER_NAMES.map((sem) => dashSubjectRecordAvg(classeData, sem, matiere, eleveId)).filter(
+      (v) => v !== null
+    );
+    return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+  }
+
+  function dashSubjectClassAvg(classeData, matiere) {
+    const vals = (Array.isArray(classeData.eleves) ? classeData.eleves : [])
+      .map((e) => dashSubjectStudentAvg(classeData, matiere, e.id))
+      .filter((v) => v !== null);
+    return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+  }
+
+  function classSemSubjectAvg(classeData, sem, matiere) {
+    const record =
+      classeData && classeData.semestres && classeData.semestres[sem]
+        ? classeData.semestres[sem][matiere]
+        : null;
+    if (!record) return null;
+    const vals = (Array.isArray(classeData.eleves) ? classeData.eleves : [])
+      .map((e) => moyenneFromNotes(record.notes ? record.notes[e.id] : null, record.composition))
+      .filter((v) => v !== null);
+    return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+  }
+
+  function dashMedian(values) {
+    if (!values.length) return null;
+    const sorted = values.slice().sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  function dashEvoDelta(after, before) {
+    if (after === null || before === null) return null;
+    if (Math.abs(after - before) < 0.05) return 0;
+    return after > before ? 1 : -1;
+  }
+
+  function dashMentionKey(avg) {
+    if (avg === null) return null;
+    if (avg < 10) return 'prof_dash_mention_insuffisant';
+    if (avg < 12) return 'prof_dash_mention_passable';
+    if (avg < 14) return 'prof_dash_mention_ab';
+    if (avg < 16) return 'prof_dash_mention_bien';
+    if (avg < 18) return 'prof_dash_mention_tb';
+    return 'prof_dash_mention_excellent';
+  }
+
+  function dashMentionCls(key) {
+    const map = {
+      prof_dash_mention_excellent: 'm-excellent',
+      prof_dash_mention_tb: 'm-tb',
+      prof_dash_mention_bien: 'm-bien',
+      prof_dash_mention_ab: 'm-ab',
+      prof_dash_mention_passable: 'm-passable',
+      prof_dash_mention_insuffisant: 'm-insuffisant'
+    };
+    return map[key] || '';
+  }
+
+  function dashEvoHtml(delta) {
+    if (delta === null) return '<span class="prof-dash-evo flat">—</span>';
+    if (delta > 0) return '<span class="prof-dash-evo up">↑</span>';
+    if (delta < 0) return '<span class="prof-dash-evo down">↓</span>';
+    return '<span class="prof-dash-evo flat">→</span>';
+  }
+
+  function dashBarHtml(label, value, max, opts) {
+    const pct = max > 0 ? Math.max(0, Math.min(100, Math.round((value / max) * 100))) : 0;
+    const valueTxt = opts && opts.raw ? opts.raw : value === null ? '—' : value.toFixed(2);
+    const cls = opts && opts.cls ? ` is-${opts.cls}` : '';
+    return `
+      <div class="prof-dash-bar-row">
+        <span class="prof-dash-bar-label">${label}</span>
+        <span class="prof-dash-bar-value">${valueTxt}</span>
+        <span class="prof-dash-bar-track"><span class="prof-dash-bar-fill${cls}" style="width:${pct}%"></span></span>
+      </div>`;
+  }
+
+  function dashBarCls(value) {
+    if (value === null) return '';
+    if (value < 10) return 'low';
+    if (value >= 14) return 'gold';
+    return '';
+  }
+
+  function setProfTab(which) {
+    const isDash = which === 'dash';
+    if (els.tabDash) els.tabDash.classList.toggle('is-active', isDash);
+    if (els.tabClasses) els.tabClasses.classList.toggle('is-active', !isDash);
+  }
+
+  function renderDashHeadStats() {
+    if (!els.dashHeadStats) return;
+    const classes = dashClassNames();
+    let totalStudents = 0;
+    const subjects = new Set();
+    const avgs = [];
+    classes.forEach((name) => {
+      const cd = store[name];
+      if (!cd) return;
+      totalStudents += Array.isArray(cd.eleves) ? cd.eleves.length : 0;
+      dashSubjectUnion(cd).forEach((m) => subjects.add(m));
+      (Array.isArray(cd.eleves) ? cd.eleves : []).forEach((e) => {
+        const avg = dashAnnualAvg(cd, e.id);
+        if (avg !== null) avgs.push(avg);
+      });
+    });
+    const globalAvg = avgs.length ? avgs.reduce((s, v) => s + v, 0) / avgs.length : null;
+
+    const chips = [
+      { icon: ICON_CLASSE, val: String(classes.length), label: t(classes.length > 1 ? 'prof_dash_stat_classes' : 'prof_dash_stat_classes') },
+      { icon: ICON_STUDENTS, val: String(totalStudents), label: t(totalStudents > 1 ? 'prof_dash_stat_students' : 'prof_dash_stat_students'), thick: true },
+      { icon: ICON_SUBJECTS, val: String(subjects.size), label: t('prof_dash_stat_subjects') },
+      { icon: ICON_AVG, val: globalAvg === null ? '—' : globalAvg.toFixed(2), label: t('prof_dash_stat_average') }
+    ];
+    els.dashHeadStats.innerHTML = chips
+      .map(
+        (c) => `<div class="prof-dash-stat-chip">
+          <span class="prof-dash-stat-chip-icon${c.thick ? ' is-thick' : ''}" aria-hidden="true">${c.icon}</span>
+          <span class="prof-dash-stat-chip-body">
+            <strong>${c.val}</strong>
+            <small>${escHtml(c.label)}</small>
+          </span>
+        </div>`
+      )
+      .join('');
+  }
+
+  function renderDashQuick() {
+    if (!els.dashQuick) return;
+    const items = [
+      { act: 'classes', icon: ICON_CLASSE, title: t('prof_dash_quick_classes'), desc: t('prof_dash_quick_classes_desc'), blue: true },
+      { act: 'students', icon: ICON_STUDENTS, title: t('prof_dash_quick_students'), desc: t('prof_dash_quick_students_desc') },
+      { act: 'stats', icon: ICON_BARS, title: t('prof_dash_quick_stats'), desc: t('prof_dash_quick_stats_desc'), blue: true },
+      { act: 'ranking', icon: ICON_ORDER, title: t('prof_dash_quick_ranking'), desc: t('prof_dash_quick_ranking_desc') },
+      { act: 'difficult', icon: ICON_ALERT, title: t('prof_dash_quick_difficult'), desc: t('prof_dash_quick_difficult_desc') },
+      { act: 'top', icon: ICON_TROPHY, title: t('prof_dash_quick_top'), desc: t('prof_dash_quick_top_desc') }
+    ];
+    els.dashQuick.innerHTML = items
+      .map(
+        (item) => `
+          <button type="button" class="prof-dash-quick-card" data-quick="${item.act}" aria-label="${escHtml(item.title)}">
+            <span class="prof-dash-quick-icon${item.blue ? ' is-blue' : ''}" aria-hidden="true">${item.icon}</span>
+            <span class="prof-dash-quick-body">
+              <strong>${escHtml(item.title)}</strong>
+              <small>${escHtml(item.desc)}</small>
+            </span>
+          </button>`
+      )
+      .join('');
+
+    els.dashQuick.querySelectorAll('[data-quick]').forEach((btn) => {
+      btn.addEventListener('click', () => dashQuickAction(btn.dataset.quick));
+    });
+  }
+
+  function dashQuickAction(act) {
+    if (act === 'classes') {
+      showHome();
+      return;
+    }
+    if (act === 'students' || act === 'stats' || act === 'ranking') {
+      const panel = els[act === 'students' ? 'dashStudentsPanel' : act === 'stats' ? 'dashStatsPanel' : 'dashRankPanel'];
+      if (panel) panel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+      return;
+    }
+    if (act === 'difficult' || act === 'top') {
+      if (els.dashFilterClass) els.dashFilterClass.value = '';
+      if (els.dashFilterRank) els.dashFilterRank.value = '';
+      if (els.dashFilterPerf) els.dashFilterPerf.value = act === 'difficult' ? '__low__' : '__high__';
+      if (els.dashSearch) els.dashSearch.value = '';
+      renderDashStudents();
+      if (els.dashStudentsPanel) els.dashStudentsPanel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+    }
+  }
+
+  /* ---------- Classement ---------- */
+
+  function fillRankSelectors() {
+    const names = dashClassNames();
+    const cur = dashRankClass && store[dashRankClass] ? dashRankClass : null;
+    dashRankClass = cur || (names.length ? names[0] : null);
+
+    if (els.dashRankClassSel) {
+      els.dashRankClassSel.innerHTML = names
+        .map((n) => `<option value="${escHtml(n)}">${escHtml(n)}</option>`)
+        .join('');
+      els.dashRankClassSel.value = dashRankClass || '';
+    }
+    fillRankSubjectSelect();
+  }
+
+  function fillRankSubjectSelect() {
+    if (!els.dashRankSubjectSel) return;
+    const cd = dashRankClass && store[dashRankClass] ? store[dashRankClass] : null;
+    const subjects = cd ? dashSubjectUnion(cd) : [];
+    const cur = dashRankSubject;
+    els.dashRankSubjectSel.innerHTML =
+      `<option value="__all__">${escHtml(t('prof_dash_rank_all_subjects'))}</option>` +
+      subjects.map((m) => `<option value="${escHtml(m)}">${escHtml(showMatiere(m))}</option>`).join('');
+    if (cur && subjects.includes(cur)) els.dashRankSubjectSel.value = cur;
+    else {
+      dashRankSubject = null;
+      els.dashRankSubjectSel.value = '__all__';
+    }
+  }
+
+  function renderRanking() {
+    if (!els.dashRankBody) return;
+    if (!dashRankClass) {
+      els.dashRankBody.innerHTML =
+        `<div class="prof-dash-empty">${escHtml(t('prof_dash_empty_classes'))}<div class="prof-dash-empty-cta"><button type="button" class="secondary-button" data-act="create-class">${escHtml(t('prof_dash_empty_btn'))}</button></div></div>`;
+      return;
+    }
+    const cd = store[dashRankClass];
+    const isAll = !dashRankSubject;
+    const rows = (Array.isArray(cd.eleves) ? cd.eleves : [])
+      .map((e) => {
+        let avg;
+        let evo;
+        if (isAll) {
+          const s1 = dashSemAvg(cd, 'Semestre1', e.id);
+          const s2 = dashSemAvg(cd, 'Semestre2', e.id);
+          avg = dashAnnualAvg(cd, e.id);
+          evo = dashEvoDelta(s2, s1);
+        } else {
+          const s1 = dashSubjectRecordAvg(cd, 'Semestre1', dashRankSubject, e.id);
+          const s2 = dashSubjectRecordAvg(cd, 'Semestre2', dashRankSubject, e.id);
+          avg = dashSubjectStudentAvg(cd, dashRankSubject, e.id);
+          evo = dashEvoDelta(s2, s1);
+        }
+        return { id: e.id, nom: e.nom, prenom: e.prenom, avg, evo };
+      })
+      .sort((a, b) => {
+        if (a.avg === null && b.avg === null) return 0;
+        if (a.avg === null) return 1;
+        if (b.avg === null) return -1;
+        return b.avg - a.avg;
+      });
+
+    if (!rows.length) {
+      els.dashRankBody.innerHTML = `<p class="prof-empty">${escHtml(t('prof_dash_empty_rank'))}</p>`;
+      return;
+    }
+
+    const medals = ['🥇', '🥈', '🥉'];
+    const tbody = rows
+      .map((r, i) => {
+        const mentionKey = dashMentionKey(r.avg);
+        const med = r.avg !== null && i < 3 ? `<span class="prof-dash-medal" aria-hidden="true">${medals[i]}</span>&nbsp;` : '';
+        return `
+          <tr data-id="${escHtml(r.id)}" data-classe="${escHtml(dashRankClass)}">
+            <td class="prof-col-rank">${med}${r.avg === null ? '—' : i + 1}</td>
+            <td>${escHtml(getStudentName(r))}</td>
+            <td class="prof-moyenne-cell${r.avg === null ? '' : ' ' + gradeClass(r.avg)}">${r.avg === null ? '—' : r.avg.toFixed(2)}</td>
+            <td>${dashEvoHtml(r.evo)}</td>
+            <td>${mentionKey ? `<span class="prof-dash-mention ${dashMentionCls(mentionKey)}">${escHtml(t(mentionKey))}</span>` : '—'}</td>
+          </tr>`;
+      })
+      .join('');
+
+    els.dashRankBody.innerHTML = `
+      <div class="table-wrap prof-table-wrap prof-dash-clickable">
+        <table class="prof-table prof-dash-rank-table">
+          <thead>
+            <tr>
+              <th class="prof-col-rank">${t('prof_dash_rank_col_rank')}</th>
+              <th>${t('prof_dash_rank_col_student')}</th>
+              <th>${t('prof_dash_rank_col_avg')}</th>
+              <th>${t('prof_dash_rank_col_evolution')}</th>
+              <th>${t('prof_dash_rank_col_mention')}</th>
+            </tr>
+          </thead>
+          <tbody>${tbody}</tbody>
+        </table>
+      </div>`;
+
+    els.dashRankBody.querySelectorAll('tbody tr[data-id]').forEach((tr) => {
+      tr.addEventListener('click', () => {
+        const student = (store[tr.dataset.classe]?.eleves || []).find((s) => s.id === tr.dataset.id);
+        if (student) showDashProfile(tr.dataset.classe, student);
+      });
+    });
+  }
+
+  /* ---------- Statistiques ---------- */
+
+  function fillStatsSelectors() {
+    const names = dashClassNames();
+    const cur = dashStatsClass && store[dashStatsClass] ? dashStatsClass : null;
+    dashStatsClass = cur || (names.length ? names[0] : null);
+    if (els.dashStatsClassSel) {
+      els.dashStatsClassSel.innerHTML = names
+        .map((n) => `<option value="${escHtml(n)}">${escHtml(n)}</option>`)
+        .join('');
+      els.dashStatsClassSel.value = dashStatsClass || '';
+    }
+  }
+
+  function renderStats() {
+    if (!els.dashStatsBody) return;
+    if (!dashStatsClass) {
+      els.dashStatsBody.innerHTML =
+        `<div class="prof-dash-empty">${escHtml(t('prof_dash_empty_classes'))}<div class="prof-dash-empty-cta"><button type="button" class="secondary-button" data-act="create-class">${escHtml(t('prof_dash_empty_btn'))}</button></div></div>`;
+      return;
+    }
+    const cd = store[dashStatsClass];
+    const students = Array.isArray(cd.eleves) ? cd.eleves : [];
+    const values = students.map((e) => dashAnnualAvg(cd, e.id)).filter((v) => v !== null);
+
+    if (!values.length) {
+      els.dashStatsBody.innerHTML = `<div class="prof-dash-empty">${escHtml(t('prof_dash_empty_stats'))}</div>`;
+      return;
+    }
+
+    const nbEval = values.length;
+    const mean = values.reduce((s, v) => s + v, 0) / nbEval;
+    const best = values.reduce((m, v) => Math.max(m, v), -Infinity);
+    const worst = values.reduce((m, v) => Math.min(m, v), Infinity);
+    const median = dashMedian(values);
+    const pass = values.filter((v) => v >= 10).length;
+    const fail = nbEval - pass;
+    const rate = Math.round((pass / nbEval) * 100);
+
+    const summaryBoxes = [
+      { label: t('prof_dash_summary_avg'), value: mean.toFixed(2), cls: mean >= 10 ? 'is-good' : 'is-bad' },
+      { label: t('prof_dash_summary_best'), value: best.toFixed(2), cls: 'is-good' },
+      { label: t('prof_dash_summary_worst'), value: worst.toFixed(2) },
+      { label: t('prof_dash_summary_median'), value: median === null ? '—' : median.toFixed(2) },
+      { label: t('prof_dash_summary_count'), value: String(students.length) },
+      { label: t('prof_dash_summary_pass'), value: String(pass), cls: 'is-good' },
+      { label: t('prof_dash_summary_fail'), value: String(fail), cls: fail ? 'is-bad' : '' },
+      { label: t('prof_dash_summary_success'), value: rate + ' %', cls: rate >= 50 ? 'is-good' : 'is-bad' }
+    ];
+
+    const summaryHtml = `
+      <div class="prof-dash-subsection">
+        <h5>${escHtml(t('prof_dash_summary_title'))}</h5>
+        <div class="prof-dash-stats-summary">
+          ${summaryBoxes
+            .map(
+              (b) =>
+                `<div class="prof-dash-stat-box"><small>${escHtml(b.label)}</small><b${b.cls ? ` class="${b.cls}"` : ''}>${escHtml(b.value)}</b></div>`
+            )
+            .join('')}
+        </div>
+      </div>`;
+
+    const buckets = [
+      { label: '<8', min: 0, max: 8 },
+      { label: '8–10', min: 8, max: 10 },
+      { label: '10–12', min: 10, max: 12 },
+      { label: '12–14', min: 12, max: 14 },
+      { label: '14–16', min: 14, max: 16 },
+      { label: '16–18', min: 16, max: 18 },
+      { label: '18–20', min: 18, max: 20.01 }
+    ];
+    const counts = buckets.map((b) => values.filter((v) => v >= b.min && v < b.max).length);
+    const distMax = counts.reduce((m, v) => Math.max(m, v), 1);
+
+    const distHtml = `
+      <div class="prof-dash-subsection">
+        <h5>${escHtml(t('prof_dash_distribution'))}</h5>
+        <div class="prof-dash-bars">
+          ${counts.map((c, i) => dashBarHtml(buckets[i].label, c, distMax, { raw: String(c) })).join('')}
+        </div>
+      </div>`;
+
+    const subjects = dashSubjectUnion(cd);
+    const subjRows = subjects.map((m) => ({ m, avg: dashSubjectClassAvg(cd, m) })).filter((r) => r.avg !== null);
+
+    const avgHtml = `
+      <div class="prof-dash-subsection">
+        <h5>${escHtml(t('prof_dash_avg_by_subject'))}</h5>
+        <div class="prof-dash-bars">
+          ${subjRows.map((r) => dashBarHtml(escHtml(showMatiere(r.m)), r.avg, 20, { cls: dashBarCls(r.avg) })).join('')}
+        </div>
+      </div>`;
+
+    const compRows = subjects.map((m) => ({
+      m,
+      s1: classSemSubjectAvg(cd, 'Semestre1', m),
+      s2: classSemSubjectAvg(cd, 'Semestre2', m)
+    }));
+
+    const compHtml = `
+      <div class="prof-dash-subsection">
+        <h5>${escHtml(t('prof_dash_comparison'))}</h5>
+        <div class="prof-dash-bars">
+          ${compRows
+            .map((r) => {
+              const s1pct = r.s1 === null ? 0 : Math.round((r.s1 / 20) * 100);
+              const s2pct = r.s2 === null ? 0 : Math.round((r.s2 / 20) * 100);
+              const s1cls = r.s1 !== null && r.s1 < 10 ? ' is-low' : '';
+              const s2cls = r.s2 !== null && r.s2 < 10 ? ' is-low' : '';
+              return `
+                <div class="prof-dash-compare-row">
+                  <span class="prof-dash-bar-label">${escHtml(showMatiere(r.m))}</span>
+                  <span class="prof-dash-bar-value">${r.s1 === null ? '—' : r.s1.toFixed(2)} / ${r.s2 === null ? '—' : r.s2.toFixed(2)}</span>
+                  <span class="prof-dash-bar-track"><span class="prof-dash-bar-fill${s1cls}" style="width:${s1pct}%"></span></span>
+                  <span class="prof-dash-bar-track"><span class="prof-dash-bar-fill is-gold${s2cls}" style="width:${s2pct}%"></span></span>
+                  <span class="prof-dash-compare-legends">
+                    <span><span class="prof-dash-legend-dot" style="background:var(--blue-700)"></span>${escHtml(t('prof_dash_profile_s1'))}</span>
+                    <span><span class="prof-dash-legend-dot" style="background:var(--copper-500)"></span>${escHtml(t('prof_dash_profile_s2'))}</span>
+                  </span>
+                </div>`;
+            })
+            .join('')}
+        </div>
+      </div>`;
+
+    const mentionDefs = [
+      ['prof_dash_mention_excellent', 18],
+      ['prof_dash_mention_tb', 16],
+      ['prof_dash_mention_bien', 14],
+      ['prof_dash_mention_ab', 12],
+      ['prof_dash_mention_passable', 10],
+      ['prof_dash_mention_insuffisant', 0]
+    ];
+    const mentionCounts = mentionDefs.map(([key, min]) => ({
+      key,
+      count: values.filter((v) => v >= min && v < (min === 18 ? 21 : min + 2)).length
+    }));
+    const mentionMax = mentionCounts.reduce((m, x) => Math.max(m, x.count), 1);
+
+    const mentionHtml = `
+      <div class="prof-dash-subsection">
+        <h5>${escHtml(t('prof_dash_mentions'))}</h5>
+        <div class="prof-dash-bars">
+          ${mentionCounts
+            .map((x) => {
+              const cls =
+                dashMentionCls(x.key) === 'm-insuffisant'
+                  ? 'low'
+                  : dashMentionCls(x.key) === 'm-excellent'
+                    ? 'gold'
+                    : '';
+              return dashBarHtml(escHtml(t(x.key)), x.count, mentionMax, { raw: String(x.count), cls });
+            })
+            .join('')}
+        </div>
+      </div>`;
+
+    els.dashStatsBody.innerHTML = summaryHtml + distHtml + avgHtml + compHtml + mentionHtml;
+  }
+
+  /* ---------- Élèves : recherche + filtres ---------- */
+
+  function fillStudentsFilters() {
+    const names = dashClassNames();
+    if (els.dashFilterClass) {
+      els.dashFilterClass.innerHTML =
+        `<option value="">${escHtml(t('prof_dash_filter_all'))}</option>` +
+        names.map((n) => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+    }
+    if (els.dashFilterPerf) {
+      els.dashFilterPerf.innerHTML =
+        `<option value="">${escHtml(t('prof_dash_filter_all'))}</option>` +
+        `<option value="__high__">${escHtml(t('prof_dash_filter_high'))}</option>` +
+        `<option value="__mid__">${escHtml(t('prof_dash_filter_mid'))}</option>` +
+        `<option value="__low__">${escHtml(t('prof_dash_filter_low'))}</option>`;
+    }
+    if (els.dashFilterRank) {
+      els.dashFilterRank.innerHTML =
+        `<option value="">${escHtml(t('prof_dash_filter_all'))}</option>` +
+        `<option value="top5">${escHtml(t('prof_dash_filter_top5'))}</option>` +
+        `<option value="top10">${escHtml(t('prof_dash_filter_top10'))}</option>` +
+        `<option value="improve">${escHtml(t('prof_dash_filter_improve'))}</option>`;
+    }
+  }
+
+  function dashStudentScope() {
+    const src = els.dashFilterClass && els.dashFilterClass.value ? els.dashFilterClass.value : null;
+    const names = src ? [src].filter((n) => store[n]) : dashClassNames();
+    const list = [];
+    names.forEach((classe) => {
+      const cd = store[classe];
+      if (!cd || !Array.isArray(cd.eleves)) return;
+      cd.eleves.forEach((e) => {
+        list.push({
+          id: e.id,
+          nom: e.nom,
+          prenom: e.prenom,
+          classe,
+          avg: dashAnnualAvg(cd, e.id),
+          s1: dashSemAvg(cd, 'Semestre1', e.id),
+          s2: dashSemAvg(cd, 'Semestre2', e.id)
+        });
+      });
+    });
+    list.sort((a, b) => {
+      if (a.avg === null && b.avg === null) return 0;
+      if (a.avg === null) return 1;
+      if (b.avg === null) return -1;
+      return b.avg - a.avg;
+    });
+    const withAvg = list.filter((x) => x.avg !== null);
+    const rankById = {};
+    withAvg.forEach((x, i) => {
+      rankById[x.id] = i + 1;
+    });
+    return { list, rankById, totalWithAvg: withAvg.length };
+  }
+
+  function renderDashStudents() {
+    if (!els.dashStudentsTbody) return;
+    const { list, rankById, totalWithAvg } = dashStudentScope();
+    const query = (els.dashSearch ? els.dashSearch.value : '').trim().toLowerCase();
+    const perf = els.dashFilterPerf ? els.dashFilterPerf.value : '';
+    const rankf = els.dashFilterRank ? els.dashFilterRank.value : '';
+
+    const filtered = list.filter((x) => {
+      if (query && !getStudentName(x).toLowerCase().includes(query)) return false;
+      if (perf && x.avg === null) return false;
+      if (perf === '__high__' && x.avg < 15) return false;
+      if (perf === '__mid__' && !(x.avg >= 10 && x.avg < 15)) return false;
+      if (perf === '__low__' && x.avg >= 10) return false;
+      if (rankf === 'top5' && rankById[x.id] > 5) return false;
+      if (rankf === 'top10' && rankById[x.id] > 10) return false;
+      if (rankf === 'improve' && !(totalWithAvg > 0 && rankById[x.id] >= totalWithAvg - 4)) return false;
+      return true;
+    });
+
+    const tbody = filtered.length
+      ? filtered
+          .map((x) => {
+            const mentionKey = dashMentionKey(x.avg);
+            return `
+              <tr data-id="${escHtml(x.id)}" data-classe="${escHtml(x.classe)}">
+                <td class="prof-col-rank">${x.avg === null ? '—' : rankById[x.id]}</td>
+                <td>${escHtml(getStudentName(x))}</td>
+                <td>${escHtml(x.classe)}</td>
+                <td class="prof-moyenne-cell${x.avg === null ? '' : ' ' + gradeClass(x.avg)}">${x.avg === null ? '—' : x.avg.toFixed(2)}</td>
+                <td>${mentionKey ? `<span class="prof-dash-mention ${dashMentionCls(mentionKey)}">${escHtml(t(mentionKey))}</span>` : '—'}</td>
+              </tr>`;
+          })
+          .join('')
+      : '';
+
+    els.dashStudentsTbody.innerHTML = tbody;
+    if (els.dashStudentsEmpty) {
+      els.dashStudentsEmpty.hidden = filtered.length > 0;
+      els.dashStudentsEmpty.textContent = t('prof_dash_empty_students');
+    }
+
+    els.dashStudentsTbody.querySelectorAll('tr[data-id]').forEach((tr) => {
+      tr.addEventListener('click', () => {
+        const student = (store[tr.dataset.classe]?.eleves || []).find((s) => s.id === tr.dataset.id);
+        if (student) showDashProfile(tr.dataset.classe, student);
+      });
+    });
+  }
+
+  /* ---------- Profil élève ---------- */
+
+  function showDashProfile(classe, student) {
+    if (!els.dashProfile) return;
+    const cd = store[classe];
+    if (!cd) return;
+
+    const s1 = dashSemAvg(cd, 'Semestre1', student.id);
+    const s2 = dashSemAvg(cd, 'Semestre2', student.id);
+    const avg = dashAnnualAvg(cd, student.id);
+
+    const scored = (Array.isArray(cd.eleves) ? cd.eleves : [])
+      .filter((e) => dashAnnualAvg(cd, e.id) !== null)
+      .sort((a, b) => dashAnnualAvg(cd, b.id) - dashAnnualAvg(cd, a.id));
+    const rankPos = avg === null ? 0 : 1 + scored.findIndex((e) => e.id === student.id);
+    const rankTxt = rankPos > 0 ? t('prof_dash_profile_rank_of', { rang: rankPos, total: scored.length }) : '—';
+
+    const subjects = dashSubjectUnion(cd);
+    const rows = subjects
+      .map((m) => {
+        const s1v = dashSubjectRecordAvg(cd, 'Semestre1', m, student.id);
+        const s2v = dashSubjectRecordAvg(cd, 'Semestre2', m, student.id);
+        const vals = [s1v, s2v].filter((v) => v !== null);
+        return { m, s1: s1v, s2: s2v, moy: vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null, evo: dashEvoDelta(s2v, s1v) };
+      })
+      .sort((a, b) => (b.moy === null ? 1 : a.moy === null ? -1 : b.moy - a.moy));
+
+    els.dashProfile.innerHTML = `
+      <div class="prof-dash-profile-head">
+        <div class="prof-dash-profile-name">
+          <h3>${escHtml(getStudentName(student))}</h3>
+          <p>${escHtml(t('prof_dash_quick_classes'))} : ${escHtml(classe)} • ${escHtml(rankTxt)}</p>
+        </div>
+        <button type="button" class="ghost-button prof-dash-profile-close" data-close>${escHtml(t('prof_dash_profile_close'))}</button>
+      </div>
+
+      <div class="prof-dash-profile-grid">
+        ${[
+          ['prof_dash_profile_s1', s1],
+          ['prof_dash_profile_s2', s2],
+          ['prof_dash_profile_year', avg]
+        ]
+          .map(
+            ([k, v]) =>
+              `<div class="prof-dash-profile-cell"><small>${escHtml(t(k))}</small><b>${v === null ? '—' : v.toFixed(2)}</b></div>`
+          )
+          .join('')}
+        <div class="prof-dash-profile-cell"><small>${escHtml(t('prof_dash_rank_col_rank'))}</small><b>${escHtml(rankTxt)}</b></div>
+      </div>
+
+      <div class="prof-dash-subsection">
+        <h5>${escHtml(t('prof_dash_profile_subjects'))}</h5>
+        ${
+          rows.length
+            ? `<div class="table-wrap prof-table-wrap prof-dash-profile-subjects">
+                <table class="prof-table">
+                  <thead><tr>
+                    <th>${escHtml(t('prof_dash_profile_subject'))}</th>
+                    <th>${escHtml(t('prof_dash_profile_s1'))}</th>
+                    <th>${escHtml(t('prof_dash_profile_s2'))}</th>
+                    <th>${escHtml(t('prof_dash_profile_subject_avg'))}</th>
+                    <th>${escHtml(t('prof_dash_profile_subject_evolution'))}</th>
+                  </tr></thead>
+                  <tbody>
+                    ${rows
+                      .map(
+                        (r) => `
+                          <tr>
+                            <td>${escHtml(showMatiere(r.m))}</td>
+                            <td class="prof-moyenne-cell">${r.s1 === null ? '—' : r.s1.toFixed(2)}</td>
+                            <td class="prof-moyenne-cell">${r.s2 === null ? '—' : r.s2.toFixed(2)}</td>
+                            <td class="prof-moyenne-cell">${r.moy === null ? '—' : r.moy.toFixed(2)}</td>
+                            <td>${dashEvoHtml(r.evo)}</td>
+                          </tr>`
+                      )
+                      .join('')}
+                  </tbody>
+                </table>
+              </div>`
+            : `<p class="prof-empty">${escHtml(t('prof_dash_profile_no_subjects'))}</p>`
+        }
+      </div>
+
+      <div class="prof-dash-subsection">
+        <h5>${escHtml(t('prof_dash_profile_evolution_title'))}</h5>
+        <div class="prof-dash-profile-chart">
+          ${rows
+            .map(
+              (r) => `
+                <div class="prof-dash-compare-row">
+                  <span class="prof-dash-bar-label">${escHtml(showMatiere(r.m))}</span>
+                  <span class="prof-dash-bar-value">${r.s1 === null ? '—' : r.s1.toFixed(2)} → ${r.s2 === null ? '—' : r.s2.toFixed(2)}</span>
+                  <span class="prof-dash-bar-track"><span class="prof-dash-bar-fill" style="width:${r.s1 === null ? 0 : Math.round((r.s1 / 20) * 100)}%"></span></span>
+                  <span class="prof-dash-bar-track"><span class="prof-dash-bar-fill is-gold" style="width:${r.s2 === null ? 0 : Math.round((r.s2 / 20) * 100)}%"></span></span>
+                  <span class="prof-dash-compare-legends">
+                    <span><span class="prof-dash-legend-dot" style="background:var(--blue-700)"></span>${escHtml(t('prof_dash_profile_s1'))}</span>
+                    <span><span class="prof-dash-legend-dot" style="background:var(--copper-500)"></span>${escHtml(t('prof_dash_profile_s2'))}</span>
+                  </span>
+                </div>`
+            )
+            .join('')}
+        </div>
+      </div>`;
+
+    els.dashProfile.hidden = false;
+    els.dashProfile.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+    els.dashProfile.querySelector('[data-close]').addEventListener('click', () => {
+      els.dashProfile.hidden = true;
+      dashSelectedStudent = null;
+    });
+    dashSelectedStudent = { classe, id: student.id };
+  }
+
+  function renderDash() {
+    renderDashHeadStats();
+    renderDashQuick();
+    fillRankSelectors();
+    renderRanking();
+    fillStatsSelectors();
+    renderStats();
+    fillStudentsFilters();
+    renderDashStudents();
+    if (dashSelectedStudent) {
+      const cd = store[dashSelectedStudent.classe];
+      const student = cd && Array.isArray(cd.eleves) ? cd.eleves.find((e) => e.id === dashSelectedStudent.id) : null;
+      if (student) showDashProfile(dashSelectedStudent.classe, student);
+      else dashSelectedStudent = null;
+    }
+  }
+
+  function showDash() {
+    els.backBtn.hidden = true;
+    if (els.breadcrumbText) els.breadcrumbText.textContent = '';
+    els.viewDash.hidden = false;
+    els.viewHome.hidden = true;
+    els.viewClass.hidden = true;
+    els.viewSubject.hidden = true;
+    setProfTab('dash');
+    renderDash();
   }
 
   /* ================= Vue 1 : Mes classes ================= */
@@ -1797,6 +2577,41 @@
       setAuthenticated(null);
       showLogin();
     });
+
+    /* ---------- Tableau de bord : navigation + sélecteurs ---------- */
+    if (els.tabDash) els.tabDash.addEventListener('click', showDash);
+    if (els.tabClasses) els.tabClasses.addEventListener('click', showHome);
+
+    if (els.dashRankClassSel) {
+      els.dashRankClassSel.addEventListener('change', () => {
+        dashRankClass = els.dashRankClassSel.value || null;
+        fillRankSubjectSelect();
+        renderRanking();
+      });
+    }
+    if (els.dashRankSubjectSel) {
+      els.dashRankSubjectSel.addEventListener('change', () => {
+        dashRankSubject = els.dashRankSubjectSel.value === '__all__' ? null : els.dashRankSubjectSel.value;
+        renderRanking();
+      });
+    }
+    if (els.dashStatsClassSel) {
+      els.dashStatsClassSel.addEventListener('change', () => {
+        dashStatsClass = els.dashStatsClassSel.value || null;
+        renderStats();
+      });
+    }
+    if (els.dashSearch) els.dashSearch.addEventListener('input', renderDashStudents);
+    if (els.dashFilterClass) els.dashFilterClass.addEventListener('change', renderDashStudents);
+    if (els.dashFilterPerf) els.dashFilterPerf.addEventListener('change', renderDashStudents);
+    if (els.dashFilterRank) els.dashFilterRank.addEventListener('change', renderDashStudents);
+
+    document.addEventListener('click', (e) => {
+      if (e.target instanceof Element && e.target.closest('[data-act="create-class"]')) {
+        showAddClassForm();
+        showHome();
+      }
+    });
   }
 
   if (els.backBtn) {
@@ -1994,7 +2809,7 @@
     } else if (activeClass) {
       renderClassView();
     } else {
-      renderHome();
+      showDash();
     }
   };
 
@@ -2005,7 +2820,7 @@
     if (isAuthenticated()) {
       els.loginCard.hidden = true;
       els.console.hidden = false;
-      if (isActiveScreen) renderHome();
+      if (isActiveScreen) showDash();
     } else {
       els.loginCard.hidden = false;
       els.console.hidden = true;
@@ -2028,8 +2843,11 @@
     store = {};
     activeClass = null;
     activeSubject = null;
+    dashRankClass = null;
+    dashStatsClass = null;
+    dashSelectedStudent = null;
     if (els.editBanner) els.editBanner.hidden = true;
-    if (els.classesGrid) renderHome();
+    if (els.viewDash) showDash();
   };
 
   init();
