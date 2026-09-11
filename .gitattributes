@@ -1,12 +1,54 @@
+########################################################
+# .gitattributes — SUNU MOYENNE
+# Normalise les fins de ligne (LF partout) et protège
+# les fichiers binaires de toute conversion CRLF/LF.
+########################################################
+
+# Règle par défaut : Git détecte le texte et le normalise en LF
 * text=auto eol=lf
 
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.webp binary
-*.gif binary
-*.ico binary
-*.woff binary
-*.woff2 binary
-*.ttf binary
-*.wasm binary
+########################################################
+# Fichiers texte explicites (code, config, docs)
+########################################################
+*.html   text eol=lf
+*.htm    text eol=lf
+*.css    text eol=lf
+*.js     text eol=lf
+*.mjs    text eol=lf
+*.cjs    text eol=lf
+*.json   text eol=lf
+*.md     text eol=lf
+*.txt    text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.xml    text eol=lf
+*.svg    text eol=lf
+.gitignore     text eol=lf
+.gitattributes text eol=lf
+package.json      text eol=lf
+package-lock.json text eol=lf
+
+########################################################
+# Fichiers binaires — jamais touchés par la conversion
+########################################################
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.ico    binary
+*.pdf    binary
+
+# Polices
+*.woff   binary
+*.woff2  binary
+*.ttf    binary
+*.eot    binary
+
+# WebAssembly / OCR (Tesseract) / moteurs tiers
+*.wasm         binary
+*.traineddata  binary
+
+# Archives éventuelles
+*.zip    binary
+*.gz     binary
