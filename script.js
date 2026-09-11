@@ -316,6 +316,8 @@ const translations = {
     prof_ocr_confidence: "Confiance",
     prof_ocr_apply: "Appliquer au tableau",
     prof_ocr_cancel: "Annuler",
+    prof_ocr_overwrite_confirm: "{count} note(s) déjà saisie(s) seraient remplacées par les valeurs scannées. Continuer ?",
+    prof_ocr_overwrite_confirm_ok: "Remplacer",
     prof_ocr_rescan: "Ré-scanner",
     prof_ocr_add_row: "Ajouter une ligne",
     prof_ocr_remove_row: "Supprimer",
@@ -677,6 +679,8 @@ const translations = {
     prof_ocr_confidence: "Confidence",
     prof_ocr_apply: "Apply to table",
     prof_ocr_cancel: "Cancel",
+    prof_ocr_overwrite_confirm: "{count} already-entered grade(s) would be replaced by the scanned values. Continue?",
+    prof_ocr_overwrite_confirm_ok: "Replace",
     prof_ocr_rescan: "Rescan",
     prof_ocr_add_row: "Add a row",
     prof_ocr_remove_row: "Remove",
@@ -3061,7 +3065,7 @@ function generatePDFBulletin() {
 
       doc.addImage(logoImg, 'PNG', 14, 13, logoWidth, logoHeight);
     } catch(e) {
-      console.log("Erreur lors de l'intégration du logo :", e);
+      console.error("Erreur lors de l'intégration du logo :", e);
     }
   }
 
@@ -3237,7 +3241,7 @@ function generatePDFBulletin() {
   }
     return true;
   } catch (e) {
-    console.log('Erreur lors de la génération du PDF :', e);
+    console.error('Erreur lors de la génération du PDF :', e);
     showInfoDialog(t('msg_erreur_generation_pdf'));
     return false;
   }

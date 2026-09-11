@@ -1221,49 +1221,9 @@
     <script>
       (function () {
         if (!('serviceWorker' in navigator)) return;
-
-        var updateRequested = false;
-        var activeReg = null;
-
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js').then(function (reg) {
-            activeReg = reg;
-            reg.addEventListener('updatefound', function () {
-              var newWorker = reg.installing;
-              if (!newWorker) return;
-              newWorker.addEventListener('statechange', function () {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  showUpdateBanner();
-                }
-              });
-            });
-          }).catch(function () {});
-
-          navigator.serviceWorker.addEventListener('controllerchange', function () {
-            if (updateRequested && !sessionStorage.getItem('sunu_sw_reloaded')) {
-              sessionStorage.setItem('sunu_sw_reloaded', '1');
-              window.location.reload();
-            }
-          });
+          navigator.serviceWorker.register('sw.js').catch(function () {});
         });
-
-        function showUpdateBanner() {
-          if (document.getElementById('sw-update-banner')) return;
-          var banner = document.createElement('div');
-          banner.id = 'sw-update-banner';
-          banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1a1a2e;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:center;gap:12px;font-family:inherit;font-size:14px;box-shadow:0 -2px 12px rgba(0,0,0,.3);animation:slideUp .3s ease;';
-          banner.innerHTML = '<span>&#128260; Une nouvelle version de SUNU MOYENNE est disponible.</span><button id="sw-update-btn" style="background:#e63946;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Actualiser</button>';
-          document.body.appendChild(banner);
-          document.getElementById('sw-update-btn').addEventListener('click', function () {
-            updateRequested = true;
-            var target =
-              (activeReg && activeReg.waiting) ||
-              navigator.serviceWorker.controller;
-            if (target) {
-              target.postMessage({ type: 'SKIP_WAITING' });
-            }
-          });
-        }
       })();
     </script>
   </body>

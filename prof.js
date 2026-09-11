@@ -14,7 +14,24 @@
 (function () {
   'use strict';
 
-  const PROF_PASSWORD = 'LYNAQE2026';
+  // Le mot de passe n'est jamais stocké en clair dans le code source : on ne
+  // garde que son empreinte SHA-256, comparée à l'empreinte de la saisie.
+  // ATTENTION : ceci reste une simple barrière visuelle côté client, PAS une
+  // vraie authentification — le site étant hébergé en statique (GitHub Pages),
+  // aucune vérification serveur n'est possible tant qu'un backend n'est pas en place.
+  const PROF_PASSWORD_HASH = '28a0e7d27e35ae88ecdcfb46972a5d5979db3d3ab53b8e12a2bcd01b57bbe696';
+
+  async function hashPassword(value) {
+    try {
+      const data = new TextEncoder().encode(value);
+      const digest = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+    } catch {
+      return null;
+    }
+  }
   const PROF_AUTH_KEY = 'lynaqe_prof_token';
   const PROF_STORE_KEY = 'lynaqe_prof_classes';
   const PROF_ROWS_PREFIX = 'lynaqe_prof_rows';
@@ -1287,6 +1304,9 @@
     if (!Array.isArray(ocrVerifiedRows) || !ocrVerifiedRows.length) return;
     const classeData = store[activeClass] || defaultClass();
     let added = false;
+    const conflicts = []; // { row, field, oldValue, newValue }
+    const safeOps = []; // { type: 'new-row' | 'field', ... } applied immediately
+
     ocrVerifiedRows.forEach((r) => {
       const nom = String(r.nom || '').trim();
       const prenom = String(r.prenom || '').trim();
@@ -1297,25 +1317,62 @@
         classeData.eleves.push(eleve);
         added = true;
       }
-      const row = currentRows.find((x) => x.id === eleve.id);
-      if (row) {
-        row.d1 = r.d1 || '';
-        row.d2 = r.d2 || '';
-        row.compo = r.compo || '';
-      } else {
-        currentRows.push({
-          id: eleve.id,
-          nom: eleve.nom,
-          prenom: eleve.prenom,
-          d1: r.d1 || '',
-          d2: r.d2 || '',
-          compo: r.compo || ''
-        });
+      let row = currentRows.find((x) => x.id === eleve.id);
+      if (!row) {
+        row = { id: eleve.id, nom: eleve.nom, prenom: eleve.prenom, d1: '', d2: '', compo: '' };
+        currentRows.push(row);
       }
+
+      ['d1', 'd2', 'compo'].forEach((field) => {
+        const incoming = r[field] === undefined || r[field] === null ? '' : String(r[field]).trim();
+        const existing = row[field] === undefined || row[field] === null ? '' : String(row[field]).trim();
+
+        if (!incoming) {
+          // Rien lu par l'OCR pour ce champ : on ne touche jamais à une valeur déjà saisie.
+          return;
+        }
+        if (!existing || existing === incoming) {
+          // Pas de perte de données possible : on applique tout de suite.
+          row[field] = r[field];
+          return;
+        }
+        // Une valeur différente existe déjà : on demandera confirmation avant d'écraser.
+        conflicts.push({ row, field, oldValue: existing, newValue: r[field] });
+      });
     });
-    if (added) saveStore();
-    renderRows();
-    updateEditBanner();
+
+    const finish = () => {
+      if (added) saveStore();
+      renderRows();
+      updateEditBanner();
+    };
+
+    if (!conflicts.length) {
+      finish();
+      return;
+    }
+
+    if (typeof confirmModal !== 'undefined' && confirmModal.el) {
+      confirmModal.show({
+        message: t('prof_ocr_overwrite_confirm', { count: conflicts.length }),
+        okLabel: t('prof_ocr_overwrite_confirm_ok'),
+        onConfirm: () => {
+          conflicts.forEach(({ row, field, newValue }) => {
+            row[field] = newValue;
+          });
+          finish();
+        },
+        onDismiss: () => {
+          // L'utilisateur refuse l'écrasement : on garde les valeurs existantes
+          // mais on applique quand même les nouveaux élèves / champs non conflictuels.
+          finish();
+        }
+      });
+    } else {
+      // Pas de modale disponible : par sécurité, on ne prend jamais le risque
+      // d'écraser une note déjà saisie sans confirmation explicite.
+      finish();
+    }
   };
 
   window.getProfContext = function () {
@@ -1570,7 +1627,7 @@
   }
 
   if (els.loginForm) {
-    els.loginForm.addEventListener('submit', (event) => {
+    els.loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       const password = els.password.value;
       if (!password) {
@@ -1578,7 +1635,8 @@
         return;
       }
       els.loginError.hidden = true;
-      if (password === PROF_PASSWORD) {
+      const hash = await hashPassword(password);
+      if (hash && hash === PROF_PASSWORD_HASH) {
         setAuthenticated(PROF_AUTH_VALUE);
         showConsole();
         return;
