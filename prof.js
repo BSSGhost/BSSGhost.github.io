@@ -2022,5 +2022,15 @@
     }
   }
 
+  /* Réinitialisation globale du site : vide aussi les classes professeur
+     déjà mémorisées en mémoire (le localStorage est effacé par script.js). */
+  window.resetProfesseurData = function () {
+    store = {};
+    activeClass = null;
+    activeSubject = null;
+    if (els.editBanner) els.editBanner.hidden = true;
+    if (els.classesGrid) renderHome();
+  };
+
   init();
 })();

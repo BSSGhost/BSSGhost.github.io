@@ -3,6 +3,13 @@
    ========================================================= */
 const LANG_KEY = 'sunu_moyenne_lang';
 
+/* Clés de stockage de l'espace professeur (définies ici aussi pour que la
+   réinitialisation globale du site puisse les purger ; prof.js conserve ses
+   propres constantes dans son IIFE). */
+const PROF_STORE_KEY = 'lynaqe_prof_classes';
+const PROF_AUTH_KEY = 'lynaqe_prof_token';
+const PROF_ROWS_PREFIX = 'lynaqe_prof_rows';
+
 function getLang() {
   try {
     const stored = localStorage.getItem(LANG_KEY);
@@ -162,7 +169,7 @@ const translations = {
     msg_donnees_reinitialisees: "Les données ont été réinitialisées avec succès.",
     confirm_supprimer_matiere: "Supprimer la matière « {matiere} » ?",
     confirm_reset_classe: "Toutes les notes de la classe {classe} (Semestre 1 et 2) seront définitivement supprimées. Voulez-vous continuer ?",
-    confirm_reset_all: "Toutes les données enregistrées (toutes les classes et matières) seront définitivement supprimées. Voulez-vous continuer ?",
+    confirm_reset_all: "Toutes les données enregistrées seront définitivement supprimées : vos notes et matières, vos classes de l'espace professeur, votre profil élève et votre objectif personnel. Voulez-vous continuer ?",
     confirm_modal_title: "Êtes-vous sûr ?",
     confirm_modal_ok: "Confirmer",
     confirm_modal_cancel: "Annuler",
@@ -540,7 +547,7 @@ const translations = {
     msg_donnees_reinitialisees: "The data has been successfully reset.",
     confirm_supprimer_matiere: "Delete the subject \"{matiere}\"?",
     confirm_reset_classe: "All grades for grade level {classe} (Semester 1 and 2) will be permanently deleted. Do you want to continue?",
-    confirm_reset_all: "All saved data (all grade levels and subjects) will be permanently deleted. Do you want to continue?",
+    confirm_reset_all: "All saved data will be permanently deleted: your grades and subjects, your teacher-space classes, your student profile and your personal goal. Do you want to continue?",
     confirm_modal_title: "Are you sure?",
     confirm_modal_ok: "Confirm",
     confirm_modal_cancel: "Cancel",
@@ -3434,10 +3441,23 @@ boutonReset.addEventListener('click', function () {
         localStorage.removeItem(getClassStorageKey(classe, 'Semestre1'));
         localStorage.removeItem(getClassStorageKey(classe, 'Semestre2'));
       } else {
+        /* Réinitialisation complète : on efface toutes les données de
+           l'application (calculatrice élève, objectif personnel, espace
+           professeur) tout en conservant les préférences (langue, thème,
+           son, choix du terminal). */
         Object.keys(localStorage)
           .filter((key) => key.startsWith(`${STORAGE_PREFIX}_`))
           .forEach((key) => localStorage.removeItem(key));
         localStorage.removeItem(STUDENT_PROFILE_KEY);
+        localStorage.removeItem(OBJECTIF_PERSONNEL_KEY);
+        localStorage.removeItem(PROF_STORE_KEY);
+        localStorage.removeItem(PROF_AUTH_KEY);
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith(`${PROF_ROWS_PREFIX}_`))
+          .forEach((key) => localStorage.removeItem(key));
+
+        if (objectifInput) objectifInput.value = '';
+        if (typeof window.resetProfesseurData === 'function') window.resetProfesseurData();
       }
 
       form.reset();
