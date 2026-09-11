@@ -5695,6 +5695,10 @@ html.dark-mode .prof-breadcrumb-text {
   color: #fff;
 }
 
+.prof-class-card-badge svg {
+  display: block;
+}
+
 .prof-class-card-badge.tone-default {
   background: linear-gradient(150deg, var(--blue-800), var(--blue-600));
   color: var(--yellow-400);

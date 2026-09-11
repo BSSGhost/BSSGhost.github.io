@@ -348,6 +348,26 @@
     return null;
   }
 
+  /* Icône associée à chaque niveau scolaire (remplace les initiales dans le
+     badge de la carte classe) : 6e = pousse, 5e = feuille, 4e = livre,
+     3e = cerveau, 2nde = toque de diplômé, 1ère = courbe de progression,
+     Tle = trophée. */
+  const LEVEL_ICON_PATHS = {
+    '6e': '<path d="M12 20V10"/><path d="M12 10C7 10 5 7 5 4c4 0 7 2 7 6Z"/><path d="M12 10c5 0 7-3 7-6-4 0-7 2-7 6Z"/>',
+    '5e': '<path d="M11 20A7 7 0 0 1 4 13c0-5 4-9 9-9h6a1 1 0 0 1 1 1c0 6-4 10-9 10Z"/><path d="M4 20c3-4 6-6 10-8"/>',
+    '4e': '<path d="M2 5.5A2.5 2.5 0 0 1 4.5 3H10a2 2 0 0 1 2 2v15a1.5 1.5 0 0 0-1.5-1.5H2Z"/><path d="M22 5.5A2.5 2.5 0 0 0 19.5 3H14a2 2 0 0 0-2 2v15a1.5 1.5 0 0 1 1.5-1.5H22Z"/>',
+    '3e': '<path d="M12 4c-2 0-3.4 1.4-3.4 3.1 0 .6.2 1.2.5 1.7-1.3.4-2.4 1.6-2.4 3.1 0 1 .5 1.9 1.3 2.5-.3.5-.4 1-.4 1.6 0 1.7 1.4 3 3.1 3 .4 0 .8 0 1.1-.2"/><path d="M12 4c2 0 3.4 1.4 3.4 3.1 0 .6-.2 1.2-.5 1.7 1.3.4 2.4 1.6 2.4 3.1 0 1-.5 1.9-1.3 2.5.3.5.4 1 .4 1.6 0 1.7-1.4 3-3.1 3-.4 0-.8 0-1.1-.2"/><line x1="12" y1="4" x2="12" y2="19"/>',
+    '2nde': '<path d="m22 10-10-5L2 10l10 5 10-5Z"/><path d="M6 12.5V17c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5"/><path d="M22 10v6"/>',
+    '1er': '<polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/>',
+    'Tle': '<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v4a5 5 0 0 1-10 0Z"/><path d="M17 5h2a2 2 0 0 1 2 2c0 2.2-2 4-4 4"/><path d="M7 5H5a2 2 0 0 0-2 2c0 2.2 2 4 4 4"/>'
+  };
+
+  function classIcon(classe) {
+    const level = inferLevel(classe);
+    if (!level || !LEVEL_ICON_PATHS[level]) return null;
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true">${LEVEL_ICON_PATHS[level]}</svg>`;
+  }
+
   function isSameString(a, b) {
     return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
   }
@@ -521,8 +541,9 @@
       body.type = 'button';
       body.className = 'prof-class-card-body';
       body.setAttribute('aria-label', t('prof_class_open') + ' ' + classe);
+      const badgeContent = classIcon(classe) || escHtml(classSerie(classe) || inferLevel(classe) || '—');
       body.innerHTML = `
-        <span class="prof-class-card-badge ${classTone(classe)}" aria-hidden="true">${escHtml(classSerie(classe) || inferLevel(classe) || '—')}</span>
+        <span class="prof-class-card-badge ${classTone(classe)}" aria-hidden="true">${badgeContent}</span>
         <span class="prof-class-card-name" data-name>${escHtml(classe)}</span>
         <span class="prof-class-card-meta">${t('prof_stat_effectifs')} : ${nbStudents} • Matières : ${nbSubjects}</span>
       `;
