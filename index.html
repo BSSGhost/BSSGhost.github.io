@@ -895,19 +895,26 @@
             </div>
             <div id="prof-classes-grid" class="prof-classes-grid">
               <div class="prof-add-card" id="prof-add-class-card">
-                <form class="prof-add-card-form" data-role="add">
+                <div class="prof-add-card-state" id="prof-add-card-promo" data-role="promo">
                   <span class="prof-add-card-plus" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                   </span>
-                  <div class="prof-add-card-fields">
-                    <input
-                      type="text"
-                      id="prof-new-class"
-                      maxlength="30"
-                      data-i18n-placeholder="prof_new_class_placeholder"
-                      placeholder="Nouvelle classe (ex : 2nde S04)"
-                    />
+                  <h4 class="prof-add-card-title" data-i18n="prof_create_class_title">Créer une classe</h4>
+                  <p class="prof-add-card-desc" data-i18n="prof_create_class_desc">Ajoutez une nouvelle classe pour gérer vos élèves.</p>
+                  <button type="button" id="prof-add-card-open" class="prof-add-card-cta" data-i18n="prof_new_class_btn">Nouvelle classe</button>
+                </div>
+                <form class="prof-add-card-form" id="prof-add-class-form" hidden>
+                  <input
+                    type="text"
+                    id="prof-new-class"
+                    maxlength="30"
+                    data-i18n-placeholder="prof_new_class_placeholder"
+                    placeholder="Nouvelle classe (ex : 2nde S04)"
+                    autocomplete="off"
+                  />
+                  <div class="prof-add-card-form-actions">
                     <button type="button" id="prof-add-class-btn" class="secondary-button" data-i18n="prof_add_class">Ajouter</button>
+                    <button type="button" id="prof-add-card-cancel" class="ghost-button" data-i18n="prof_ocr_cancel">Annuler</button>
                   </div>
                 </form>
               </div>

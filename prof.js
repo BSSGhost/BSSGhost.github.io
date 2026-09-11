@@ -63,6 +63,10 @@
     newClass: $('prof-new-class'),
     addClassBtn: $('prof-add-class-btn'),
     addClassCard: $('prof-add-class-card'),
+    addClassPromo: $('prof-add-card-promo'),
+    addClassForm: $('prof-add-class-form'),
+    addClassOpen: $('prof-add-card-open'),
+    addClassCancel: $('prof-add-card-cancel'),
     headStats: $('prof-classes-head-stats'),
 
     classTitle: $('prof-class-name'),
@@ -501,9 +505,57 @@
 
   /* ================= Vue 1 : Mes classes ================= */
 
+  const LEVEL_LABEL_KEYS = {
+    '6e': 'prof_level_6e',
+    '5e': 'prof_level_5e',
+    '4e': 'prof_level_4e',
+    '3e': 'prof_level_3e',
+    '2nde': 'prof_level_2nde',
+    '1er': 'prof_level_1er',
+    'Tle': 'prof_level_tle'
+  };
+
+  const ICON_STUDENTS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+  const ICON_SUBJECTS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>';
+  const ICON_DOTS = '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>';
+  const ICON_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+  const ICON_RENAME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+  const ICON_DELETE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+
   function classSerie(classe) {
     const m = String(classe || '').match(/(?:^|\s)(S\d{1,2})\b/i);
     return m ? m[1].toUpperCase() : null;
+  }
+
+  function levelLabel(classe) {
+    const level = inferLevel(classe);
+    return level && LEVEL_LABEL_KEYS[level] ? t(LEVEL_LABEL_KEYS[level]) : null;
+  }
+
+  /* Indicateur discret de l'état d'avancement de la classe : élèves
+     renseignés (45 %) + matières configurées (55 %). */
+  function classProgress(entry, classe) {
+    const nbStudents = Array.isArray(entry.eleves) ? entry.eleves.length : 0;
+    const nbSubjects =
+      Object.keys(entry.semestres?.Semestre1 || {}).length +
+      Object.keys(entry.semestres?.Semestre2 || {}).length;
+    let expected = 6;
+    const level = inferLevel(classe);
+    if (level && typeof getMatieresPourClasse === 'function') {
+      const list = getMatieresPourClasse(level);
+      if (Array.isArray(list) && list.length) expected = list.length;
+    }
+    const subjectPct = Math.min(1, nbSubjects / expected);
+    const studentPct = Math.min(1, nbStudents / 32);
+    return Math.round(studentPct * 45 + subjectPct * 55);
+  }
+
+  function closeAllClassPopovers() {
+    document.querySelectorAll('.prof-class-popover').forEach((popover) => {
+      popover.hidden = true;
+      const trigger = popover.closest('.prof-class-menu')?.querySelector('.prof-class-menu-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
   }
 
   function renderHome() {
@@ -527,31 +579,94 @@
       const nbSubjects =
         Object.keys(entry.semestres?.Semestre1 || {}).length +
         Object.keys(entry.semestres?.Semestre2 || {}).length;
+      const level = levelLabel(classe);
+      const progress = classProgress(entry, classe);
+      const badgeContent = classIcon(classe) || escHtml(classSerie(classe) || inferLevel(classe) || '—');
 
       const card = document.createElement('article');
       card.className = 'prof-class-card';
-      const body = document.createElement('button');
-      body.type = 'button';
-      body.className = 'prof-class-card-body';
-      body.setAttribute('aria-label', t('prof_class_open') + ' ' + classe);
-      const badgeContent = classIcon(classe) || escHtml(classSerie(classe) || inferLevel(classe) || '—');
-      body.innerHTML = `
+
+      const top = document.createElement('div');
+      top.className = 'prof-class-card-top';
+      top.innerHTML = `
         <span class="prof-class-card-badge tone-default" aria-hidden="true">${badgeContent}</span>
-        <span class="prof-class-card-name" data-name>${escHtml(classe)}</span>
-        <span class="prof-class-card-meta">${t('prof_stat_effectifs')} : ${nbStudents} • Matières : ${nbSubjects}</span>
+        <div class="prof-class-menu">
+          <button type="button" class="prof-class-menu-trigger" aria-label="${t('prof_class_actions_label')}" aria-haspopup="true" aria-expanded="false">
+            ${ICON_DOTS}
+          </button>
+          <div class="prof-class-popover" role="menu" hidden>
+            <button type="button" role="menuitem" data-act="rename">${ICON_RENAME}<span>${t('prof_rename_class')}</span></button>
+            <button type="button" role="menuitem" data-act="delete" class="prof-class-popover-delete">${ICON_DELETE}<span>${t('prof_delete_class')}</span></button>
+          </div>
+        </div>
       `;
-      body.addEventListener('click', () => openClass(classe));
+
+      const center = document.createElement('div');
+      center.className = 'prof-class-card-center';
+      center.innerHTML = `
+        <h4 class="prof-class-card-name" data-name>${escHtml(classe)}</h4>
+        ${level ? `<p class="prof-class-card-level">${level}</p>` : ''}
+      `;
+
+      const stats = document.createElement('div');
+      stats.className = 'prof-class-stats';
+      stats.innerHTML = `
+        <div class="prof-class-stat">
+          <span class="prof-class-stat-icon" aria-hidden="true">${ICON_STUDENTS}</span>
+          <span class="prof-class-stat-value">${nbStudents}</span>
+          <span class="prof-class-stat-label">${t('prof_stat_eleves_label')}</span>
+        </div>
+        <div class="prof-class-stat">
+          <span class="prof-class-stat-icon" aria-hidden="true">${ICON_SUBJECTS}</span>
+          <span class="prof-class-stat-value">${nbSubjects}</span>
+          <span class="prof-class-stat-label">${t('prof_stat_matieres_label')}</span>
+        </div>
+      `;
+
+      const progressEl = document.createElement('div');
+      progressEl.className = 'prof-class-card-progress';
+      progressEl.innerHTML = `
+        <div class="prof-class-card-progress-head">
+          <span>${t('prof_class_progress_label')}</span>
+          <b>${progress}%</b>
+        </div>
+        <div class="prof-class-card-progress-track" role="progressbar" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100" aria-label="${t('prof_class_progress_label')}">
+          <div class="prof-class-card-progress-bar" style="width:${progress}%"></div>
+        </div>
+      `;
 
       const actions = document.createElement('div');
       actions.className = 'prof-class-card-actions';
-      actions.innerHTML = `
-        <button type="button" class="ghost-button" data-act="rename">${t('prof_rename_class')}</button>
-        <button type="button" class="ghost-button prof-danger-text" data-act="delete">${t('prof_delete_class')}</button>
-      `;
-      actions.querySelector('[data-act="rename"]').addEventListener('click', () => startRenameClass(card, classe));
-      actions.querySelector('[data-act="delete"]').addEventListener('click', () => deleteClass(classe));
+      const openBtn = document.createElement('button');
+      openBtn.type = 'button';
+      openBtn.className = 'prof-class-card-btn';
+      openBtn.setAttribute('aria-label', `${t('prof_class_open')} ${classe}`);
+      openBtn.innerHTML = `<span>${t('prof_open_class_btn')}</span> ${ICON_OPEN}`;
+      openBtn.addEventListener('click', () => openClass(classe));
+      actions.appendChild(openBtn);
 
-      card.append(body, actions);
+      const trigger = top.querySelector('.prof-class-menu-trigger');
+      const popover = top.querySelector('.prof-class-popover');
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const willOpen = popover.hidden;
+        closeAllClassPopovers();
+        if (willOpen) {
+          popover.hidden = false;
+          trigger.setAttribute('aria-expanded', 'true');
+        }
+      });
+      popover.querySelector('[data-act="rename"]').addEventListener('click', () => {
+        closeAllClassPopovers();
+        startRenameClass(card, classe);
+      });
+      popover.querySelector('[data-act="delete"]').addEventListener('click', () => {
+        closeAllClassPopovers();
+        deleteClass(classe);
+      });
+
+      card.append(top, center, stats, progressEl, actions);
       els.classesGrid.appendChild(card);
     });
 
@@ -628,7 +743,23 @@
     store[name] = defaultClass();
     saveStore();
     els.newClass.value = '';
+    showAddClassPromo();
     renderHome();
+  }
+
+  function showAddClassForm() {
+    if (!els.addClassPromo || !els.addClassForm) return;
+    els.addClassPromo.hidden = true;
+    els.addClassForm.hidden = false;
+    requestAnimationFrame(() => {
+      if (els.newClass) els.newClass.focus();
+    });
+  }
+
+  function showAddClassPromo() {
+    if (!els.addClassPromo || !els.addClassForm) return;
+    els.addClassForm.hidden = true;
+    els.addClassPromo.hidden = false;
   }
 
   function deleteClass(classe) {
@@ -1696,6 +1827,29 @@
       if (e.key === 'Enter') addClass();
     });
   }
+
+  if (els.addClassOpen) {
+    els.addClassOpen.addEventListener('click', showAddClassForm);
+  }
+  if (els.addClassCancel) {
+    els.addClassCancel.addEventListener('click', showAddClassPromo);
+  }
+  if (els.addClassForm) {
+    els.addClassForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      addClass();
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!(target instanceof Element) || !target.closest('.prof-class-menu')) {
+      closeAllClassPopovers();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllClassPopovers();
+  });
 
   if (els.studentAdd) {
     els.studentAdd.addEventListener('click', () => {
