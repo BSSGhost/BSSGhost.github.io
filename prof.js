@@ -506,13 +506,6 @@
     return m ? m[1].toUpperCase() : null;
   }
 
-  function classTone(classe) {
-    const serie = classSerie(classe);
-    if (!serie) return 'tone-default';
-    const n = parseInt(serie.slice(1), 10) || 0;
-    return n ? 'tone-' + ((n % 8) || 8) : 'tone-default';
-  }
-
   function renderHome() {
     if (!els.classesGrid) return;
     els.classesGrid.querySelectorAll('.prof-class-card').forEach((node) => node.remove());
@@ -543,7 +536,7 @@
       body.setAttribute('aria-label', t('prof_class_open') + ' ' + classe);
       const badgeContent = classIcon(classe) || escHtml(classSerie(classe) || inferLevel(classe) || '—');
       body.innerHTML = `
-        <span class="prof-class-card-badge ${classTone(classe)}" aria-hidden="true">${badgeContent}</span>
+        <span class="prof-class-card-badge tone-default" aria-hidden="true">${badgeContent}</span>
         <span class="prof-class-card-name" data-name>${escHtml(classe)}</span>
         <span class="prof-class-card-meta">${t('prof_stat_effectifs')} : ${nbStudents} • Matières : ${nbSubjects}</span>
       `;
