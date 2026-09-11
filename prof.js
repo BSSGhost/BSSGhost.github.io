@@ -108,7 +108,6 @@
     fileRemove: $('prof-file-remove'),
     tbody: $('prof-tbody'),
     empty: $('prof-empty'),
-    addStudent: $('prof-add-student'),
     thComposition: $('prof-th-composition'),
     summary: $('prof-summary'),
     summaryStats: $('prof-summary-stats'),
@@ -2086,22 +2085,6 @@
     updateSummary();
   }
 
-  function addStudent() {
-    const eleves = store[activeClass].eleves;
-    const id = newId();
-    eleves.push({ id, nom: '', prenom: '' });
-    saveStore();
-    currentRows.push({ id, nom: '', prenom: '', d1: '', d2: '', compo: '' });
-    renderRows();
-    updateEditBanner();
-    const lastRow = els.tbody.lastElementChild;
-    const noteInput = lastRow ? lastRow.querySelector('.prof-note') : null;
-    if (noteInput) {
-      lastRow.scrollIntoView({ block: 'nearest', inline: 'end', behavior: 'smooth' });
-      window.setTimeout(() => noteInput.focus({ preventScroll: true }), 60);
-    }
-  }
-
   /* ---------- Résumé & exports ---------- */
 
   function updateSummary() {
@@ -2784,10 +2767,6 @@
     clearFilePreview();
     els.fileInput.value = '';
   });
-
-  if (els.addStudent) {
-    els.addStudent.addEventListener('click', addStudent);
-  }
 
   if (els.exportPdf) els.exportPdf.addEventListener('click', exportPdf);
   if (els.exportCsv) els.exportCsv.addEventListener('click', exportCsv);
