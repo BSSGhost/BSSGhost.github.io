@@ -2072,6 +2072,7 @@
       d2Cell.appendChild(createNoteInput(row, 'd2'));
 
       const compoCell = document.createElement('td');
+      compoCell.hidden = !showCompo;
       compoCell.appendChild(createNoteInput(row, 'compo'));
 
       const avgCell = document.createElement('td');
