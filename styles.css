@@ -7351,6 +7351,7 @@ html.dark-mode .prof-dash-subsection h5 {
 }
 
 .prof-dash-bar-track {
+  display: block;
   grid-column: 1 / -1;
   height: 10px;
   border-radius: 99px;
@@ -7359,6 +7360,7 @@ html.dark-mode .prof-dash-subsection h5 {
 }
 
 .prof-dash-bar-fill {
+  display: block;
   height: 100%;
   border-radius: 99px;
   background: linear-gradient(90deg, var(--blue-700), var(--blue-500));
