@@ -3603,6 +3603,11 @@ boutonReset.addEventListener('click', function () {
         localStorage.removeItem(getClassStorageKey(classe, 'Semestre1'));
         localStorage.removeItem(getClassStorageKey(classe, 'Semestre2'));
       } else {
+        /* Réinitialisation complète : l'objectif personnel et le
+           bulletin déjà généré étant des données de l'élève, ils sont
+           effacés au même titre que les notes. */
+        localStorage.removeItem(OBJECTIF_PERSONNEL_KEY);
+        localStorage.removeItem(getClassStorageKey(classe, 'Bulletin'), true);
         /* Réinitialisation complète : on efface toutes les données de
            l'application (calculatrice élève, objectif personnel, espace
            professeur) tout en conservant les préférences (langue, thème,
@@ -3618,9 +3623,16 @@ boutonReset.addEventListener('click', function () {
           .filter((key) => key.startsWith(`${PROF_ROWS_PREFIX}_`))
           .forEach((key) => localStorage.removeItem(key));
 
-        if (objectifInput) objectifInput.value = '';
         if (typeof window.resetProfesseurData === 'function') window.resetProfesseurData();
       }
+
+      /* Quel que soit le mode de réinitialisation (une classe ou tout),
+         l'objectif personnel de l'élève et la bannière "bulletin prêt"
+         sont des données éphémères : globales, elles ne doivent pas
+         survivre à l'effacement des notes. */
+      localStorage.removeItem(OBJECTIF_PERSONNEL_KEY);
+      if (objectifInput) objectifInput.value = '';
+      if (bulletinReadyBanner) bulletinReadyBanner.hidden = true;
 
       form.reset();
       document.querySelectorAll('.note-input').forEach((input) => {
