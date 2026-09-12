@@ -1,4 +1,4 @@
-/* =========================================================
+﻿/* =========================================================
    SYSTEME DE TRADUCTION FR / EN
    ========================================================= */
 const LANG_KEY = 'sunu_moyenne_lang';
@@ -213,6 +213,12 @@ const translations = {
     advisor_objectif_personnel_atteint: "Bravo, tu as déjà atteint ton objectif personnel de {objectif}/20 (moyenne actuelle : {value}/20) ! Continue sur cette lancée pour viser encore plus haut.",
     advisor_leviers_with_subjects: "augmente principalement tes résultats en {list}.",
     advisor_leviers_none: "continue à consolider l'ensemble de tes matières.",
+    advisor_evolution_prefix: "Évolution : {delta} depuis le semestre précédent.",
+    advisor_evolution_empty: "Renseigne les deux semestres pour observer ton évolution.",
+    advisor_conseil_progression: "Une progression de {delta} point est observée.",
+    advisor_conseil_baisse: "Une baisse de {delta} point est observée.",
+    advisor_conseil_stable: "Ta moyenne est stable.",
+    advisor_title_analyse: "Analyse de {prenom}",
 
     objectif_label: "Mon objectif de moyenne",
     objectif_placeholder: "Ex : 14",
@@ -666,6 +672,12 @@ const translations = {
     advisor_objectif_personnel_atteint: "Well done, you've already reached your personal goal of {objectif}/20 (current average: {value}/20)! Keep it up and aim even higher.",
     advisor_leviers_with_subjects: "mainly improve your results in {list}.",
     advisor_leviers_none: "keep consolidating all your subjects.",
+    advisor_evolution_prefix: "Trend: {delta} from the previous semester.",
+    advisor_evolution_empty: "Fill in both semesters to track your trend.",
+    advisor_conseil_progression: "An improvement of {delta} point is observed.",
+    advisor_conseil_baisse: "A drop of {delta} point is observed.",
+    advisor_conseil_stable: "Your average is stable.",
+    advisor_title_analyse: "Analysis of {prenom}",
 
     objectif_label: "My target average",
     objectif_placeholder: "E.g. 14",
