@@ -1854,7 +1854,12 @@
       return;
     }
     const coef = Number(els.subjectCoef.value);
-    const composition = true;
+    // Composition désactivée par défaut : la plupart du temps le prof saisit
+    // d'abord les devoirs (D1/D2) et la moyenne doit s'afficher tout de suite
+    // (jauges du tableau de bord incluses), sans attendre la composition qui
+    // arrive en général plus tard dans le semestre. Le prof peut activer
+    // "Composition : oui" dans l'éditeur de matière dès qu'il a cette note.
+    const composition = false;
     setSubjectRecord(activeClass, activeSem, matiere, {
       coefficient: Number.isInteger(coef) && coef >= 1 && coef <= 8 ? coef : 1,
       composition,
