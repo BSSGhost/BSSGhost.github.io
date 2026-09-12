@@ -47,6 +47,7 @@ package-lock.json text eol=lf
 
 # WebAssembly / OCR (Tesseract) / moteurs tiers
 *.wasm         binary
+*.wasm.js      binary
 *.traineddata  binary
 
 # Archives éventuelles

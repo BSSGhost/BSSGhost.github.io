@@ -2605,7 +2605,7 @@
         if (pending && typeof confirmModal !== 'undefined' && confirmModal.el) {
           confirmModal.show({
             message: t('prof_edit_banner_title', { matiere: showMatiere(activeSubject) }),
-            okLabel: t('prof_edit_annuler'),
+            okLabel: t('prof_leave_confirm_ok'),
             danger: true,
             onConfirm: () => showClassView()
           });
