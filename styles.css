@@ -4743,6 +4743,13 @@ html.dark-mode .prof-error {
   flex: 0 0 auto;
 }
 
+.prof-console-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .prof-settings {
   display: flex;
   flex-direction: column;
@@ -7920,6 +7927,33 @@ html.dark-mode .dash-progress-head b { color: var(--yellow-400); }
 .profil-fiche-cell .mention-badge {
   display: inline-block;
   align-self: flex-start;
+}
+
+/* En mode clair, les mentions sur la carte "Ma fiche" doivent rester
+   lisibles : les teintes claires des badges sont pensées pour les fonds
+   sombres (barre de résultat), on les assombrit donc ici uniquement. */
+html:not(.dark-mode) .profil-fiche-cell .mention-badge {
+  border: 1px solid rgba(27, 42, 66, 0.12);
+}
+
+html:not(.dark-mode) .profil-fiche-cell .mention-badge.mention-insuffisant {
+  color: #b42d2d;
+}
+
+html:not(.dark-mode) .profil-fiche-cell .mention-badge.mention-peux-mieux-faire {
+  color: #7d6417;
+}
+
+html:not(.dark-mode) .profil-fiche-cell .mention-badge.mention-bon-travail {
+  color: #1f7a53;
+}
+
+html:not(.dark-mode) .profil-fiche-cell .mention-badge.mention-tres-bon-travail {
+  color: #0f6e45;
+}
+
+html:not(.dark-mode) .profil-fiche-cell .mention-badge.mention-excellent-travail {
+  color: #7d6417;
 }
 
 .profil-fiche-na {

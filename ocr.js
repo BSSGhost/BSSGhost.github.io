@@ -993,6 +993,43 @@
     });
   }
 
+  /* Extrait le texte sélectionnable d'un PDF (bornes de texte pdf.js).
+     Sert à l'import d'une liste d'élèves (ou de notes) en mode professeur :
+     chaque ligne est reconstituée en regroupant les mots par coordonnée Y. */
+  async function extractPdfText(pdfFile) {
+    await loadPdfJs();
+    const pdfjsLib = window.pdfjsLib;
+    if (!pdfjsLib) throw new Error('pdf.js non disponible');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    const allLines = [];
+    for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+      const page = await pdf.getPage(pageNo);
+      const content = await page.getTextContent();
+      const items = content.items
+        .filter((item) => item.str && String(item.str).trim() !== '')
+        .map((item) => ({ y: item.transform[5], x: item.transform[4], text: String(item.str) }));
+
+      const lines = [];
+      let currentY = null;
+      let lineItems = [];
+      items.sort((a, b) => b.y - a.y || a.x - b.x);
+      for (const it of items) {
+        if (currentY !== null && Math.abs(it.y - currentY) > 3) {
+          lines.push(lineItems.sort((a, b) => a.x - b.x).map((i) => i.text).join(' '));
+          lineItems = [];
+        }
+        currentY = it.y;
+        lineItems.push(it);
+      }
+      if (lineItems.length) lines.push(lineItems.sort((a, b) => a.x - b.x).map((i) => i.text).join(' '));
+      if (lines.length) allLines.push(lines.join('\n'));
+    }
+    return allLines.join('\n');
+  }
+
   /* ---------- Scan principal ---------- */
 
   async function onScanClick() {
@@ -1173,6 +1210,7 @@
   /* ---------- Exposition globale ---------- */
 
   window.startOCRScan = onScanClick;
+  window.extractPdfText = extractPdfText;
 
   /* ---------- Initialisation ---------- */
 

@@ -406,6 +406,33 @@
       refreshProfilFiche();
       if (typeof showInfoDialog === 'function') showInfoDialog(t('profil_saved'));
     });
+
+    const deleteBtn = el('profil-delete-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => {
+        if (typeof confirmModal === 'undefined' || !confirmModal.el) return;
+        confirmModal.show({
+          message: t('profil_delete_confirm'),
+          danger: true,
+          onConfirm: () => {
+            saveStudentProfile({
+              nom: '',
+              prenom: '',
+              classe: '',
+              etablissement: '',
+              numeroEleve: ''
+            });
+            if (getProfile().photo) saveStudentProfile({ photo: null });
+            pendingPhoto = null;
+            updatePhotoUI();
+            populateProfilForm();
+            syncCalcForm('', '', '');
+            refreshProfilFiche();
+            if (typeof showInfoDialog === 'function') showInfoDialog(t('profil_deleted'));
+          }
+        });
+      });
+    }
   }
 
   /* Synchronise le formulaire du calculateur avec le profil enregistré,

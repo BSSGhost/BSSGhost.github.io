@@ -920,6 +920,7 @@
 
               <div class="button-row">
                 <button type="submit" id="profil-save-btn" class="primary-button" data-i18n="btn_profil_save">Enregistrer le profil</button>
+                <button type="button" id="profil-delete-btn" class="ghost-button prof-danger-text" data-i18n="profil_delete_btn">Supprimer mon profil</button>
               </div>
             </form>
 
@@ -957,7 +958,7 @@
                   placeholder="Entrez le mot de passe"
                   required
                 />
-                <button type="button" id="prof-toggle-password" class="prof-toggle-password" aria-label="Afficher le mot de passe" tabindex="-1" aria-pressed="false">
+                <button type="button" id="prof-toggle-password" class="prof-toggle-password" data-i18n-aria-label="prof_password_show" aria-label="Afficher le mot de passe" tabindex="-1" aria-pressed="false">
                   <svg class="eye-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path class="eye-lid" d="M2 12C2 12 7 5 12 5C17 5 22 12 22 12C22 12 17 19 12 19C7 19 2 12 2 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                     <circle class="eye-pupil" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
@@ -986,15 +987,18 @@
                 <p data-i18n="prof_console_subtitle">Gérez vos classes, vos élèves et saisissez les notes de chaque matière. Les moyennes se calculent instantanément.</p>
               </div>
             </div>
-            <button type="button" id="prof-logout-btn" class="ghost-button prof-logout-btn" data-i18n="prof_logout_btn">Se déconnecter</button>
+            <div class="prof-console-header-actions">
+              <button type="button" id="prof-reset-data-btn" class="ghost-button prof-logout-btn prof-danger-text" data-i18n="prof_reset_data_btn">Réinitialiser les données</button>
+              <button type="button" id="prof-logout-btn" class="ghost-button prof-logout-btn" data-i18n="prof_logout_btn">Se déconnecter</button>
+            </div>
           </header>
 
-          <nav class="prof-console-tabs" aria-label="Navigation principale du mode professeur">
+          <nav class="prof-console-tabs" data-i18n-aria-label="prof_nav_main_label" aria-label="Navigation principale du mode professeur">
             <button type="button" id="prof-tab-dash" class="prof-console-tab is-active" data-i18n="prof_tab_dash">Tableau de bord</button>
             <button type="button" id="prof-tab-classes" class="prof-console-tab" data-i18n="prof_tab_classes">Mes classes</button>
           </nav>
 
-          <nav class="prof-breadcrumb" aria-label="Navigation du mode professeur">
+          <nav class="prof-breadcrumb" data-i18n-aria-label="prof_nav_breadcrumb_label" aria-label="Navigation du mode professeur">
             <button type="button" id="prof-back-btn" class="ghost-button prof-back-btn" hidden>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
               <span id="prof-back-label" data-i18n="prof_back_classes">Mes classes</span>
@@ -1021,8 +1025,8 @@
                     <h4 data-i18n="prof_dash_rank_title">Classement des élèves</h4>
                   </div>
                   <div class="prof-dash-toolbar">
-                    <div class="select-wrap"><select id="prof-dash-rank-class" aria-label="Classe"></select></div>
-                    <div class="select-wrap"><select id="prof-dash-rank-subject" aria-label="Matière"></select></div>
+                    <div class="select-wrap"><select id="prof-dash-rank-class" data-i18n-aria-label="prof_filter_class_label" aria-label="Classe"></select></div>
+                    <div class="select-wrap"><select id="prof-dash-rank-subject" data-i18n-aria-label="prof_filter_subject_label" aria-label="Matière"></select></div>
                   </div>
                   <div id="prof-dash-rank-body"></div>
                 </section>
@@ -1030,7 +1034,7 @@
                 <section class="prof-panel prof-dash-panel" id="prof-dash-stats-panel">
                   <div class="prof-panel-head">
                     <h4 data-i18n="prof_dash_stats_title">Statistiques de la classe</h4>
-                    <div class="select-wrap prof-dash-stats-select"><select id="prof-dash-stats-class" aria-label="Classe"></select></div>
+                    <div class="select-wrap prof-dash-stats-select"><select id="prof-dash-stats-class" data-i18n-aria-label="prof_filter_class_label" aria-label="Classe"></select></div>
                   </div>
                   <div id="prof-dash-stats-body"></div>
                 </section>
@@ -1042,9 +1046,9 @@
                     <h4 data-i18n="prof_dash_students_title">Mes élèves</h4>
                   </div>
                   <div class="prof-dash-toolbar prof-dash-students-toolbar">
-                    <div class="select-wrap"><select id="prof-dash-filter-class" aria-label="Classe"></select></div>
-                    <div class="select-wrap"><select id="prof-dash-filter-perf" aria-label="Performance"></select></div>
-                    <div class="select-wrap"><select id="prof-dash-filter-rank" aria-label="Rang"></select></div>
+                    <div class="select-wrap"><select id="prof-dash-filter-class" data-i18n-aria-label="prof_filter_class_label" aria-label="Classe"></select></div>
+                    <div class="select-wrap"><select id="prof-dash-filter-perf" data-i18n-aria-label="prof_dash_filter_perf" aria-label="Performance"></select></div>
+                    <div class="select-wrap"><select id="prof-dash-filter-rank" data-i18n-aria-label="prof_filter_rank_label" aria-label="Rang"></select></div>
                   </div>
                   <input type="search" id="prof-dash-search" class="prof-dash-search" data-i18n-placeholder="prof_dash_search_placeholder" placeholder="🔍 Rechercher un élève…" autocomplete="off" />
                   <div class="table-wrap prof-table-wrap prof-dash-clickable">
@@ -1114,7 +1118,7 @@
                 <h3 id="prof-class-name"></h3>
                 <p class="prof-view-subtitle" id="prof-class-meta"></p>
               </div>
-              <div class="prof-semester-tabs" id="prof-semester-tabs" role="tablist" aria-label="Semestre"></div>
+              <div class="prof-semester-tabs" id="prof-semester-tabs" role="tablist" data-i18n-aria-label="label_semestre_aria" aria-label="Semestre"></div>
             </div>
 
             <div class="prof-class-grid">
@@ -1258,7 +1262,7 @@
 
               <fieldset class="field-group">
                 <legend data-i18n="legend_composition">La matière comporte-t-elle une composition ?</legend>
-                <div class="choice-group" role="radiogroup" aria-label="Composition disponible">
+                <div class="choice-group" role="radiogroup" data-i18n-aria-label="label_composition_dispo" aria-label="Composition disponible">
                   <label class="choice-option">
                     <input type="radio" name="prof-composition" value="oui" checked />
                     <span data-i18n="radio_oui">Oui</span>

@@ -50,6 +50,7 @@
     loginError: $('prof-login-error'),
     console: $('prof-console'),
     logoutBtn: $('prof-logout-btn'),
+    resetDataBtn: $('prof-reset-data-btn'),
 
     backBtn: $('prof-back-btn'),
     backLabel: $('prof-back-label'),
@@ -2524,9 +2525,10 @@
   }
 
   /* =========================================================
-     IMPORT MASSIF — ÉLÈVES (CSV / XLSX) + NOTES (CSV)
+     IMPORT MASSIF — ÉLÈVES (CSV / XLSX / PDF) + NOTES (CSV / XLSX / PDF)
      Parsing 100 % côté client (PWA hors-ligne) : CSV lisible
-     directement, XLSX décompressé via DecompressionStream.
+     directement, XLSX décompressé via DecompressionStream, PDF
+     via l'extraction de texte de ocr.js (pdf.js).
      ========================================================= */
 
   function parseDelimitedCSV(text) {
@@ -2665,9 +2667,36 @@
     return rows;
   }
 
+  /* Lecteur PDF minimal : on extrait le texte sélectionnable du fichier
+     (via ocr.js) puis on le découpe en lignes de cellules exploitables. */
+  async function parsePdfFile(file) {
+    if (typeof window.extractPdfText !== 'function') {
+      throw new Error('Extraction PDF indisponible');
+    }
+    const text = await window.extractPdfText(file);
+    const lines = String(text || '').split(/\r\n|\r|\n/);
+    const rows = [];
+    lines.forEach((line) => {
+      let trimmed = String(line || '').trim();
+      if (!trimmed) return;
+      /* Supprime un éventuel numéro de ligne en début de texte ("1. ", "1)"). */
+      trimmed = trimmed.replace(/^\d+[.)]\s*/, '');
+      if (!trimmed) return;
+      const cells = trimmed.split(/\t|;|\|/);
+      const cleaned = cells.map((c) => String(c || '').trim());
+      if (cleaned.every((c) => c === '')) return;
+      /* Si la ligne n'a qu'une seule colonne (nom vide), on tente malgré
+         tout de la garder : buildStudentsList fera le découpage nom/prénom. */
+      rows.push(cleaned);
+    });
+    return rows;
+  }
+
   async function readTabularFile(file) {
     const isXlsx = /\.xlsx$/i.test(file.name) || file.type.includes('spreadsheetml');
     if (isXlsx) return parseXlsxFile(file);
+    const isPdf = /\.pdf$/i.test(file.name) || file.type === 'application/pdf';
+    if (isPdf) return parsePdfFile(file);
     const text = await file.text();
     return parseDelimitedCSV(text);
   }
@@ -2745,7 +2774,7 @@
             <span>${escHtml(t('prof_import_dropzone'))}</span>
             <small>${escHtml(t('prof_import_format_label'))}</small>
           </label>
-          <input type="file" id="prof-import-class-file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden />
+          <input type="file" id="prof-import-class-file" accept=".csv,.xlsx,.pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf" hidden />
         </div>
         <div class="prof-import-preview" id="prof-import-class-preview" hidden>
           <p class="prof-import-preview-info" id="prof-import-class-info"></p>
@@ -2969,7 +2998,7 @@
             <span>${escHtml(t('prof_import_dropzone'))}</span>
             <small>${escHtml(t('prof_import_format_label'))}</small>
           </label>
-          <input type="file" id="prof-import-notes-file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden />
+          <input type="file" id="prof-import-notes-file" accept=".csv,.xlsx,.pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf" hidden />
         </div>
         <div class="prof-import-preview" id="prof-import-notes-preview" hidden>
           <p class="prof-import-preview-info" id="prof-import-notes-info"></p>
@@ -3071,7 +3100,7 @@
       const show = els.password.type === 'password';
       els.password.type = show ? 'text' : 'password';
       els.togglePassword.setAttribute('aria-pressed', String(show));
-      els.togglePassword.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+      els.togglePassword.setAttribute('aria-label', show ? t('prof_password_hide') : t('prof_password_show'));
       els.password.focus();
     });
   }
@@ -3102,6 +3131,32 @@
       setAuthenticated(null);
       showLogin();
     });
+  }
+
+  if (els.resetDataBtn) {
+    els.resetDataBtn.addEventListener('click', () => {
+      const resetAll = () => {
+        try {
+          localStorage.removeItem(PROF_STORE_KEY);
+          localStorage.removeItem(PROF_AUTH_KEY);
+          Object.keys(localStorage)
+            .filter((key) => key.startsWith(`${PROF_ROWS_PREFIX}_`))
+            .forEach((key) => localStorage.removeItem(key));
+        } catch {}
+        if (typeof window.resetProfesseurData === 'function') window.resetProfesseurData();
+        if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_data_reset_done'));
+      };
+      if (typeof confirmModal !== 'undefined' && confirmModal.el) {
+        confirmModal.show({
+          message: t('prof_confirm_reset_data'),
+          danger: true,
+          onConfirm: resetAll
+        });
+      } else if (window.confirm(t('prof_confirm_reset_data'))) {
+        resetAll();
+      }
+    });
+  }
 
     /* ---------- Tableau de bord : navigation + sélecteurs ---------- */
     if (els.tabDash) els.tabDash.addEventListener('click', showDash);
@@ -3137,7 +3192,6 @@
         showHome();
       }
     });
-  }
 
   if (els.backBtn) {
     els.backBtn.addEventListener('click', () => {
