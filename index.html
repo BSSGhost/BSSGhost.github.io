@@ -990,17 +990,42 @@
                         </span>
                       </div>
 
-                      <nav class="prof-sidebar-nav" data-i18n-aria-label="prof_nav_main_label" aria-label="Navigation principale du mode professeur">
-                        <button type="button" id="prof-tab-dash" class="prof-sidebar-item is-active" data-view="dash" data-i18n="prof_tab_dash">Tableau de bord</button>
-                        <button type="button" id="prof-tab-classes" class="prof-sidebar-item" data-view="home" data-i18n="prof_tab_classes">Mes classes</button>
-                        <button type="button" id="prof-tab-students" class="prof-sidebar-item" data-view="students" data-i18n="sidebar_students">Élèves</button>
-                        <button type="button" id="prof-tab-ranking" class="prof-sidebar-item" data-view="ranking" data-i18n="sidebar_ranking">Classement</button>
-                        <button type="button" id="prof-tab-stats" class="prof-sidebar-item" data-view="stats" data-i18n="sidebar_stats">Statistiques</button>
-                      </nav>
+                      <div class="prof-sidebar-nav-wrap">
+                        <span class="prof-sidebar-group-label" data-i18n="prof_sidebar_nav_label">Menu</span>
+                        <nav class="prof-sidebar-nav" data-i18n-aria-label="prof_nav_main_label" aria-label="Navigation principale du mode professeur">
+                          <button type="button" id="prof-tab-dash" class="prof-sidebar-item is-active" data-view="dash">
+                            <span class="prof-sidebar-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.4"></rect><rect x="14" y="3" width="7" height="5" rx="1.4"></rect><rect x="14" y="12" width="7" height="9" rx="1.4"></rect><rect x="3" y="16" width="7" height="5" rx="1.4"></rect></svg></span>
+                            <span class="prof-sidebar-item-label" data-i18n="prof_tab_dash">Tableau de bord</span>
+                          </button>
+                          <button type="button" id="prof-tab-classes" class="prof-sidebar-item" data-view="home">
+                            <span class="prof-sidebar-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3Z"></path></svg></span>
+                            <span class="prof-sidebar-item-label" data-i18n="prof_tab_classes">Mes classes</span>
+                          </button>
+                          <button type="button" id="prof-tab-students" class="prof-sidebar-item" data-view="students">
+                            <span class="prof-sidebar-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+                            <span class="prof-sidebar-item-label" data-i18n="sidebar_students">Élèves</span>
+                          </button>
+                          <button type="button" id="prof-tab-ranking" class="prof-sidebar-item" data-view="ranking">
+                            <span class="prof-sidebar-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v4a5 5 0 0 1-10 0Z"></path><path d="M17 5h2a2 2 0 0 1 2 2c0 2.2-2 4-4 4"></path><path d="M7 5H5a2 2 0 0 0-2 2c0 2.2 2 4 4 4"></path></svg></span>
+                            <span class="prof-sidebar-item-label" data-i18n="sidebar_ranking">Classement</span>
+                          </button>
+                          <button type="button" id="prof-tab-stats" class="prof-sidebar-item" data-view="stats">
+                            <span class="prof-sidebar-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="14"></line><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line></svg></span>
+                            <span class="prof-sidebar-item-label" data-i18n="sidebar_stats">Statistiques</span>
+                          </button>
+                        </nav>
+                      </div>
 
                       <div class="prof-sidebar-footer">
-                        <button type="button" id="prof-reset-data-btn" class="prof-sidebar-btn prof-sidebar-reset" data-i18n="prof_reset_data_btn">Réinitialiser les données</button>
-                        <button type="button" id="prof-logout-btn" class="prof-sidebar-btn" data-i18n="prof_logout_btn">Se déconnecter</button>
+                        <span class="prof-sidebar-group-label" data-i18n="prof_sidebar_account_label">Compte</span>
+                        <button type="button" id="prof-reset-data-btn" class="prof-sidebar-btn prof-sidebar-reset">
+                          <span class="prof-sidebar-btn-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.64-6.36"></path><path d="M3 4v5h5"></path></svg></span>
+                          <span class="prof-sidebar-btn-label" data-i18n="prof_reset_data_btn">Réinitialiser les données</span>
+                        </button>
+                        <button type="button" id="prof-logout-btn" class="prof-sidebar-btn">
+                          <span class="prof-sidebar-btn-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></span>
+                          <span class="prof-sidebar-btn-label" data-i18n="prof_logout_btn">Se déconnecter</span>
+                        </button>
                       </div>
                     </aside>
 

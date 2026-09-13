@@ -3341,6 +3341,11 @@
     if (els.tabRanking) els.tabRanking.addEventListener('click', showRankingView);
     if (els.tabStats) els.tabStats.addEventListener('click', showStatsView);
 
+    /* ---------- Boutons de la bannière "Votre espace professeur" ---------- */
+    document.querySelectorAll('.prof-hero-cta[data-act]').forEach((btn) => {
+      btn.addEventListener('click', () => handlePortalAction(btn.dataset.act));
+    });
+
     /* ---------- Mobile nav toggle ---------- */
     if (els.mobileNavBtn && els.sidebar) {
       els.mobileNavBtn.addEventListener('click', () => {

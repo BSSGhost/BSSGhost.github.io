@@ -412,6 +412,8 @@ const translations = {
     prof_dash_greeting: "Bonjour, Professeur 👋",
     prof_dash_subtitle: "Voici un aperçu complet de votre espace : suivez les moyennes, les classements et les élèves à aider.",
     prof_sidebar_sub: "Espace Professeur",
+    prof_sidebar_nav_label: "Menu",
+    prof_sidebar_account_label: "Compte",
     prof_nav_main_label: "Navigation principale du mode professeur",
     prof_nav_breadcrumb_label: "Fil d'Ariane du mode professeur",
     prof_hero_eyebrow: "Votre espace",
@@ -1023,6 +1025,8 @@ const translations = {
     prof_dash_greeting: "Hello, Teacher 👋",
     prof_dash_subtitle: "Here is a complete overview of your space: track averages, rankings and students who need help.",
     prof_sidebar_sub: "Teacher Space",
+    prof_sidebar_nav_label: "Menu",
+    prof_sidebar_account_label: "Account",
     prof_nav_main_label: "Main teacher mode navigation",
     prof_nav_breadcrumb_label: "Teacher mode breadcrumb",
     prof_hero_eyebrow: "Your space",
@@ -3275,7 +3279,23 @@ function computeMoyennePonderee(matieres, notes) {
 const advisorSection = document.getElementById('conseiller-scolaire');
 const advisorPointsFortsEl = document.getElementById('advisor-points-forts');
 const advisorAAmeliorerEl = document.getElementById('advisor-a-ameliorer');
+const advisorEvolutionEl = document.getElementById('advisor-evolution');
+const advisorConseilEl = document.getElementById('advisor-conseil');
 const advisorObjectifEl = document.getElementById('advisor-objectif');
+
+/* Écart de moyenne entre le Semestre 1 et le Semestre 2 pour la classe
+   sélectionnée, à partir des notes déjà enregistrées. Renvoie null si
+   l'un des deux semestres n'est pas encore complet (coefficients ou
+   matières manquants), auquel cas la carte affiche une invitation à
+   compléter les deux semestres plutôt qu'un chiffre. */
+function getEvolutionDelta(classe) {
+  if (!classe) return null;
+  const matieres = getMatieresDisponiblesPourClasse(classe);
+  const resultS1 = computeMoyennePonderee(matieres, getStoredNotesForClasse(classe, 'Semestre1'));
+  const resultS2 = computeMoyennePonderee(matieres, getStoredNotesForClasse(classe, 'Semestre2'));
+  if (!resultS1.complete || !resultS2.complete) return null;
+  return resultS2.value - resultS1.value;
+}
 
 function combineMatieresAnnuelles(resultS1, resultS2) {
   const map = new Map();
@@ -3390,6 +3410,34 @@ function afficherConseillerScolaire(matieresCalculees, moyenneGenerale) {
 
   advisorObjectifEl.querySelector('.advisor-text').textContent = conseil.objectifText;
   advisorObjectifEl.classList.toggle('advisor-goal--personnel', conseil.isPersonnel);
+
+  const evolutionDelta = getEvolutionDelta(classeSelect ? classeSelect.value.trim() : '');
+  if (advisorEvolutionEl) {
+    const evolutionTextEl = advisorEvolutionEl.querySelector('.advisor-text');
+    if (evolutionDelta === null) {
+      if (evolutionTextEl) evolutionTextEl.textContent = t('advisor_evolution_empty');
+    } else {
+      const signe = evolutionDelta > 0 ? '+' : '';
+      if (evolutionTextEl) {
+        evolutionTextEl.textContent = t('advisor_evolution_prefix', { delta: `${signe}${evolutionDelta.toFixed(2)}` });
+      }
+    }
+    advisorEvolutionEl.hidden = false;
+  }
+
+  if (advisorConseilEl) {
+    if (evolutionDelta === null) {
+      advisorConseilEl.hidden = true;
+    } else {
+      const conseilTextEl = advisorConseilEl.querySelector('.advisor-text');
+      const deltaAbs = Math.abs(evolutionDelta).toFixed(2);
+      let conseilKey = 'advisor_conseil_stable';
+      if (evolutionDelta > 0.05) conseilKey = 'advisor_conseil_progression';
+      else if (evolutionDelta < -0.05) conseilKey = 'advisor_conseil_baisse';
+      if (conseilTextEl) conseilTextEl.textContent = t(conseilKey, { delta: deltaAbs });
+      advisorConseilEl.hidden = false;
+    }
+  }
 
   advisorSection.hidden = false;
   advisorSection.classList.remove('is-revealing');
