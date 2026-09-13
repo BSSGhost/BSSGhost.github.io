@@ -35,6 +35,7 @@
   const PROF_AUTH_KEY = 'lynaqe_prof_token';
   const PROF_STORE_KEY = 'lynaqe_prof_classes';
   const PROF_ROWS_PREFIX = 'lynaqe_prof_rows';
+  const PROF_ACTIVITY_KEY = 'lynaqe_prof_activity';
   const NOTE_FIELDS = ['d1', 'd2', 'compo'];
   const SEMESTER_NAMES = ['Semestre1', 'Semestre2'];
 
@@ -123,10 +124,19 @@
     editSave: $('prof-edit-save'),
 
     viewDash: $('prof-view-dash'),
+    viewStudents: $('prof-view-students'),
+    viewRanking: $('prof-view-ranking'),
+    viewStats: $('prof-view-stats'),
     tabDash: $('prof-tab-dash'),
     tabClasses: $('prof-tab-classes'),
+    tabStudents: $('prof-tab-students'),
+    tabRanking: $('prof-tab-ranking'),
+    tabStats: $('prof-tab-stats'),
+    sidebar: $('prof-sidebar'),
+    mobileNavBtn: $('prof-mobile-nav-btn'),
     dashHeadStats: $('prof-dash-head-stats'),
     dashQuick: $('prof-dash-quick'),
+    dashActivity: $('prof-dash-activity'),
     dashRankPanel: $('prof-dash-rank-panel'),
     dashStatsPanel: $('prof-dash-stats-panel'),
     dashStudentsPanel: $('prof-dash-students-panel'),
@@ -493,43 +503,92 @@
     return avg.reduce((s, v) => s + v, 0) / avg.length;
   }
 
-  /* ================= Navigation (3 vues) ================= */
+  /* ================= Navigation (7 vues) ================= */
 
   function setBackLabel(key) {
     els.backLabel.textContent = t(key);
     els.backLabel.setAttribute('data-i18n', key);
   }
 
+  function profViewsList() {
+    return [els.viewDash, els.viewStudents, els.viewRanking, els.viewStats, els.viewHome, els.viewClass, els.viewSubject];
+  }
+
+  function showView(target, opts) {
+    profViewsList().forEach((v) => {
+      if (v) v.hidden = true;
+    });
+    opts = opts || {};
+    if (target) target.hidden = false;
+    if (opts.tab) setProfTab(opts.tab);
+    if (els.backBtn) els.backBtn.hidden = opts.back !== true;
+    if (opts.backLabel) setBackLabel(opts.backLabel);
+    if (els.breadcrumbText) els.breadcrumbText.textContent = opts.breadcrumb || '';
+    if (typeof opts.afterShow === 'function') opts.afterShow();
+    closeSidebarMobile();
+  }
+
+  function showDash() {
+    showView(els.viewDash, { tab: 'dash', afterShow: renderDash });
+  }
+
+  function showStudentsView(presetPerf) {
+    showView(els.viewStudents, {
+      tab: 'students',
+      afterShow: () => {
+        fillStudentsFilters();
+        if (presetPerf && els.dashFilterPerf) {
+          els.dashFilterPerf.value = presetPerf;
+          if (els.dashSearch) els.dashSearch.value = '';
+          if (els.dashFilterClass) els.dashFilterClass.value = '';
+          if (els.dashFilterRank) els.dashFilterRank.value = '';
+        }
+        renderDashStudents();
+      }
+    });
+  }
+
+  function showRankingView() {
+    showView(els.viewRanking, {
+      tab: 'ranking',
+      afterShow: () => {
+        fillRankSelectors();
+        renderRanking();
+      }
+    });
+  }
+
+  function showStatsView() {
+    showView(els.viewStats, {
+      tab: 'stats',
+      afterShow: () => {
+        fillStatsSelectors();
+        renderStats();
+      }
+    });
+  }
+
   function showHome() {
-    els.backBtn.hidden = true;
-    if (els.breadcrumbText) els.breadcrumbText.textContent = '';
-    els.viewDash.hidden = true;
-    els.viewHome.hidden = false;
-    els.viewClass.hidden = true;
-    els.viewSubject.hidden = true;
-    setProfTab('classes');
-    renderHome();
+    showView(els.viewHome, { tab: 'classes', afterShow: renderHome });
   }
 
   function showClassView() {
-    els.backBtn.hidden = false;
-    setBackLabel('prof_back_classes');
-    if (els.breadcrumbText) els.breadcrumbText.textContent = activeClass;
-    els.viewDash.hidden = true;
-    els.viewHome.hidden = true;
-    els.viewClass.hidden = false;
-    els.viewSubject.hidden = true;
-    renderClassView();
+    showView(els.viewClass, {
+      tab: 'classes',
+      back: true,
+      backLabel: 'prof_back_classes',
+      breadcrumb: activeClass,
+      afterShow: renderClassView
+    });
   }
 
   function showSubjectView() {
-    els.backBtn.hidden = false;
-    setBackLabel('prof_back_class');
-    if (els.breadcrumbText) els.breadcrumbText.textContent = `${activeClass} › ${semLabel(activeSem)} › ${showMatiere(activeSubject)}`;
-    els.viewDash.hidden = true;
-    els.viewHome.hidden = true;
-    els.viewClass.hidden = true;
-    els.viewSubject.hidden = false;
+    showView(els.viewSubject, {
+      tab: 'classes',
+      back: true,
+      backLabel: 'prof_back_class',
+      breadcrumb: `${activeClass} › ${semLabel(activeSem)} › ${showMatiere(activeSubject)}`
+    });
   }
 
   /* ================= Vue 0 : Tableau de bord ================= */
@@ -675,9 +734,22 @@
   }
 
   function setProfTab(which) {
-    const isDash = which === 'dash';
-    if (els.tabDash) els.tabDash.classList.toggle('is-active', isDash);
-    if (els.tabClasses) els.tabClasses.classList.toggle('is-active', !isDash);
+    const tabMap = {
+      dash: els.tabDash,
+      classes: els.tabClasses,
+      students: els.tabStudents,
+      ranking: els.tabRanking,
+      stats: els.tabStats
+    };
+    const activeBtn = tabMap[which];
+    Object.values(tabMap).forEach((btn) => {
+      if (btn) btn.classList.toggle('is-active', btn === activeBtn);
+    });
+  }
+
+  function closeSidebarMobile() {
+    if (els.sidebar) els.sidebar.classList.remove('is-open');
+    if (els.mobileNavBtn) els.mobileNavBtn.setAttribute('aria-expanded', 'false');
   }
 
   function renderDashHeadStats() {
@@ -698,70 +770,181 @@
     });
     const globalAvg = avgs.length ? avgs.reduce((s, v) => s + v, 0) / avgs.length : null;
 
-    const chips = [
-      { icon: ICON_CLASSE, val: String(classes.length), label: t(classes.length > 1 ? 'prof_dash_stat_classes' : 'prof_dash_stat_classes') },
-      { icon: ICON_STUDENTS, val: String(totalStudents), label: t(totalStudents > 1 ? 'prof_dash_stat_students' : 'prof_dash_stat_students'), thick: true },
-      { icon: ICON_SUBJECTS, val: String(subjects.size), label: t('prof_dash_stat_subjects') },
-      { icon: ICON_AVG, val: globalAvg === null ? '—' : globalAvg.toFixed(2), label: t('prof_dash_stat_average') }
+    const cards = [
+      { icon: ICON_CLASSE, val: String(classes.length), label: t('prof_dash_stat_classes'), sub: classes.length ? t('prof_kpi_classes_sub') : t('prof_kpi_empty_sub') },
+      { icon: ICON_STUDENTS, val: String(totalStudents), label: t('prof_dash_stat_students'), sub: totalStudents ? t('prof_kpi_students_sub') : t('prof_kpi_empty_sub') },
+      { icon: ICON_SUBJECTS, val: String(subjects.size), label: t('prof_dash_stat_subjects'), sub: subjects.size ? t('prof_kpi_subjects_sub') : t('prof_kpi_empty_sub') },
+      { icon: ICON_AVG, val: globalAvg === null ? '—' : globalAvg.toFixed(2), label: t('prof_dash_stat_average'), sub: globalAvg === null ? t('prof_kpi_empty_sub') : t('prof_kpi_avg_sub') }
     ];
-    els.dashHeadStats.innerHTML = chips
+    els.dashHeadStats.innerHTML = cards
       .map(
-        (c) => `<div class="prof-dash-stat-chip">
-          <span class="prof-dash-stat-chip-icon${c.thick ? ' is-thick' : ''}" aria-hidden="true">${c.icon}</span>
-          <span class="prof-dash-stat-chip-body">
+        (c) => `<article class="prof-kpi-card">
+          <span class="prof-kpi-icon" aria-hidden="true">${c.icon}</span>
+          <span class="prof-kpi-body">
             <strong>${c.val}</strong>
             <small>${escHtml(c.label)}</small>
+            <em>${escHtml(c.sub)}</em>
           </span>
-        </div>`
+        </article>`
       )
       .join('');
   }
 
-  function renderDashQuick() {
-    if (!els.dashQuick) return;
-    const items = [
-      { act: 'classes', icon: ICON_CLASSE, title: t('prof_dash_quick_classes'), desc: t('prof_dash_quick_classes_desc'), blue: true },
-      { act: 'students', icon: ICON_STUDENTS, title: t('prof_dash_quick_students'), desc: t('prof_dash_quick_students_desc') },
-      { act: 'stats', icon: ICON_BARS, title: t('prof_dash_quick_stats'), desc: t('prof_dash_quick_stats_desc'), blue: true },
-      { act: 'ranking', icon: ICON_ORDER, title: t('prof_dash_quick_ranking'), desc: t('prof_dash_quick_ranking_desc') },
-      { act: 'difficult', icon: ICON_ALERT, title: t('prof_dash_quick_difficult'), desc: t('prof_dash_quick_difficult_desc') },
-      { act: 'top', icon: ICON_TROPHY, title: t('prof_dash_quick_top'), desc: t('prof_dash_quick_top_desc') }
-    ];
-    els.dashQuick.innerHTML = items
-      .map(
-        (item) => `
-          <button type="button" class="prof-dash-quick-card" data-quick="${item.act}" aria-label="${escHtml(item.title)}">
-            <span class="prof-dash-quick-icon${item.blue ? ' is-blue' : ''}" aria-hidden="true">${item.icon}</span>
-            <span class="prof-dash-quick-body">
-              <strong>${escHtml(item.title)}</strong>
-              <small>${escHtml(item.desc)}</small>
+  /* ---------- Activité récente ---------- */
+
+  function readActivity() {
+    try {
+      const raw = localStorage.getItem(PROF_ACTIVITY_KEY);
+      return Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function recordActivity(action, detail) {
+    try {
+      const list = readActivity();
+      list.unshift({ action, detail: String(detail || '') || null, ts: Date.now() });
+      localStorage.setItem(PROF_ACTIVITY_KEY, JSON.stringify(list.slice(0, 12)));
+    } catch {}
+  }
+
+  function activityLabel(item) {
+    const labels = {
+      class: t('prof_activity_class'),
+      student: t('prof_activity_student'),
+      notes: t('prof_activity_notes'),
+      bulletin: t('prof_activity_bulletin'),
+      import: t('prof_activity_import')
+    };
+    return labels[item.action] || item.action;
+  }
+
+  function renderDashActivity() {
+    if (!els.dashActivity) return;
+    const list = readActivity();
+    if (!list.length) {
+      els.dashActivity.innerHTML = `<p class="prof-empty">${escHtml(t('prof_activity_empty'))}</p>`;
+      return;
+    }
+    const iconMap = { class: ICON_CLASSE, student: ICON_STUDENTS, notes: ICON_BARS, bulletin: ICON_ORDER, import: ICON_ALERT };
+    els.dashActivity.innerHTML = list
+      .slice(0, 6)
+      .map((item) => {
+        const d = new Date(item.ts);
+        const time = d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' }) + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div class="prof-activity-item">
+            <span class="prof-activity-icon" aria-hidden="true">${iconMap[item.action] || ICON_DOTS}</span>
+            <span class="prof-activity-body">
+              <strong>${escHtml(activityLabel(item))}</strong>
+              ${item.detail ? `<small>${escHtml(item.detail)}</small>` : ''}
             </span>
-          </button>`
+            <time>${escHtml(time)}</time>
+          </div>`;
+      })
+      .join('');
+  }
+
+  /* ---------- Cartes portail (aperçu) ---------- */
+
+  function dashPortalData() {
+    const classes = dashClassNames();
+    let totalStudents = 0;
+    const allAvgs = [];
+    let best = null;
+    const lowStudents = [];
+    classes.forEach((name) => {
+      const cd = store[name];
+      if (!cd) return;
+      totalStudents += Array.isArray(cd.eleves) ? cd.eleves.length : 0;
+      (Array.isArray(cd.eleves) ? cd.eleves : []).forEach((e) => {
+        const avg = dashAnnualAvg(cd, e.id);
+        if (avg === null) return;
+        allAvgs.push(avg);
+        if (best === null || avg > best.avg) best = { name: getStudentName(e), classe: name, avg };
+        if (avg < 10) lowStudents.push({ name: getStudentName(e), classe: name, avg });
+      });
+    });
+    const globalAvg = allAvgs.length ? allAvgs.reduce((s, v) => s + v, 0) / allAvgs.length : null;
+    return { totalStudents, globalAvg, best, lowStudents, classes: classes.length };
+  }
+
+  function dashMiniBars(value) {
+    if (value === null) return '';
+    const pct = Math.round((value / 20) * 100);
+    const heights = [45, 60, 75, 90, 100];
+    return `<span class="prof-portal-bars" aria-hidden="true">${heights.map((h, i) => {
+      const on = pct >= ((i + 1) / heights.length) * 100;
+      return `<i class="${on ? 'is-on' : ''}" style="height:${h}%"></i>`;
+    }).join('')}</span>`;
+  }
+
+  function renderDashPortals() {
+    if (!els.dashQuick) return;
+    const d = dashPortalData();
+    const bestName = d.best ? escHtml(d.best.name) : '—';
+    const bestAvg = d.best ? d.best.avg.toFixed(2) : '';
+    const cards = [
+      { portal: 'students', icon: ICON_STUDENTS, title: t('prof_portal_students'), big: String(d.totalStudents), sub: d.totalStudents ? `${d.classes} ${t(d.classes > 1 ? 'prof_stat_classes' : 'prof_stat_class')}` : t('prof_portal_no_data'), cta: t('prof_portal_cta_students') },
+      { portal: 'ranking', icon: ICON_TROPHY, title: t('prof_portal_ranking'), big: bestName, sub: d.best ? `${t('prof_portal_best_avg')} ${bestAvg}` : t('prof_portal_no_data'), cta: t('prof_portal_cta_ranking') },
+      { portal: 'stats', icon: ICON_BARS, title: t('prof_portal_stats'), big: d.globalAvg === null ? '—' : d.globalAvg.toFixed(2), sub: d.globalAvg === null ? t('prof_portal_no_data') : t('prof_portal_global_avg'), cta: t('prof_portal_cta_stats'), bars: true, avgVal: d.globalAvg },
+      { portal: 'watch', icon: ICON_ALERT, title: t('prof_portal_watch'), big: String(d.lowStudents.length), sub: d.lowStudents.length ? `${t('prof_portal_low_sub')} < 10/20` : t('prof_portal_none_low'), cta: t('prof_portal_cta_watch') }
+    ];
+    els.dashQuick.innerHTML = cards
+      .map(
+        (c) => `
+          <article class="prof-portal-card" data-portal="${c.portal}" role="button" tabindex="0" aria-label="${escHtml(c.title)}">
+            <div class="prof-portal-head">
+              <span class="prof-portal-icon" aria-hidden="true">${c.icon}</span>
+              <h4>${escHtml(c.title)}</h4>
+            </div>
+            <strong class="prof-portal-value">${c.big}</strong>
+            <p class="prof-portal-sub">${escHtml(c.sub)}</p>
+            ${c.bars ? dashMiniBars(c.avgVal) : ''}
+            <span class="prof-portal-cta">${escHtml(c.cta)}&nbsp;<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+          </article>`
       )
       .join('');
 
-    els.dashQuick.querySelectorAll('[data-quick]').forEach((btn) => {
-      btn.addEventListener('click', () => dashQuickAction(btn.dataset.quick));
+    els.dashQuick.querySelectorAll('[data-portal]').forEach((card) => {
+      const open = () => handlePortalAction(card.dataset.portal);
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open();
+        }
+      });
     });
   }
 
-  function dashQuickAction(act) {
-    if (act === 'classes') {
+  function handlePortalAction(act) {
+    if (act === 'classes' || act === 'home') return showHome();
+    if (act === 'students') return showStudentsView();
+    if (act === 'ranking') return showRankingView();
+    if (act === 'stats') return showStatsView();
+    if (act === 'watch') return showStudentsView('__low__');
+    if (act === 'top') return showStudentsView('__high__');
+    if (act === 'notes') {
+      const names = dashClassNames();
+      for (const name of names) {
+        const cd = store[name];
+        const union = cd ? dashSubjectUnion(cd) : [];
+        if (union.length) {
+          activeClass = name;
+          activeSem = SEMESTER_NAMES[0];
+          openSubject(union[0]);
+          return;
+        }
+      }
       showHome();
       return;
     }
-    if (act === 'students' || act === 'stats' || act === 'ranking') {
-      const panel = els[act === 'students' ? 'dashStudentsPanel' : act === 'stats' ? 'dashStatsPanel' : 'dashRankPanel'];
-      if (panel) panel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+    if (act === 'create-class') {
+      showHome();
+      window.setTimeout(() => showAddClassForm(), prefersReducedMotion ? 0 : 120);
       return;
-    }
-    if (act === 'difficult' || act === 'top') {
-      if (els.dashFilterClass) els.dashFilterClass.value = '';
-      if (els.dashFilterRank) els.dashFilterRank.value = '';
-      if (els.dashFilterPerf) els.dashFilterPerf.value = act === 'difficult' ? '__low__' : '__high__';
-      if (els.dashSearch) els.dashSearch.value = '';
-      renderDashStudents();
-      if (els.dashStudentsPanel) els.dashStudentsPanel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
     }
   }
 
@@ -1257,30 +1440,14 @@
 
   function renderDash() {
     renderDashHeadStats();
-    renderDashQuick();
-    fillRankSelectors();
-    renderRanking();
-    fillStatsSelectors();
-    renderStats();
-    fillStudentsFilters();
-    renderDashStudents();
+    renderDashPortals();
+    renderDashActivity();
     if (dashSelectedStudent) {
       const cd = store[dashSelectedStudent.classe];
       const student = cd && Array.isArray(cd.eleves) ? cd.eleves.find((e) => e.id === dashSelectedStudent.id) : null;
       if (student) showDashProfile(dashSelectedStudent.classe, student);
       else dashSelectedStudent = null;
     }
-  }
-
-  function showDash() {
-    els.backBtn.hidden = true;
-    if (els.breadcrumbText) els.breadcrumbText.textContent = '';
-    els.viewDash.hidden = false;
-    els.viewHome.hidden = true;
-    els.viewClass.hidden = true;
-    els.viewSubject.hidden = true;
-    setProfTab('dash');
-    renderDash();
   }
 
   /* ================= Vue 1 : Mes classes ================= */
@@ -1495,6 +1662,7 @@
           store[newName] = store[classe];
           delete store[classe];
           saveStore();
+          recordActivity('class', newName);
           renderHome();
           return;
         }
@@ -1522,6 +1690,7 @@
     }
     store[name] = defaultClass();
     saveStore();
+    recordActivity('class', name);
     els.newClass.value = '';
     showAddClassPromo();
     renderHome();
@@ -1549,6 +1718,7 @@
         onConfirm: () => {
           delete store[classe];
           saveStore();
+          recordActivity('class', classe);
           if (activeClass === classe) {
             activeClass = null;
             showHome();
@@ -1675,6 +1845,7 @@
       classeData.eleves.push({ id: newId(), nom, prenom });
     }
     saveStore();
+    recordActivity('student', `${prenom} ${nom}`.trim());
     els.studentForm.hidden = true;
     els.studentNom.value = '';
     els.studentPrenom.value = '';
@@ -1704,6 +1875,7 @@
             });
           });
           saveStore();
+          recordActivity('student', `${student.prenom} ${student.nom}`.trim());
           renderClassView();
         }
       });
@@ -1769,6 +1941,7 @@
       </div>
     `;
     document.body.appendChild(modal);
+    recordActivity('bulletin', getStudentName(student));
     const close = () => {
       modal.remove();
       document.body.style.overflow = '';
@@ -2192,6 +2365,7 @@
       notes: getWorkingNotesMap()
     };
     updateEditBanner();
+    recordActivity('notes', `${activeClass} › ${showMatiere(activeSubject)}`);
     if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_save_success'));
   }
 
@@ -2922,6 +3096,7 @@
       count++;
     });
     saveStore();
+    recordActivity('import', `${t('prof_import_done', { count, classe: target })}`);
     closeClassImportModal();
     if (typeof showInfoDialog === 'function') {
       showInfoDialog(t('prof_import_done', { count, classe: target }));
@@ -3057,6 +3232,7 @@
         window.populateProfRows(valid);
       }
       close();
+      recordActivity('import', `${t('prof_import_notes_done', { count: valid.length })}`);
       if (typeof showInfoDialog === 'function') {
         showInfoDialog(t('prof_import_notes_done', { count: valid.length }));
       }
@@ -3158,9 +3334,27 @@
     });
   }
 
-    /* ---------- Tableau de bord : navigation + sélecteurs ---------- */
+    /* ---------- Sidebar navigation + sélecteurs ---------- */
     if (els.tabDash) els.tabDash.addEventListener('click', showDash);
     if (els.tabClasses) els.tabClasses.addEventListener('click', showHome);
+    if (els.tabStudents) els.tabStudents.addEventListener('click', () => showStudentsView());
+    if (els.tabRanking) els.tabRanking.addEventListener('click', showRankingView);
+    if (els.tabStats) els.tabStats.addEventListener('click', showStatsView);
+
+    /* ---------- Mobile nav toggle ---------- */
+    if (els.mobileNavBtn && els.sidebar) {
+      els.mobileNavBtn.addEventListener('click', () => {
+        const isOpen = els.sidebar.classList.contains('is-open');
+        els.sidebar.classList.toggle('is-open', !isOpen);
+        els.mobileNavBtn.setAttribute('aria-expanded', String(!isOpen));
+      });
+      document.addEventListener('click', (e) => {
+        if (!els.sidebar.classList.contains('is-open')) return;
+        if (e.target instanceof Element && !e.target.closest('.prof-sidebar') && !e.target.closest('#prof-mobile-nav-btn')) {
+          closeSidebarMobile();
+        }
+      });
+    }
 
     if (els.dashRankClassSel) {
       els.dashRankClassSel.addEventListener('change', () => {
@@ -3207,6 +3401,8 @@
         } else {
           showClassView();
         }
+      } else if (!els.viewStudents.hidden || !els.viewRanking.hidden || !els.viewStats.hidden) {
+        showDash();
       } else if (!els.viewClass.hidden) {
         showHome();
       } else {
