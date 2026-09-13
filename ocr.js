@@ -47,6 +47,7 @@
   let lastScannedFile = null;
   let ocrModalEl = null;
   let scanBtnEl = null;
+  let ocrFilterToCheck = false;
 
   /* ---------- État de prétraitement d'image ---------- */
 
@@ -61,6 +62,12 @@
   function t(key, vars) {
     if (typeof window.t === 'function') return window.t(key, vars);
     return key;
+  }
+
+  function esc(value) {
+    const div = document.createElement('div');
+    div.textContent = String(value ?? '');
+    return div.innerHTML;
   }
 
   function hasComposition() {
@@ -514,6 +521,67 @@
 
   /* ---------- UI : Modal de vérification ---------- */
 
+  const NAME_OK_PATTERN = /^[\p{L}][\p{L}\s'’.-]*$/u;
+
+  /* Note "lisible" : même règle que la saisie manuelle (quart de point). */
+  function noteSeemsValid(raw) {
+    const cleaned = String(raw || '').trim().replace(',', '.');
+    if (!cleaned) return false;
+    const ok =
+      typeof isValidDecimalNote === 'function'
+        ? isValidDecimalNote(String(raw).trim())
+        : /^(?:\d|1\d|20)(?:[.,](?:25|50|75))?$/.test(String(raw).trim());
+    if (!ok) return false;
+    return parseFloat(cleaned) <= MAX_NOTE;
+  }
+
+  /* Une ligne est marquée "à vérifier" si la confiance est basse, si un nom
+     improbable est détecté, ou si une note est absente / invalide. */
+  function rowCheckable(row) {
+    if (!row) return true;
+    if ((row.confidence || 0) < CONFIDENCE_THRESHOLD) return true;
+    const nom = String(row.nom || '').trim();
+    const prenom = String(row.prenom || '').trim();
+    if (!nom || !prenom) return true;
+    if (!NAME_OK_PATTERN.test(nom) || !NAME_OK_PATTERN.test(prenom)) return true;
+    if (!noteSeemsValid(row.d1) || !noteSeemsValid(row.d2)) return true;
+    if (hasComposition() && !noteSeemsValid(row.compo)) return true;
+    return false;
+  }
+
+  function renderOCRStats() {
+    const modal = createOCRModal();
+    const statsEl = modal.querySelector('#prof-ocr-stats');
+    const filterBtn = modal.querySelector('#prof-ocr-filter-toggle');
+    const applyBtn = modal.querySelector('#prof-ocr-apply');
+    const applySpan = applyBtn ? applyBtn.querySelector('span') : null;
+
+    const total = ocrDataRows.length;
+    const toCheck = ocrDataRows.filter(rowCheckable).length;
+    const reliable = total - toCheck;
+
+    statsEl.hidden = total === 0;
+    filterBtn.hidden = total === 0;
+    if (!total) return;
+
+    statsEl.innerHTML = `
+      <span class="prof-ocr-stat is-total">${esc(t('prof_ocr_detected', { count: total }))}</span>
+      <span class="prof-ocr-stat is-reliable">✓ ${esc(t('prof_ocr_reliable', { count: reliable }))}</span>
+      <span class="prof-ocr-stat is-tocheck">⚠ ${esc(t('prof_ocr_to_check', { count: toCheck }))}</span>
+    `;
+
+    filterBtn.textContent = ocrFilterToCheck
+      ? t('prof_ocr_show_all')
+      : t('prof_ocr_show_tocheck', { count: toCheck });
+    filterBtn.disabled = toCheck === 0;
+
+    if (applySpan) {
+      applySpan.textContent = ocrFilterToCheck && toCheck
+        ? t('prof_ocr_fix_only', { count: toCheck })
+        : t('prof_ocr_apply');
+    }
+  }
+
   function createOCRModal() {
     if (ocrModalEl) return ocrModalEl;
 
@@ -529,6 +597,10 @@
           <h3 data-i18n="prof_ocr_verify_title">${t('prof_ocr_verify_title')}</h3>
           <p class="prof-ocr-subtitle" data-i18n="prof_ocr_verify_subtitle">${t('prof_ocr_verify_subtitle')}</p>
         </div>
+        <div class="prof-ocr-stats" id="prof-ocr-stats" hidden></div>
+        <div class="prof-ocr-filter" id="prof-ocr-filter" hidden>
+          <button type="button" id="prof-ocr-filter-toggle" class="ghost-button"></button>
+        </div>
         <div class="prof-ocr-table-wrap">
           <table class="prof-ocr-table">
             <thead>
@@ -540,6 +612,7 @@
                 <th data-i18n="label_devoir2">${t('label_devoir2')}</th>
                 <th class="prof-ocr-th-compo" data-i18n="label_composition">${t('label_composition')}</th>
                 <th data-i18n="prof_ocr_confidence">${t('prof_ocr_confidence')}</th>
+                <th data-i18n="prof_ocr_status">${t('prof_ocr_status')}</th>
                 <th class="prof-ocr-th-del">&nbsp;</th>
               </tr>
             </thead>
@@ -556,7 +629,7 @@
           </button>
           <div class="prof-ocr-actions-right">
             <button type="button" id="prof-ocr-cancel" class="ghost-button" data-i18n="prof_ocr_cancel">${t('prof_ocr_cancel')}</button>
-            <button type="button" id="prof-ocr-apply" class="primary-button" data-i18n="prof_ocr_apply">${t('prof_ocr_apply')}</button>
+            <button type="button" id="prof-ocr-apply" class="primary-button"><span data-i18n="prof_ocr_apply">${t('prof_ocr_apply')}</span></button>
           </div>
         </div>
       </div>
@@ -568,6 +641,14 @@
     modal.querySelector('#prof-ocr-cancel').addEventListener('click', hideVerificationModal);
     modal.querySelector('#prof-ocr-apply').addEventListener('click', onApplyOCR);
     modal.querySelector('#prof-ocr-add-row').addEventListener('click', onAddOCRRow);
+
+    const filterToggle = modal.querySelector('#prof-ocr-filter-toggle');
+    if (filterToggle) {
+      filterToggle.addEventListener('click', () => {
+        ocrFilterToCheck = !ocrFilterToCheck;
+        renderOCRTable();
+      });
+    }
 
     modal.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') hideVerificationModal();
@@ -587,6 +668,7 @@
       compo: r.compo || '',
       confidence: r.confidence || 0
     }));
+    ocrFilterToCheck = false;
 
     const modal = createOCRModal();
     updateCompoColumn();
@@ -629,8 +711,10 @@
     emptyEl.hidden = ocrDataRows.length > 0;
 
     ocrDataRows.forEach((row, index) => {
+      const check = rowCheckable(row);
       const tr = document.createElement('tr');
-      tr.className = 'prof-ocr-row';
+      tr.className = 'prof-ocr-row' + (check ? ' is-check' : ' is-reliable');
+      tr.hidden = ocrFilterToCheck && !check;
 
       const rankCell = document.createElement('td');
       rankCell.className = 'prof-ocr-col-rank';
@@ -659,6 +743,13 @@
       confBadge.textContent = Math.round(conf * 100) + '%';
       confCell.appendChild(confBadge);
 
+      const statusCell = document.createElement('td');
+      statusCell.className = 'prof-ocr-status-cell';
+      const statusBadge = document.createElement('span');
+      statusBadge.className = 'prof-ocr-status-badge' + (check ? ' is-check' : ' is-reliable');
+      statusBadge.textContent = t(check ? 'prof_ocr_badge_check' : 'prof_ocr_badge_reliable');
+      statusCell.appendChild(statusBadge);
+
       const delCell = document.createElement('td');
       delCell.className = 'prof-ocr-col-del';
       const delBtn = document.createElement('button');
@@ -672,9 +763,11 @@
       });
       delCell.appendChild(delBtn);
 
-      tr.append(rankCell, nomCell, prenomCell, d1Cell, d2Cell, compoCell, confCell, delCell);
+      tr.append(rankCell, nomCell, prenomCell, d1Cell, d2Cell, compoCell, confCell, statusCell, delCell);
       tbody.appendChild(tr);
     });
+
+    renderOCRStats();
   }
 
   function createOCRTextInput(row, field, placeholder, rowIndex) {
@@ -736,7 +829,10 @@
   }
 
   function onApplyOCR() {
-    const validRows = ocrDataRows.filter((r) => {
+    const toApply = ocrFilterToCheck
+      ? ocrDataRows.filter((r) => !rowCheckable(r))
+      : ocrDataRows;
+    const validRows = toApply.filter((r) => {
       return (r.nom || r.prenom) && (r.d1 || r.d2);
     });
 

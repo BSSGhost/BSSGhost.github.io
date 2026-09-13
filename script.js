@@ -482,7 +482,101 @@ const translations = {
     prof_crop_apply: "Appliquer",
     prof_crop_cancel: "Annuler",
     prof_crop_hint: "Tirez pour délimiter la zone à conserver.",
-    prof_crop_reset: "Réinitialiser"
+    prof_crop_reset: "Réinitialiser",
+    /* ---- Tableau de bord élève (Accueil) ---- */
+    tab_accueil: "Accueil",
+    tab_profil: "Profil",
+    dash_greeting: "Bonjour {prenom} 👋",
+    dash_greeting_fallback: "Bonjour 👋",
+    dash_subtitle: "Voici votre tableau de bord scolaire.",
+    dash_card_moyenne: "Moyenne actuelle",
+    dash_card_rang: "Rang",
+    dash_card_objectif: "Objectif",
+    dash_delta_positive: "+{delta} depuis le dernier semestre",
+    dash_delta_negative: "{delta} depuis le dernier semestre",
+    dash_delta_first: "Première moyenne enregistrée",
+    dash_progression: "Progression",
+    dash_progress_value: "{pct}%",
+    dash_objectif_atteint: "Objectif atteint !",
+    dash_subjects: "Mes matières",
+    dash_subjects_empty: "Aucune matière enregistrée pour le moment.",
+    dash_subjects_empty_cta: "Commencez par calculer votre première note.",
+    dash_btn_calculer: "Calculer une note",
+    dash_btn_bulletin: "Voir mon bulletin",
+    dash_btn_evolution: "Voir mon évolution",
+    dash_btn_profil: "Compléter mon profil",
+    dash_rank_of: "{rang}e / {total}",
+    dash_rank_unknown: "—",
+    dash_empty_title: "Bienvenue sur votre espace personnel",
+    dash_empty_text: "Renseignez votre profil puis ajoutez vos premières notes pour voir votre tableau de bord.",
+    dash_empty_cta_profile: "Créer mon profil",
+    dash_empty_cta_calc: "Calculer ma première note",
+    dash_trend_up: "▲",
+    dash_trend_down: "▼",
+    dash_trend_flat: "=",
+    dash_current_semestre: "Semestre en cours",
+    /* ---- Profil scolaire ---- */
+    profil_eyebrow: "Espace personnel",
+    profil_screen_title: "Mon profil scolaire",
+    profil_subtitle: "Vos informations et votre fiche récapitulative en un coup d'œil.",
+    profil_section_infos: "Informations personnelles",
+    profil_section_fiche: "Ma fiche",
+    label_etablissement: "Établissement",
+    placeholder_etablissement: "Ex : LYNAQE Sédhiou",
+    label_annee_scolaire: "Année scolaire",
+    placeholder_annee_scolaire: "Ex : 2025-2026",
+    label_numero_eleve: "Numéro d'élève",
+    placeholder_numero_eleve: "Ex : 2025-0147",
+    label_photo: "Photo (facultative)",
+    btn_photo_remove: "Retirer la photo",
+    btn_profil_save: "Enregistrer le profil",
+    profil_photo_pick: "Choisir une photo…",
+    profil_photo_help: "La photo reste sur votre appareil, elle n'est jamais envoyée.",
+    profil_saved: "Profil enregistré !",
+    fiche_moyenne_actuelle: "Moyenne actuelle",
+    fiche_moyenne_s1: "Moyenne S1",
+    fiche_moyenne_s2: "Moyenne S2",
+    fiche_moyenne_annuelle: "Moyenne annuelle",
+    fiche_rang: "Rang",
+    fiche_mention: "Mention",
+    fiche_progression: "Progression",
+    fiche_objectif: "Objectif",
+    fiche_forces: "Matières fortes",
+    fiche_faibles: "Matières faibles",
+    fiche_vide: "—",
+    /* ---- Import élèves / notes (mode Professeur) ---- */
+    prof_import_class: "Importer une classe",
+    prof_import_class_desc: "Importez une liste d'élèves depuis un fichier CSV ou Excel.",
+    prof_import_class_btn: "Importer",
+    prof_import_modal_title: "Importer une classe",
+    prof_import_modal_subtitle: "Vérifiez les élèves détectés avant de les ajouter.",
+    prof_import_dropzone: "Choisir un fichier CSV ou Excel…",
+    prof_import_format_label: "Formats acceptés : CSV (.csv) ou Excel (.xlsx)",
+    prof_import_class_label: "Classe de destination",
+    prof_import_new_class: "Nouvelle classe",
+    prof_import_new_class_placeholder: "Nom de la classe (ex : 2nde S04)",
+    prof_import_apply: "Importer {count} élèves",
+    prof_import_done: "{count} élèves importés dans la classe \"{classe}\".",
+    prof_import_error: "Fichier invalide : aucune ligne exploitable n'a été trouvée.",
+    prof_import_no_class: "Choisissez une classe ou saisissez un nouveau nom de classe.",
+    prof_import_header_detected: "En-têtes détectés : {cols}",
+    prof_import_notes_btn: "Importer les notes (CSV)",
+    prof_import_notes_modal_title: "Importer les notes",
+    prof_import_notes_modal_subtitle: "CSV : Nom;Prénom;Devoir 1;Devoir 2;Composition",
+    prof_import_notes_matching: "Les élèves sont retrouvés par Nom + Prénom. Les élèves inconnus sont ajoutés à la classe.",
+    prof_import_notes_apply: "Importer les notes",
+    prof_import_notes_done: "Notes importées pour {count} élève(s).",
+    prof_import_notes_error: "Fichier invalide : aucune note exploitable n'a été trouvée.",
+    /* ---- OCR intelligent ---- */
+    prof_ocr_detected: "{count} élèves détectés",
+    prof_ocr_reliable: "{count} lignes fiables",
+    prof_ocr_to_check: "{count} lignes à vérifier",
+    prof_ocr_show_all: "Toutes les lignes",
+    prof_ocr_show_tocheck: "Afficher uniquement les {count} à vérifier",
+    prof_ocr_fix_only: "Corriger uniquement les {count} erreurs",
+    prof_ocr_badge_reliable: "Fiable",
+    prof_ocr_badge_check: "À vérifier",
+    prof_ocr_status: "Fiabilité"
   },
   en: {
     device_modal_eyebrow: "Display settings",
@@ -942,7 +1036,101 @@ const translations = {
     prof_crop_apply: "Apply",
     prof_crop_cancel: "Cancel",
     prof_crop_hint: "Drag to select the area to keep.",
-    prof_crop_reset: "Reset"
+    prof_crop_reset: "Reset",
+    /* ---- Student dashboard (Home) ---- */
+    tab_accueil: "Home",
+    tab_profil: "Profile",
+    dash_greeting: "Hello {prenom} 👋",
+    dash_greeting_fallback: "Hello 👋",
+    dash_subtitle: "Here is your school dashboard.",
+    dash_card_moyenne: "Current average",
+    dash_card_rang: "Rank",
+    dash_card_objectif: "Goal",
+    dash_delta_positive: "+{delta} since last semester",
+    dash_delta_negative: "{delta} since last semester",
+    dash_delta_first: "First recorded average",
+    dash_progression: "Progress",
+    dash_progress_value: "{pct}%",
+    dash_objectif_atteint: "Goal reached!",
+    dash_subjects: "My subjects",
+    dash_subjects_empty: "No subject recorded yet.",
+    dash_subjects_empty_cta: "Start by calculating your first grade.",
+    dash_btn_calculer: "Calculate a grade",
+    dash_btn_bulletin: "View my report card",
+    dash_btn_evolution: "View my progress",
+    dash_btn_profil: "Complete my profile",
+    dash_rank_of: "{rang}e / {total}",
+    dash_rank_unknown: "—",
+    dash_empty_title: "Welcome to your personal space",
+    dash_empty_text: "Fill in your profile, then add your first grades to see your dashboard.",
+    dash_empty_cta_profile: "Create my profile",
+    dash_empty_cta_calc: "Calculate my first grade",
+    dash_trend_up: "▲",
+    dash_trend_down: "▼",
+    dash_trend_flat: "=",
+    dash_current_semestre: "Current semester",
+    /* ---- School profile ---- */
+    profil_eyebrow: "Personal space",
+    profil_screen_title: "My school profile",
+    profil_subtitle: "Your details and summary sheet at a glance.",
+    profil_section_infos: "Personal information",
+    profil_section_fiche: "My report",
+    label_etablissement: "School",
+    placeholder_etablissement: "e.g. LYNAQE Sédhiou",
+    label_annee_scolaire: "School year",
+    placeholder_annee_scolaire: "e.g. 2025-2026",
+    label_numero_eleve: "Student number",
+    placeholder_numero_eleve: "e.g. 2025-0147",
+    label_photo: "Photo (optional)",
+    btn_photo_remove: "Remove photo",
+    btn_profil_save: "Save profile",
+    profil_photo_pick: "Choose a photo…",
+    profil_photo_help: "The photo stays on your device, it is never sent.",
+    profil_saved: "Profile saved!",
+    fiche_moyenne_actuelle: "Current average",
+    fiche_moyenne_s1: "Average S1",
+    fiche_moyenne_s2: "Average S2",
+    fiche_moyenne_annuelle: "Annual average",
+    fiche_rang: "Rank",
+    fiche_mention: "Honours",
+    fiche_progression: "Progress",
+    fiche_objectif: "Goal",
+    fiche_forces: "Strong subjects",
+    fiche_faibles: "Weak subjects",
+    fiche_vide: "—",
+    /* ---- Students / grades import (Teacher mode) ---- */
+    prof_import_class: "Import a class",
+    prof_import_class_desc: "Import a student list from a CSV or Excel file.",
+    prof_import_class_btn: "Import",
+    prof_import_modal_title: "Import a class",
+    prof_import_modal_subtitle: "Review the detected students before adding them.",
+    prof_import_dropzone: "Choose a CSV or Excel file…",
+    prof_import_format_label: "Accepted formats: CSV (.csv) or Excel (.xlsx)",
+    prof_import_class_label: "Destination class",
+    prof_import_new_class: "New class",
+    prof_import_new_class_placeholder: "Class name (e.g. 2nde S04)",
+    prof_import_apply: "Import {count} students",
+    prof_import_done: "{count} students imported into class \"{classe}\".",
+    prof_import_error: "Invalid file: no usable row was found.",
+    prof_import_no_class: "Choose a class or enter a new class name.",
+    prof_import_header_detected: "Headers detected: {cols}",
+    prof_import_notes_btn: "Import grades (CSV)",
+    prof_import_notes_modal_title: "Import grades",
+    prof_import_notes_modal_subtitle: "CSV: Name;First name;Test 1;Test 2;Composition",
+    prof_import_notes_matching: "Students are matched by Name + First name. Unknown students are added to the class.",
+    prof_import_notes_apply: "Import grades",
+    prof_import_notes_done: "Grades imported for {count} student(s).",
+    prof_import_notes_error: "Invalid file: no usable grade was found.",
+    /* ---- Smart OCR ---- */
+    prof_ocr_detected: "{count} students detected",
+    prof_ocr_reliable: "{count} reliable rows",
+    prof_ocr_to_check: "{count} rows to check",
+    prof_ocr_show_all: "All rows",
+    prof_ocr_show_tocheck: "Show only the {count} to check",
+    prof_ocr_fix_only: "Fix only the {count} errors",
+    prof_ocr_badge_reliable: "Reliable",
+    prof_ocr_badge_check: "To check",
+    prof_ocr_status: "Reliability"
   }
 };
 
@@ -1035,6 +1223,9 @@ function refreshDynamicTranslatedTexts() {
   const professeurScreen = document.querySelector('.app-screen[data-screen="professeur"]');
   if (professeurScreen && professeurScreen.classList.contains('is-active') && typeof window.refreshProfesseurTexts === 'function') {
     window.refreshProfesseurTexts();
+  }
+  if (typeof window.refreshDashboardTexts === 'function') {
+    window.refreshDashboardTexts();
   }
 }
 
@@ -4091,6 +4282,12 @@ function showInfoDialog(message) {
     if (screenName === 'historique' && typeof window.refreshHistoriqueScreen === 'function') {
       window.refreshHistoriqueScreen();
     }
+    if (screenName === 'accueil' && typeof window.refreshDashboardScreen === 'function') {
+      window.refreshDashboardScreen();
+    }
+    if (screenName === 'profil' && typeof window.refreshProfilScreen === 'function') {
+      window.refreshProfilScreen();
+    }
 
     tabs.forEach((tab) => {
       // L'écran "historique" n'a pas d'onglet dédié dans la barre de
@@ -4141,8 +4338,11 @@ function showInfoDialog(message) {
 
   // Au chargement : si l'URL contient déjà un hash valide (retour sur le
   // site, rechargement de page), on rouvre directement cet onglet-là.
+  // Sinon, l'élève arrive sur le tableau de bord "Accueil".
   const initialHash = window.location.hash.replace('#', '');
   if (initialHash && validScreens.includes(initialHash)) {
     activateScreen(initialHash, { updateHash: false });
+  } else {
+    activateScreen('accueil');
   }
 })();

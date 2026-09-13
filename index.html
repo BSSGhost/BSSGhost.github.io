@@ -189,7 +189,11 @@
       </header>
 
       <nav class="app-tabbar" aria-label="Navigation principale">
-        <button type="button" class="app-tab is-active" data-target-screen="calculer" aria-current="page">
+        <button type="button" class="app-tab is-active" data-target-screen="accueil" aria-current="page">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 3l9 8.5"></path><path d="M5 10v11h14V10"></path><path d="M9.5 21v-6h5v6"></path></svg></span>
+          <span data-i18n="tab_accueil">Accueil</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="calculer">
           <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="8" y1="11" x2="8" y2="11.01"></line><line x1="12" y1="11" x2="12" y2="11.01"></line><line x1="16" y1="11" x2="16" y2="11.01"></line><line x1="8" y1="15" x2="8" y2="15.01"></line><line x1="12" y1="15" x2="12" y2="15.01"></line><line x1="16" y1="15" x2="16" y2="15.01"></line><line x1="8" y1="19" x2="16" y2="19"></line></svg></span>
           <span data-i18n="tab_calculer">Calculer</span>
         </button>
@@ -209,13 +213,17 @@
           <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
           <span data-i18n="tab_conseils">Conseils</span>
         </button>
+        <button type="button" class="app-tab" data-target-screen="profil">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+          <span data-i18n="tab_profil">Profil</span>
+        </button>
         <button type="button" class="app-tab" data-target-screen="professeur">
           <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path><path d="M22 10v6"></path></svg></span>
           <span data-i18n="tab_professeur">Prof</span>
         </button>
       </nav>
 
-      <main class="hero app-screen is-active" data-screen="calculer">
+      <main class="hero app-screen" data-screen="calculer">
         <section class="info-panel">
           <p class="eyebrow" data-i18n="hero_eyebrow">Outil scolaire officiel</p>
           <h1 data-i18n="hero_h1">Calculez votre moyenne de matière et semestrielle en quelques secondes</h1>
@@ -494,6 +502,10 @@
           </form>
         </section>
       </main>
+
+      <div class="app-screen is-active" data-screen="accueil">
+        <section id="dash-screen" class="dash-screen" aria-live="polite"></section>
+      </div>
 
       <div class="app-screen" data-screen="resultats">
       <section id="resultat" class="result-card" aria-live="polite">
@@ -828,6 +840,99 @@
       </section>
       </div>
 
+      <div class="app-screen" data-screen="profil">
+        <section class="profil-screen">
+          <div class="profil-head">
+            <span class="profil-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+            <div>
+              <p class="eyebrow" data-i18n="profil_eyebrow">Espace personnel</p>
+              <h2 data-i18n="profil_screen_title">Mon profil scolaire</h2>
+              <p class="subtitle" data-i18n="profil_subtitle">Vos informations et votre fiche récapitulative en un coup d'œil.</p>
+            </div>
+          </div>
+
+          <div class="profil-layout">
+            <form id="profil-form" class="prof-panel profil-form-panel">
+              <div class="profil-form-head">
+                <h3 data-i18n="profil_section_infos">Informations personnelles</h3>
+              </div>
+
+              <div class="profil-photo" id="profil-photo-block" hidden>
+                <img id="profil-photo-img" alt="" />
+                <button type="button" id="profil-photo-remove" class="ghost-button" data-i18n="btn_photo_remove">Retirer la photo</button>
+              </div>
+
+              <div class="field-group">
+                <label for="profil-photo-input" data-i18n="label_photo">Photo (facultative)</label>
+                <div class="profil-photo-upload">
+                  <label for="profil-photo-input" class="profil-photo-pick">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>
+                    <span data-i18n="profil_photo_pick">Choisir une photo…</span>
+                  </label>
+                  <input type="file" id="profil-photo-input" accept="image/*" hidden />
+                  <p class="profil-photo-help" data-i18n="profil_photo_help">La photo reste sur votre appareil, elle n'est jamais envoyée.</p>
+                </div>
+              </div>
+
+              <div class="two-columns">
+                <div class="field-group">
+                  <label for="profil-nom" data-i18n="label_nom">Nom</label>
+                  <input type="text" id="profil-nom" autocomplete="family-name" maxlength="40" data-i18n-placeholder="placeholder_nom" placeholder="Ex : Diop" />
+                </div>
+                <div class="field-group">
+                  <label for="profil-prenom" data-i18n="label_prenom">Prénom</label>
+                  <input type="text" id="profil-prenom" autocomplete="given-name" maxlength="40" data-i18n-placeholder="placeholder_prenom" placeholder="Ex : Mamadou" />
+                </div>
+              </div>
+
+              <div class="two-columns">
+                <div class="field-group">
+                  <label for="profil-classe" data-i18n="label_classe">Classe</label>
+                  <div class="select-wrap">
+                    <select id="profil-classe">
+                      <option value="" data-i18n="option_classe_default">-- Sélectionner votre classe --</option>
+                      <option value="6e">6e</option>
+                      <option value="5e">5e</option>
+                      <option value="4e">4e</option>
+                      <option value="3e">3e</option>
+                      <option value="2nde">2nde</option>
+                      <option value="1er">1er</option>
+                      <option value="Tle">Tle</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field-group">
+                  <label for="profil-etablissement" data-i18n="label_etablissement">Établissement</label>
+                  <input type="text" id="profil-etablissement" maxlength="60" data-i18n-placeholder="placeholder_etablissement" placeholder="Ex : LYNAQE Sédhiou" />
+                </div>
+              </div>
+
+              <div class="two-columns">
+                <div class="field-group">
+                  <label for="profil-annee" data-i18n="label_annee_scolaire">Année scolaire</label>
+                  <input type="text" id="profil-annee" maxlength="9" pattern="\d{4}-\d{4}" data-i18n-placeholder="placeholder_annee_scolaire" placeholder="Ex : 2025-2026" />
+                </div>
+                <div class="field-group">
+                  <label for="profil-numero" data-i18n="label_numero_eleve">Numéro d'élève</label>
+                  <input type="text" id="profil-numero" maxlength="30" data-i18n-placeholder="placeholder_numero_eleve" placeholder="Ex : 2025-0147" />
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button type="submit" id="profil-save-btn" class="primary-button" data-i18n="btn_profil_save">Enregistrer le profil</button>
+              </div>
+            </form>
+
+            <section class="prof-panel profil-fiche-panel">
+              <div class="profil-form-head">
+                <h3 data-i18n="profil_section_fiche">Ma fiche</h3>
+              </div>
+              <div id="profil-fiche" class="profil-fiche" aria-live="polite"></div>
+            </section>
+          </div>
+        </section>
+      </div>
+
       <div class="app-screen" data-screen="professeur" id="prof-screen">
         <section id="prof-login-card" class="prof-card prof-login-card">
           <span class="prof-login-icon" aria-hidden="true">
@@ -982,6 +1087,7 @@
                   <h4 class="prof-add-card-title" data-i18n="prof_create_class_title">Créer une classe</h4>
                   <p class="prof-add-card-desc" data-i18n="prof_create_class_desc">Ajoutez une nouvelle classe pour gérer vos élèves.</p>
                   <button type="button" id="prof-add-card-open" class="prof-add-card-cta" data-i18n="prof_new_class_btn">Nouvelle classe</button>
+                  <button type="button" id="prof-import-class-btn" class="ghost-button prof-add-card-import" data-i18n="prof_import_class_btn">Importer</button>
                 </div>
                 <form class="prof-add-card-form" id="prof-add-class-form" hidden>
                   <input
@@ -1166,7 +1272,13 @@
             </div>
 
           <div class="prof-upload">
-              <span class="prof-section-label" data-i18n="prof_upload_label">Relevé de notes de la matière</span>
+              <div class="prof-upload-head">
+                <span class="prof-section-label" data-i18n="prof_upload_label">Relevé de notes de la matière</span>
+                <button type="button" id="prof-import-notes-btn" class="secondary-button prof-import-notes-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span data-i18n="prof_import_notes_btn">Importer les notes (CSV)</span>
+                </button>
+              </div>
               <div id="prof-dropzone" class="prof-dropzone" role="button" tabindex="0" data-i18n-aria-label="prof_dropzone_aria">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 <p class="prof-dropzone-title" data-i18n="prof_dropzone_title">Glissez le relevé (photo ou PDF) ici</p>
@@ -1261,9 +1373,8 @@
     <div id="theme-reveal-overlay" aria-hidden="true"></div>
 
     <script src="./js/jspdf.umd.min.js"></script>
-    <script src="./js/qrcode-generator.js"></script>
-    <script src="./js/bulletin-auth.js"></script>
     <script src="script.js"></script>
+    <script src="dashboard.js"></script>
     <script src="prof.js"></script>
     <script src="ocr.js"></script>
     <script>

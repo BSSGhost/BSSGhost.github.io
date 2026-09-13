@@ -2523,6 +2523,547 @@
     if (typeof window.onProfFileCleared === 'function') window.onProfFileCleared();
   }
 
+  /* =========================================================
+     IMPORT MASSIF — ÉLÈVES (CSV / XLSX) + NOTES (CSV)
+     Parsing 100 % côté client (PWA hors-ligne) : CSV lisible
+     directement, XLSX décompressé via DecompressionStream.
+     ========================================================= */
+
+  function parseDelimitedCSV(text) {
+    text = String(text || '');
+    if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+
+    const lines = text.split(/\r\n|\r|\n/);
+    const sample = (lines.find((l) => l.trim()) || '').trim();
+    let delim = ',';
+    const candidates = [',', ';', '\t'].map((d) => {
+      const escaped = d === '\t' ? '\\t' : '\\' + d;
+      const count = (sample.match(new RegExp(escaped, 'g')) || []).length;
+      return { d, count };
+    });
+    candidates.sort((a, b) => b.count - a.count);
+    if (candidates[0].count > 0) delim = candidates[0].d;
+
+    const rows = [];
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (text[i + 1] === '"') {
+            field += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          field += c;
+        }
+      } else if (c === '"') {
+        inQuotes = true;
+      } else if (c === delim) {
+        row.push(field.trim());
+        field = '';
+      } else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(field.trim());
+        field = '';
+        if (row.some((f) => f !== '')) rows.push(row);
+        row = [];
+      } else {
+        field += c;
+      }
+    }
+    row.push(field.trim());
+    if (row.some((f) => f !== '')) rows.push(row);
+    return rows;
+  }
+
+  /* Lecteur XLSX minimaliste : on ne lit que sharedStrings + sheet1. */
+  function xlsxColIndex(ref) {
+    const m = String(ref || '').match(/^[A-Z]+/);
+    if (!m) return -1;
+    let idx = 0;
+    for (const ch of m[0]) idx = idx * 26 + (ch.charCodeAt(0) - 64);
+    return idx - 1;
+  }
+
+  async function parseXlsxFile(file) {
+    if (typeof DecompressionStream === 'undefined') {
+      throw new Error('XLSX non supporté sur ce navigateur');
+    }
+    const buf = new Uint8Array(await file.arrayBuffer());
+    const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    const entries = {};
+    let pos = 0;
+    while (pos + 30 <= buf.length) {
+      if (dv.getUint32(pos, true) !== 0x04034b50) break;
+      const method = dv.getUint16(pos + 8, true);
+      const compSize = dv.getUint32(pos + 18, true);
+      const nameLen = dv.getUint16(pos + 26, true);
+      const extraLen = dv.getUint16(pos + 28, true);
+      const name = new TextDecoder().decode(buf.slice(pos + 30, pos + 30 + nameLen));
+      const dataStart = pos + 30 + nameLen + extraLen;
+      entries[name] = { method, compSize, dataStart };
+      pos = dataStart + compSize;
+    }
+
+    const readEntry = async (name) => {
+      const entry = entries[name];
+      if (!entry) return null;
+      let data = buf.slice(entry.dataStart, entry.dataStart + entry.compSize);
+      if (entry.method === 8) {
+        const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        data = new Uint8Array(await new Response(stream).arrayBuffer());
+      } else if (entry.method !== 0) {
+        return null;
+      }
+      return new TextDecoder('utf-8').decode(data);
+    };
+
+    const [sharedXml, sheetXml] = await Promise.all([
+      readEntry('xl/sharedStrings.xml'),
+      readEntry('xl/worksheets/sheet1.xml')
+    ]);
+    if (!sheetXml) throw new Error('Feuille de calcul introuvable');
+
+    const parser = new DOMParser();
+    const shared = [];
+    if (sharedXml) {
+      const doc = parser.parseFromString(sharedXml, 'application/xml');
+      doc.querySelectorAll('si').forEach((si) => {
+        let text = '';
+        si.querySelectorAll('t').forEach((n) => {
+          text += n.textContent;
+        });
+        shared.push(text);
+      });
+    }
+
+    const doc = parser.parseFromString(sheetXml, 'application/xml');
+    const rows = [];
+    doc.querySelectorAll('sheetData row').forEach((rowEl) => {
+      const cells = [];
+      rowEl.querySelectorAll('c').forEach((cEl) => {
+        const ref = cEl.getAttribute('r');
+        const type = cEl.getAttribute('t') || '';
+        const vEl = cEl.querySelector('v');
+        const isEl = cEl.querySelector('is');
+        let value = '';
+        if (type === 's' && vEl) value = shared[Number(vEl.textContent)] || '';
+        else if (type === 'inlineStr' && isEl) value = isEl.textContent || '';
+        else if (vEl) value = vEl.textContent || '';
+        const idx = xlsxColIndex(ref);
+        const target = idx >= 0 ? idx : cells.length;
+        while (cells.length < target) cells.push('');
+        cells[target] = String(value).trim();
+      });
+      if (cells.some((f) => f !== '')) rows.push(cells);
+    });
+    return rows;
+  }
+
+  async function readTabularFile(file) {
+    const isXlsx = /\.xlsx$/i.test(file.name) || file.type.includes('spreadsheetml');
+    if (isXlsx) return parseXlsxFile(file);
+    const text = await file.text();
+    return parseDelimitedCSV(text);
+  }
+
+  /* ---------- Import d'une liste d'élèves ---------- */
+
+  function buildStudentsList(rows) {
+    if (!rows.length) return [];
+    const header = rows[0].map((c) => String(c || '').toLowerCase());
+    const isHeader = header.some(
+      (h) =>
+        h.includes('nom') || h.includes('prénom') || h.includes('prenom') || h.includes('élève') || h === 'name'
+    );
+    const data = isHeader ? rows.slice(1) : rows;
+
+    let nomIdx = 0;
+    let prenomIdx = 1;
+    if (isHeader) {
+      let prenomFound = false;
+      header.forEach((h, i) => {
+        if (h.includes('prénom') || h.includes('prenom') || h.includes('first name') || h.includes('given name')) {
+          if (prenomIdx !== i) {
+            prenomIdx = i;
+            prenomFound = true;
+          }
+        } else if (h.includes('nom') || h === 'name' || h.includes('last name')) {
+          if (nomIdx === 0 || !prenomFound) nomIdx = i;
+        }
+      });
+    }
+
+    const list = [];
+    data.forEach((cells) => {
+      if (!cells.length) return;
+      let nom = String(cells[nomIdx] || '').trim();
+      let prenom = prenomIdx >= 0 && cells.length > prenomIdx ? String(cells[prenomIdx] || '').trim() : '';
+      if (prenomIdx < 0 || prenomIdx >= cells.length) {
+        const parts = nom.split(/\s+/);
+        if (parts.length > 1) {
+          nom = parts[0];
+          prenom = parts.slice(1).join(' ');
+        }
+      }
+      if (!nom && !prenom) return;
+      list.push({ nom, prenom });
+    });
+    return list;
+  }
+
+  let importClassRows = [];
+
+  function closeClassImportModal() {
+    const modal = document.getElementById('prof-import-class-modal');
+    if (modal) modal.remove();
+    document.body.style.overflow = '';
+    importClassRows = [];
+  }
+
+  function openClassImportModal() {
+    const modal = document.createElement('div');
+    modal.id = 'prof-import-class-modal';
+    modal.className = 'prof-ocr-modal prof-import-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = `
+      <div class="prof-ocr-overlay"></div>
+      <div class="prof-ocr-modal-card">
+        <div class="prof-ocr-header">
+          <h3>${escHtml(t('prof_import_modal_title'))}</h3>
+          <p class="prof-ocr-subtitle">${escHtml(t('prof_import_modal_subtitle'))}</p>
+        </div>
+        <div class="prof-import-file">
+          <label for="prof-import-class-file" class="prof-import-dropzone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>${escHtml(t('prof_import_dropzone'))}</span>
+            <small>${escHtml(t('prof_import_format_label'))}</small>
+          </label>
+          <input type="file" id="prof-import-class-file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden />
+        </div>
+        <div class="prof-import-preview" id="prof-import-class-preview" hidden>
+          <p class="prof-import-preview-info" id="prof-import-class-info"></p>
+          <div class="prof-import-table-wrap">
+            <table class="prof-import-table">
+              <thead>
+                <tr><th>#</th><th>${escHtml(t('label_nom'))}</th><th>${escHtml(t('label_prenom'))}</th><th class="prof-import-col-check">&nbsp;</th></tr>
+              </thead>
+              <tbody id="prof-import-class-tbody"></tbody>
+            </table>
+          </div>
+          <div class="prof-import-target">
+            <label for="prof-import-class-target">${escHtml(t('prof_import_class_label'))}</label>
+            <div class="prof-import-target-row">
+              <div class="select-wrap">
+                <select id="prof-import-class-target"></select>
+              </div>
+              <input type="text" id="prof-import-class-new" maxlength="30" placeholder="${escHtml(t('prof_import_new_class_placeholder'))}" hidden />
+            </div>
+          </div>
+        </div>
+        <div class="prof-ocr-actions">
+          <div class="prof-ocr-actions-right">
+            <button type="button" id="prof-import-class-cancel" class="ghost-button">${escHtml(t('prof_ocr_cancel'))}</button>
+            <button type="button" id="prof-import-class-apply" class="primary-button">${escHtml(t('prof_import_apply', { count: 0 }))}</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+
+    const close = () => {
+      closeClassImportModal();
+    };
+    modal.querySelector('.prof-ocr-overlay').addEventListener('click', close);
+    modal.querySelector('#prof-import-class-cancel').addEventListener('click', close);
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close();
+    });
+
+    const targetSel = modal.querySelector('#prof-import-class-target');
+    const newInput = modal.querySelector('#prof-import-class-new');
+    targetSel.innerHTML = `
+      <option value="" disabled selected>${escHtml(t('prof_import_new_class'))}</option>
+      ${Object.keys(store)
+        .map((name) => `<option value="${escHtml(name)}">${escHtml(name)}</option>`)
+        .join('')}
+      <option value="__new__">${escHtml(t('prof_import_new_class'))}…</option>
+    `;
+    targetSel.addEventListener('change', () => {
+      const isNew = targetSel.value === '__new__';
+      newInput.hidden = !isNew;
+      if (isNew) newInput.focus();
+    });
+
+    const fileInput = modal.querySelector('#prof-import-class-file');
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      try {
+        const rows = await readTabularFile(file);
+        importClassRows = buildStudentsList(rows);
+        renderClassImportPreview(modal);
+      } catch (err) {
+        if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_import_error'));
+      }
+    });
+
+    modal.querySelector('#prof-import-class-apply').addEventListener('click', applyClassImport);
+  }
+
+  function renderClassImportPreview(modal) {
+    const preview = modal.querySelector('#prof-import-class-preview');
+    const tbody = modal.querySelector('#prof-import-class-tbody');
+    const applyBtn = modal.querySelector('#prof-import-class-apply');
+    const info = modal.querySelector('#prof-import-class-info');
+
+    if (!importClassRows.length) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_import_error'));
+      return;
+    }
+
+    tbody.innerHTML = '';
+    importClassRows.forEach((row, index) => {
+      const tr = document.createElement('tr');
+      tr.className = 'prof-import-check-row';
+      const rankCell = document.createElement('td');
+      rankCell.className = 'prof-ocr-col-rank';
+      rankCell.textContent = String(index + 1);
+      const nomCell = document.createElement('td');
+      nomCell.textContent = row.nom;
+      const prenomCell = document.createElement('td');
+      prenomCell.textContent = row.prenom;
+      const checkCell = document.createElement('td');
+      checkCell.className = 'prof-import-col-check';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = true;
+      cb.setAttribute('aria-label', `${row.nom} ${row.prenom}`);
+      cb.addEventListener('change', () => {
+        row._keep = cb.checked;
+        updateClassImportApply();
+      });
+      checkCell.appendChild(cb);
+      tr.append(rankCell, nomCell, prenomCell, checkCell);
+      tbody.appendChild(tr);
+    });
+
+    info.textContent = t('prof_import_header_detected', { cols: t('label_nom') + ' / ' + t('label_prenom') });
+    preview.hidden = false;
+    updateClassImportApply();
+  }
+
+  function updateClassImportApply() {
+    const modal = document.getElementById('prof-import-class-modal');
+    if (!modal) return;
+    const count = importClassRows.filter((r) => r._keep !== false).length;
+    const btn = modal.querySelector('#prof-import-class-apply');
+    if (btn) btn.textContent = t('prof_import_apply', { count });
+  }
+
+  function applyClassImport() {
+    const modal = document.getElementById('prof-import-class-modal');
+    if (!modal) return;
+    const targetSel = modal.querySelector('#prof-import-class-target');
+    const newInput = modal.querySelector('#prof-import-class-new');
+    let target = targetSel.value === '__new__' ? newInput.value.trim() : targetSel.value;
+    if (!target) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_import_no_class'));
+      return;
+    }
+    if (!store[target]) store[target] = defaultClass();
+    let count = 0;
+    importClassRows.forEach((row) => {
+      if (row._keep === false) return;
+      const nom = String(row.nom || '').trim();
+      const prenom = String(row.prenom || '').trim();
+      if (!nom && !prenom) return;
+      const exists = store[target].eleves.some(
+        (e) => isSameString(e.nom, nom) && isSameString(e.prenom, prenom)
+      );
+      if (exists) return;
+      store[target].eleves.push({ id: newId(), nom, prenom });
+      count++;
+    });
+    saveStore();
+    closeClassImportModal();
+    if (typeof showInfoDialog === 'function') {
+      showInfoDialog(t('prof_import_done', { count, classe: target }));
+    }
+    renderHome();
+  }
+
+  /* ---------- Import des notes (Nom;Prénom;D1;D2;Compo) ---------- */
+
+  function buildNotesList(rows) {
+    if (!rows.length) return [];
+    const header = rows[0].map((c) => String(c || '').toLowerCase());
+    const isHeader = header.some(
+      (h) =>
+        h.includes('nom') ||
+        h.includes('prenom') ||
+        h.includes('prénom') ||
+        /^d[12]$/.test(h) ||
+        h.includes('devoir') ||
+        h.includes('note') ||
+        h.includes('compo')
+    );
+
+    let nomIdx = 0;
+    let prenomIdx = -1;
+    let d1Idx = -1;
+    let d2Idx = -1;
+    let compoIdx = -1;
+
+    if (isHeader) {
+      header.forEach((h, i) => {
+        if (h.includes('prénom') || h.includes('prenom')) { if (prenomIdx < 0) prenomIdx = i; }
+        else if (h.includes('nom')) { if (nomIdx === 0) nomIdx = i; }
+        else if (/^(d1|dev[oô]ir[ _]?1|note1|n1)/.test(h)) { if (d1Idx < 0) d1Idx = i; }
+        else if (/^(d2|dev[oô]ir[ _]?2|note2|n2)/.test(h)) { if (d2Idx < 0) d2Idx = i; }
+        else if (h.includes('compo') || h.includes('composition')) { if (compoIdx < 0) compoIdx = i; }
+      });
+      if (prenomIdx < 0) prenomIdx = -1;
+    }
+
+    const data = isHeader ? rows.slice(1) : rows;
+    const list = [];
+    data.forEach((cells) => {
+      if (!cells.length) return;
+      const nom = String(cells[nomIdx] || '').trim();
+      const prenom = prenomIdx >= 0 && cells.length > prenomIdx ? String(cells[prenomIdx] || '').trim() : '';
+      const cell = (idx) => (idx >= 0 && cells.length > idx ? String(cells[idx] || '').trim() : '');
+      const d1 = cell(d1Idx >= 0 ? d1Idx : 2);
+      const d2 = cell(d2Idx >= 0 ? d2Idx : 3);
+      const compo = cell(compoIdx >= 0 ? compoIdx : 4);
+      if (!nom && !prenom) return;
+      if (!d1 && !d2 && !compo) return;
+      list.push({ nom, prenom, d1, d2, compo });
+    });
+    return list;
+  }
+
+  function openNotesImportModal() {
+    const modal = document.createElement('div');
+    modal.id = 'prof-import-notes-modal';
+    modal.className = 'prof-ocr-modal prof-import-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = `
+      <div class="prof-ocr-overlay"></div>
+      <div class="prof-ocr-modal-card">
+        <div class="prof-ocr-header">
+          <h3>${escHtml(t('prof_import_notes_modal_title'))}</h3>
+          <p class="prof-ocr-subtitle">${escHtml(t('prof_import_notes_modal_subtitle'))}</p>
+        </div>
+        <div class="prof-import-file">
+          <label for="prof-import-notes-file" class="prof-import-dropzone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>${escHtml(t('prof_import_dropzone'))}</span>
+            <small>${escHtml(t('prof_import_format_label'))}</small>
+          </label>
+          <input type="file" id="prof-import-notes-file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden />
+        </div>
+        <div class="prof-import-preview" id="prof-import-notes-preview" hidden>
+          <p class="prof-import-preview-info" id="prof-import-notes-info"></p>
+          <div class="prof-import-table-wrap">
+            <table class="prof-import-table">
+              <thead>
+                <tr><th>#</th><th>${escHtml(t('label_nom'))}</th><th>${escHtml(t('label_prenom'))}</th><th>${escHtml(t('label_devoir1'))}</th><th>${escHtml(t('label_devoir2'))}</th><th>${escHtml(t('label_composition'))}</th></tr>
+              </thead>
+              <tbody id="prof-import-notes-tbody"></tbody>
+            </table>
+          </div>
+          <p class="prof-import-note-hint">${escHtml(t('prof_import_notes_matching'))}</p>
+        </div>
+        <div class="prof-ocr-actions">
+          <div class="prof-ocr-actions-right">
+            <button type="button" id="prof-import-notes-cancel" class="ghost-button">${escHtml(t('prof_ocr_cancel'))}</button>
+            <button type="button" id="prof-import-notes-apply" class="primary-button">${escHtml(t('prof_import_notes_apply'))}</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+
+    const close = () => {
+      modal.remove();
+      document.body.style.overflow = '';
+    };
+    modal.querySelector('.prof-ocr-overlay').addEventListener('click', close);
+    modal.querySelector('#prof-import-notes-cancel').addEventListener('click', close);
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close();
+    });
+
+    const fileInput = modal.querySelector('#prof-import-notes-file');
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      try {
+        const rows = await readTabularFile(file);
+        const list = buildNotesList(rows);
+        renderNotesImportPreview(modal, list);
+      } catch {
+        if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_import_notes_error'));
+      }
+    });
+
+    modal.querySelector('#prof-import-notes-apply').addEventListener('click', () => {
+      const list = modal.__notesList || [];
+      const valid = list.filter((r) => (r.nom || r.prenom) && (r.d1 || r.d2));
+      if (!valid.length) {
+        if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_import_notes_error'));
+        return;
+      }
+      if (typeof window.populateProfRows === 'function') {
+        window.populateProfRows(valid);
+      }
+      close();
+      if (typeof showInfoDialog === 'function') {
+        showInfoDialog(t('prof_import_notes_done', { count: valid.length }));
+      }
+    });
+  }
+
+  function renderNotesImportPreview(modal, list) {
+    const preview = modal.querySelector('#prof-import-notes-preview');
+    const tbody = modal.querySelector('#prof-import-notes-tbody');
+    const info = modal.querySelector('#prof-import-notes-info');
+    if (!list.length) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_import_notes_error'));
+      return;
+    }
+    modal.__notesList = list;
+    tbody.innerHTML = '';
+    list.forEach((row, index) => {
+      const tr = document.createElement('tr');
+      const cells = [String(index + 1), row.nom || '', row.prenom || '', row.d1 || '', row.d2 || '', row.compo || ''];
+      cells.forEach((value, idx) => {
+        const td = document.createElement('td');
+        td.textContent = value;
+        if (idx === 0) td.className = 'prof-ocr-col-rank';
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    info.textContent = t('prof_import_header_detected', { cols: (t('label_nom') + ';' + t('label_prenom') + ';D1;D2') });
+    preview.hidden = false;
+  }
+
+  const importClassBtn = $('prof-import-class-btn');
+  const importNotesBtn = $('prof-import-notes-btn');
+  if (importClassBtn) importClassBtn.addEventListener('click', openClassImportModal);
+  if (importNotesBtn) importNotesBtn.addEventListener('click', openNotesImportModal);
+
   /* ===================== Events ===================== */
 
   if (els.togglePassword && els.password) {
