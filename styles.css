@@ -6195,6 +6195,131 @@ html.dark-mode .prof-view-head-stats {
   color: #e6e9ee;
 }
 
+/* Corbeille (en-tête "Mes classes") */
+.prof-view-head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+.prof-trash-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.prof-trash-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--danger, #e03131);
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.prof-trash-count[hidden] {
+  display: none;
+}
+
+/* Modal corbeille */
+.prof-trash-body {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 6px 24px 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prof-trash-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 8px;
+  border-bottom: 1px solid var(--soft-border, rgba(15, 23, 42, 0.07));
+}
+
+.prof-trash-item:last-child {
+  border-bottom: none;
+}
+
+.prof-trash-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(41, 74, 128, 0.08);
+  color: var(--blue-700, #1e3a5f);
+}
+
+.prof-trash-item-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.prof-trash-item-label {
+  font-weight: 700;
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prof-trash-item-meta {
+  color: var(--muted, #6b7280);
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prof-trash-item-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.prof-trash-item-actions .secondary-button,
+.prof-trash-item-actions .ghost-button {
+  padding: 7px 12px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+html.dark-mode .prof-trash-item-icon {
+  background: rgba(134, 159, 200, 0.14);
+  color: #cdd5e0;
+}
+
+@media (-ms-high-contrast: none), (max-width: 560px) {
+  .prof-trash-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .prof-trash-item-actions {
+    width: 100%;
+    padding-left: 50px;
+    justify-content: flex-start;
+  }
+}
+
 .prof-class-rename-input {
   width: 100%;
   padding: 10px 12px;

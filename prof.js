@@ -36,6 +36,8 @@
   const PROF_STORE_KEY = 'lynaqe_prof_classes';
   const PROF_ROWS_PREFIX = 'lynaqe_prof_rows';
   const PROF_ACTIVITY_KEY = 'lynaqe_prof_activity';
+  const PROF_TRASH_KEY = 'lynaqe_prof_trash';
+  const PROF_TRASH_LIMIT = 30;
   const NOTE_FIELDS = ['d1', 'd2', 'compo'];
   const SEMESTER_NAMES = ['Semestre1', 'Semestre2'];
 
@@ -70,6 +72,8 @@
     addClassOpen: $('prof-add-card-open'),
     addClassCancel: $('prof-add-card-cancel'),
     headStats: $('prof-classes-head-stats'),
+    trashBtn: $('prof-trash-btn'),
+    trashCount: $('prof-trash-count'),
 
     classTitle: $('prof-class-name'),
     classMeta: $('prof-class-meta'),
@@ -367,6 +371,275 @@
       delete semObj[matiere];
       saveStore();
     }
+  }
+
+  /* ================= Corbeille =================
+     Supprimer une classe, un élève ou une matière ne l'efface plus
+     définitivement : un instantané est conservé dans la corbeille et
+     peut être restauré tant qu'il n'est pas purgé explicitement. */
+
+  function readTrash() {
+    try {
+      const raw = localStorage.getItem(PROF_TRASH_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveTrash(items) {
+    try {
+      localStorage.setItem(PROF_TRASH_KEY, JSON.stringify(items));
+    } catch {}
+  }
+
+  function addToTrash(item) {
+    const list = readTrash();
+    list.unshift(item);
+    saveTrash(list.slice(0, PROF_TRASH_LIMIT));
+  }
+
+  function removeFromTrash(id) {
+    saveTrash(readTrash().filter((it) => it.id !== id));
+    updateTrashBadge();
+  }
+
+  function trashId() {
+    return 't_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  function updateTrashBadge() {
+    if (els.trashCount) {
+      const n = readTrash().length;
+      els.trashCount.textContent = String(n);
+      els.trashCount.hidden = n === 0;
+    }
+  }
+
+  function trashSnapshotClass(classe) {
+    return {
+      id: trashId(),
+      type: 'class',
+      label: classe,
+      classe,
+      data: store[classe] || defaultClass(),
+      deletedAt: Date.now()
+    };
+  }
+
+  function trashSnapshotStudent(classe, student) {
+    const notesBySem = {};
+    SEMESTER_NAMES.forEach((sem) => {
+      const semObj = store[classe]?.semestres?.[sem] || {};
+      Object.keys(semObj).forEach((matiere) => {
+        const record = semObj[matiere];
+        if (record && record.notes && record.notes[student.id]) {
+          if (!notesBySem[sem]) notesBySem[sem] = {};
+          notesBySem[sem][matiere] = record.notes[student.id];
+        }
+      });
+    });
+    return {
+      id: trashId(),
+      type: 'student',
+      label: getStudentName(student),
+      classe,
+      eleve: { id: student.id, nom: student.nom || '', prenom: student.prenom || '' },
+      notes: notesBySem,
+      deletedAt: Date.now()
+    };
+  }
+
+  function trashSnapshotSubject(classe, sem, matiere) {
+    const record = getSubjectRecord(classe, sem, matiere);
+    if (!record) return null;
+    return {
+      id: trashId(),
+      type: 'subject',
+      label: showMatiere(matiere),
+      classe,
+      semestre: sem,
+      matiere,
+      record,
+      deletedAt: Date.now()
+    };
+  }
+
+  function trashUnit(n, keyS, keyP) {
+    return t(n === 1 ? keyS : keyP);
+  }
+
+  function trashRelative(ts) {
+    const diff = Date.now() - (Number(ts) || 0);
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return t('prof_trash_just_now');
+    if (minutes < 60) return t('prof_trash_ago', { n: minutes, unit: trashUnit(minutes, 'prof_trash_unit_minute_s', 'prof_trash_unit_minute_p') });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return t('prof_trash_ago', { n: hours, unit: trashUnit(hours, 'prof_trash_unit_hour_s', 'prof_trash_unit_hour_p') });
+    const days = Math.floor(hours / 24);
+    if (days < 7) return t('prof_trash_ago', { n: days, unit: trashUnit(days, 'prof_trash_unit_day_s', 'prof_trash_unit_day_p') });
+    const weeks = Math.floor(days / 7);
+    if (weeks < 5) return t('prof_trash_ago', { n: weeks, unit: trashUnit(weeks, 'prof_trash_unit_week_s', 'prof_trash_unit_week_p') });
+    const months = Math.floor(days / 30);
+    if (months < 12) return t('prof_trash_ago', { n: months, unit: t('prof_trash_unit_month') });
+    const years = Math.floor(months / 12);
+    return t('prof_trash_ago', { n: years, unit: trashUnit(years, 'prof_trash_unit_year_s', 'prof_trash_unit_year_p') });
+  }
+
+  function trashTypeLabel(type) {
+    const labels = {
+      class: t('prof_trash_type_class'),
+      student: t('prof_trash_type_student'),
+      subject: t('prof_trash_type_subject')
+    };
+    return labels[type] || '';
+  }
+
+  function restoreTrashItem(item) {
+    if (!item) return;
+    const doRestore = () => {
+      if (item.type === 'class') {
+        store[item.classe] = item.data ? Object.assign(defaultClass(), item.data) : defaultClass();
+        saveStore();
+      } else if (item.type === 'student') {
+        if (!store[item.classe]) store[item.classe] = defaultClass();
+        const classeData = store[item.classe];
+        classeData.eleves = (classeData.eleves || []).filter((s) => s.id !== item.eleve?.id);
+        if (item.eleve) {
+          classeData.eleves.push({ id: item.eleve.id, nom: item.eleve.nom || '', prenom: item.eleve.prenom || '' });
+        }
+        if (item.notes) {
+          Object.keys(item.notes).forEach((sem) => {
+            const semObj = (classeData.semestres[sem] = classeData.semestres[sem] || {});
+            Object.keys(item.notes[sem]).forEach((matiere) => {
+              const record = semObj[matiere];
+              if (record && record.notes && item.notes[sem][matiere]) {
+                record.notes[item.eleve.id] = item.notes[sem][matiere];
+              }
+            });
+          });
+        }
+        saveStore();
+      } else if (item.type === 'subject') {
+        if (!store[item.classe]) store[item.classe] = defaultClass();
+        if (!store[item.classe].semestres[item.semestre]) store[item.classe].semestres[item.semestre] = {};
+        store[item.classe].semestres[item.semestre][item.matiere] = item.record;
+        saveStore();
+      }
+      removeFromTrash(item.id);
+      recordActivity('trash', item.label);
+      openTrashModal();
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_trash_restored', { label: item.label }));
+    };
+
+    const conflict =
+      (item.type === 'class' && store[item.classe]) ||
+      (item.type === 'subject' && !!getSubjectRecord(item.classe, item.semestre, item.matiere));
+
+    if (conflict) {
+      if (typeof confirmModal !== 'undefined' && confirmModal.el) {
+        confirmModal.show({ message: t('prof_trash_overwrite', { label: item.label }), danger: true, onConfirm: doRestore });
+      } else if (window.confirm(t('prof_trash_overwrite', { label: item.label }))) {
+        doRestore();
+      }
+    } else {
+      doRestore();
+    }
+  }
+
+  function purgeTrashItem(item) {
+    if (!item) return;
+    const doPurge = () => {
+      removeFromTrash(item.id);
+      recordActivity('trash', item.label);
+      openTrashModal();
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('prof_trash_deleted', { label: item.label }));
+    };
+    if (typeof confirmModal !== 'undefined' && confirmModal.el) {
+      confirmModal.show({
+        message: t('prof_trash_confirm_delete', { label: item.label }),
+        danger: true,
+        onConfirm: doPurge
+      });
+    } else if (window.confirm(t('prof_trash_confirm_delete', { label: item.label }))) {
+      doPurge();
+    }
+  }
+
+  function openTrashModal() {
+    document.querySelectorAll('.prof-trash-modal').forEach((node) => node.remove());
+    const items = readTrash();
+    const iconMap = {
+      class: ICON_SUBJECTS,
+      student: ICON_STUDENTS,
+      subject: ICON_BARS
+    };
+
+    const rows = items
+      .map(
+        (item) => `
+        <div class="prof-trash-item" data-id="${escHtml(item.id)}">
+          <span class="prof-trash-item-icon" aria-hidden="true">${iconMap[item.type] || ICON_DOTS}</span>
+          <div class="prof-trash-item-main">
+            <strong class="prof-trash-item-label">${escHtml(item.label)}</strong>
+            <small class="prof-trash-item-meta">${escHtml(trashTypeLabel(item.type))} • ${escHtml(trashRelative(item.deletedAt))}</small>
+          </div>
+          <div class="prof-trash-item-actions">
+            <button type="button" class="secondary-button prof-trash-restore">${t('prof_trash_restore')}</button>
+            <button type="button" class="ghost-button prof-danger-text prof-trash-purge">${t('prof_trash_delete_forever')}</button>
+          </div>
+        </div>`
+      )
+      .join('');
+
+    const modal = document.createElement('div');
+    modal.className = 'prof-ocr-modal prof-trash-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = `
+      <div class="prof-ocr-overlay"></div>
+      <div class="prof-ocr-modal-card">
+        <div class="prof-ocr-header">
+          <h3>${escHtml(t('prof_trash_title'))}</h3>
+          <p class="prof-ocr-subtitle">${escHtml(t('prof_trash_subtitle'))}</p>
+        </div>
+        <div class="prof-trash-body">
+          ${items.length ? rows : `<p class="prof-empty">${escHtml(t('prof_trash_empty'))}</p>`}
+        </div>
+        <div class="prof-ocr-actions">
+          <div class="prof-ocr-actions-right">
+            <button type="button" class="primary-button" data-trash-close>${escHtml(t('prof_bulletin_close'))}</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+
+    const close = () => {
+      modal.remove();
+      document.body.style.overflow = '';
+      renderHome();
+    };
+    modal.querySelector('[data-trash-close]').addEventListener('click', close);
+    modal.querySelector('.prof-ocr-overlay').addEventListener('click', close);
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close();
+    });
+
+    modal.querySelectorAll('.prof-trash-restore').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const item = items.find((it) => it.id === btn.closest('.prof-trash-item')?.dataset.id);
+        restoreTrashItem(item);
+      });
+    });
+    modal.querySelectorAll('.prof-trash-purge').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const item = items.find((it) => it.id === btn.closest('.prof-trash-item')?.dataset.id);
+        purgeTrashItem(item);
+      });
+    });
   }
 
   /* ------------------ Utilitaires ------------------ */
@@ -815,7 +1088,8 @@
       student: t('prof_activity_student'),
       notes: t('prof_activity_notes'),
       bulletin: t('prof_activity_bulletin'),
-      import: t('prof_activity_import')
+      import: t('prof_activity_import'),
+      trash: t('prof_trash_btn')
     };
     return labels[item.action] || item.action;
   }
@@ -827,7 +1101,7 @@
       els.dashActivity.innerHTML = `<p class="prof-empty">${escHtml(t('prof_activity_empty'))}</p>`;
       return;
     }
-    const iconMap = { class: ICON_CLASSE, student: ICON_STUDENTS, notes: ICON_BARS, bulletin: ICON_ORDER, import: ICON_ALERT };
+    const iconMap = { class: ICON_CLASSE, student: ICON_STUDENTS, notes: ICON_BARS, bulletin: ICON_ORDER, import: ICON_ALERT, trash: ICON_DELETE };
     els.dashActivity.innerHTML = list
       .slice(0, 6)
       .map((item) => {
@@ -1509,6 +1783,7 @@
     if (!els.classesGrid) return;
     els.classesGrid.querySelectorAll('.prof-class-card').forEach((node) => node.remove());
     els.classesGrid.classList.remove('has-none');
+    updateTrashBadge();
 
     if (els.headStats) {
       let totalStudents = 0;
@@ -1712,25 +1987,26 @@
   }
 
   function deleteClass(classe) {
+    const doDelete = () => {
+      addToTrash(trashSnapshotClass(classe));
+      delete store[classe];
+      saveStore();
+      recordActivity('class', classe);
+      if (activeClass === classe) {
+        activeClass = null;
+        showHome();
+      } else {
+        renderHome();
+      }
+    };
     if (typeof confirmModal !== 'undefined' && confirmModal.el) {
       confirmModal.show({
         message: t('prof_confirm_delete_class', { classe }),
-        onConfirm: () => {
-          delete store[classe];
-          saveStore();
-          recordActivity('class', classe);
-          if (activeClass === classe) {
-            activeClass = null;
-            showHome();
-          } else {
-            renderHome();
-          }
-        }
+        danger: true,
+        onConfirm: doDelete
       });
     } else if (window.confirm(t('prof_confirm_delete_class', { classe }))) {
-      delete store[classe];
-      saveStore();
-      renderHome();
+      doDelete();
     }
   }
 
@@ -1862,23 +2138,28 @@
   }
 
   function deleteStudent(student) {
+    const doDelete = () => {
+      addToTrash(trashSnapshotStudent(activeClass, student));
+      const classeData = store[activeClass] || defaultClass();
+      classeData.eleves = classeData.eleves.filter((s) => s.id !== student.id);
+      ['Semestre1', 'Semestre2'].forEach((sem) => {
+        const semObj = store[activeClass]?.semestres?.[sem] || {};
+        Object.values(semObj).forEach((record) => {
+          if (record.notes && record.notes[student.id]) delete record.notes[student.id];
+        });
+      });
+      saveStore();
+      recordActivity('student', `${student.prenom} ${student.nom}`.trim());
+      renderClassView();
+    };
     if (typeof confirmModal !== 'undefined' && confirmModal.el) {
       confirmModal.show({
         message: t('prof_confirm_delete_student'),
-        onConfirm: () => {
-          const classeData = store[activeClass] || defaultClass();
-          classeData.eleves = classeData.eleves.filter((s) => s.id !== student.id);
-          ['Semestre1', 'Semestre2'].forEach((sem) => {
-            const semObj = store[activeClass]?.semestres?.[sem] || {};
-            Object.values(semObj).forEach((record) => {
-              if (record.notes && record.notes[student.id]) delete record.notes[student.id];
-            });
-          });
-          saveStore();
-          recordActivity('student', `${student.prenom} ${student.nom}`.trim());
-          renderClassView();
-        }
+        danger: true,
+        onConfirm: doDelete
       });
+    } else if (window.confirm(t('prof_confirm_delete_student'))) {
+      doDelete();
     }
   }
 
@@ -2006,14 +2287,20 @@
   }
 
   function deleteSubject(matiere) {
+    const doDelete = () => {
+      const item = trashSnapshotSubject(activeClass, activeSem, matiere);
+      if (item) addToTrash(item);
+      deleteSubjectRecord(activeClass, activeSem, matiere);
+      renderClassView();
+    };
     if (typeof confirmModal !== 'undefined' && confirmModal.el) {
       confirmModal.show({
         message: t('prof_confirm_delete_subject', { matiere: showMatiere(matiere) }),
-        onConfirm: () => {
-          deleteSubjectRecord(activeClass, activeSem, matiere);
-          renderClassView();
-        }
+        danger: true,
+        onConfirm: doDelete
       });
+    } else if (window.confirm(t('prof_confirm_delete_subject', { matiere: showMatiere(matiere) }))) {
+      doDelete();
     }
   }
 
@@ -3315,6 +3602,7 @@
         try {
           localStorage.removeItem(PROF_STORE_KEY);
           localStorage.removeItem(PROF_AUTH_KEY);
+          localStorage.removeItem(PROF_TRASH_KEY);
           Object.keys(localStorage)
             .filter((key) => key.startsWith(`${PROF_ROWS_PREFIX}_`))
             .forEach((key) => localStorage.removeItem(key));
@@ -3332,6 +3620,10 @@
         resetAll();
       }
     });
+  }
+
+    if (els.trashBtn) {
+    els.trashBtn.addEventListener('click', () => openTrashModal());
   }
 
     /* ---------- Sidebar navigation + sélecteurs ---------- */
