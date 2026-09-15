@@ -7216,16 +7216,16 @@ html.dark-mode .prof-console-tab.is-active {
   appearance: none;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 9px;
   width: 100%;
-  padding: 8px 13px 8px 17px;
+  padding: 5px 10px 5px 12px;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   background: transparent;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--muted);
   transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
@@ -7237,7 +7237,7 @@ html.dark-mode .prof-console-tab.is-active {
   left: 0;
   top: 50%;
   width: 3px;
-  height: 20px;
+  height: 16px;
   border-radius: 0 6px 6px 0;
   background: var(--blue-700);
   transform: translateY(-50%) scaleY(0);
@@ -7257,17 +7257,17 @@ html.dark-mode .prof-sidebar-item.is-active::before {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
   background: rgba(78, 113, 170, 0.1);
   color: var(--blue-600);
   transition: background 0.18s ease, color 0.18s ease;
 }
 
 .prof-sidebar-item-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .prof-sidebar-item-label {
@@ -7411,10 +7411,11 @@ html.dark-mode .prof-sidebar-reset {
   width: 40px;
   height: 40px;
   border-radius: 11px;
-  border: 1px solid rgba(27, 42, 66, 0.12);
-  background: transparent;
-  color: var(--text);
+  border: 1px solid rgba(27, 42, 66, 0.15);
+  background: var(--card-strong);
+  color: var(--blue-700);
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
 .prof-breadcrumb {
