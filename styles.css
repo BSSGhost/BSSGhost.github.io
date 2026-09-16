@@ -7215,6 +7215,7 @@ html.dark-mode .prof-console-tab.is-active {
   position: relative;
   appearance: none;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 8px;
   width: 100%;
@@ -7323,6 +7324,7 @@ html.dark-mode .prof-sidebar-item.is-active .prof-sidebar-item-icon {
 .prof-sidebar-btn {
   appearance: none;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
@@ -7410,6 +7412,7 @@ html.dark-mode .prof-sidebar-reset {
   flex: 0 0 auto;
   width: 42px;
   height: 42px;
+  padding: 0;
   border-radius: 11px;
   border: 1px solid rgba(27, 42, 66, 0.15);
   background: var(--card-strong);
@@ -7423,6 +7426,23 @@ html.dark-mode .prof-sidebar-reset {
   flex: 0 0 auto;
   width: 20px;
   height: 20px;
+  overflow: visible;
+}
+
+.prof-mobile-nav-btn svg .pmb-bar {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.prof-mobile-nav-btn:hover svg .pmb-bar-1 {
+  transform: translateX(1px);
+}
+
+.prof-mobile-nav-btn:hover svg .pmb-bar-3 {
+  transform: translateX(-1px);
+}
+
+html.dark-mode .prof-mobile-nav-btn {
+  color: var(--yellow-400);
 }
 
 .prof-breadcrumb {
