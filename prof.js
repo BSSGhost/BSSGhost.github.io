@@ -2263,17 +2263,19 @@
     names.forEach((matiere) => {
       const record = semObj[matiere];
       const avg = classeAverageForSubject(record);
+      const avgClass = avg === null ? 'is-empty' : avg >= 10 ? 'is-good' : 'is-low';
+      const avgLabel = avg === null ? '—' : `${avg.toFixed(2)}/20`;
       const item = document.createElement('div');
       item.className = 'prof-subject-item';
       item.innerHTML = `
         <div class="prof-subject-item-main">
-          <span class="prof-subject-item-name">${escHtml(showMatiere(matiere))}</span>
+          <div class="prof-subject-item-top">
+            <span class="prof-subject-item-name">${escHtml(showMatiere(matiere))}</span>
+            <span class="prof-subject-item-avg-pill ${avgClass}" title="${escHtml(t('th_moyenne'))}">${avgLabel}</span>
+          </div>
           <span class="prof-subject-item-meta">${t('label_coefficient')} : ${record.coefficient || 1} • ${
         record.composition ? t('radio_oui') : t('radio_non')
       } ${t('legend_composition')}</span>
-          <span class="prof-subject-item-avg"><span>${t('th_moyenne')} :</span> ${
-        avg === null ? '—' : avg.toFixed(2)
-      }</span>
         </div>
         <div class="prof-subject-item-actions">
           <button type="button" class="secondary-button prof-add-btn" data-act="open">${t('prof_subject_open')}</button>

@@ -6359,20 +6359,48 @@ html.dark-mode .prof-class-rename-input {
   font-size: 0.76rem;
 }
 
-.prof-subject-item-avg {
-  color: var(--text);
-  font-size: 0.84rem;
-  font-weight: 700;
+.prof-subject-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.prof-subject-item-avg-pill {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: rgba(120, 130, 145, 0.14);
+  color: var(--muted);
 }
 
-.prof-subject-item-avg span {
-  color: var(--muted);
-  font-weight: 400;
+.prof-subject-item-avg-pill.is-good {
+  background: rgba(46, 160, 90, 0.14);
+  color: #1f8a4c;
 }
 
-html.dark-mode .prof-subject-item-avg span {
+.prof-subject-item-avg-pill.is-low {
+  background: rgba(214, 68, 68, 0.12);
+  color: #c23636;
+}
+
+html.dark-mode .prof-subject-item-avg-pill {
+  background: rgba(230, 233, 238, 0.1);
   color: var(--muted);
+}
+
+html.dark-mode .prof-subject-item-avg-pill.is-good {
+  background: rgba(52, 168, 83, 0.18);
+  color: #5fd88a;
+}
+
+html.dark-mode .prof-subject-item-avg-pill.is-low {
+  background: rgba(220, 68, 68, 0.18);
+  color: #ff8f8f;
 }
 
 .prof-bulletin-table-wrap {
