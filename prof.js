@@ -2273,9 +2273,9 @@
             <span class="prof-subject-item-name">${escHtml(showMatiere(matiere))}</span>
             <span class="prof-subject-item-avg-pill ${avgClass}" title="${escHtml(t('th_moyenne'))}">${avgLabel}</span>
           </div>
-          <span class="prof-subject-item-meta">${t('label_coefficient')} : ${record.coefficient || 1} • ${
-        record.composition ? t('radio_oui') : t('radio_non')
-      } ${t('legend_composition')}</span>
+          <span class="prof-subject-item-meta">${t('label_coefficient')} : ${record.coefficient || 1} • ${t(
+        'stat_composition_label'
+      )} : ${record.composition ? t('radio_oui') : t('radio_non')}</span>
         </div>
         <div class="prof-subject-item-actions">
           <button type="button" class="secondary-button prof-add-btn" data-act="open">${t('prof_subject_open')}</button>

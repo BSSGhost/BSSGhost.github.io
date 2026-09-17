@@ -6600,8 +6600,8 @@ html.dark-mode .prof-semester-tab.is-active {
 
 .prof-subject-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 10px;
   padding: 12px 14px;
   border: 1px solid var(--soft-border);
@@ -6653,8 +6653,10 @@ html.dark-mode .prof-subject-item-badge {
 .prof-subject-item-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 6px;
   flex: 0 0 auto;
+  width: 100%;
 }
 
 .prof-subject-item-actions .ghost-button,
@@ -7090,16 +7092,6 @@ html.dark-mode .prof-danger-text {
 
   .prof-semester-tab {
     flex: 1 1 0;
-  }
-
-  .prof-subject-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .prof-subject-item-actions {
-    width: 100%;
-    justify-content: flex-end;
   }
 }
 
