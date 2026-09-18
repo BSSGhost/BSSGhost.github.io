@@ -4397,6 +4397,7 @@ const confirmModal = {
     this.onAlt = onAlt || null;
     this.onDismiss = onDismiss || null;
     this.messageEl.textContent = message;
+    this._seq = (this._seq || 0) + 1;
 
     if (this.altBtn) {
       this.altBtn.hidden = !altLabel;
@@ -4436,11 +4437,13 @@ const confirmModal = {
     if (this.closing || !this.el) return;
     this.closing = true;
     this.el.classList.add('is-closing');
+    const seq = this._seq || 0;
     const dismissFn = dismiss ? this.onDismiss : null;
     this.onConfirm = null;
     this.onAlt = null;
     this.onDismiss = null;
     const done = () => {
+      if ((this._seq || 0) !== seq) return; /* révélé entre-temps : on garde */
       this.el.hidden = true;
       this.el.classList.remove('is-closing');
       this.closing = false;
