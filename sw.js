@@ -4,7 +4,7 @@
    fonctionnement hors-ligne complet (calcul, PDF, OCR).
    Incrémenter CACHE_VERSION à chaque déploiement.
    ========================================================= */
-const CACHE_VERSION = 'v40';
+const CACHE_VERSION = 'v41';
 const CACHE_NAME = `sunu-moyenne-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -15,6 +15,7 @@ const PRECACHE_URLS = [
   './dashboard.js',
   './prof.js',
   './ocr.js',
+  './supabase.config.js',
   './manifest.json',
   './LYNAQE.png',
   './force-armee.webp',

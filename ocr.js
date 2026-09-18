@@ -372,7 +372,190 @@
     return result.data;
   }
 
-  /* ---------- Parsing des résultats OCR ---------- */
+  /* ---------- Parsing des résultats OCR : détection du tableau ---------- */
+
+  /* Un token « note » peut contenir du bruit OCR courant : « ? » (note
+     douteuse), « O/l/I » à la place de « 0/1 », virgules ou points
+     parasites. On retourne { value, doubtful } si le token est une
+     note plausible (0–20), sinon null. */
+  function classifyNoteToken(raw) {
+    let s = String(raw || '').replace(/\s+/g, '');
+    if (!s) return null;
+    const doubtful = /[?]/.test(s) || /[^0-9.,OoIl]/.test(s);
+    s = s
+      .replace(/[Oo]/g, '0')
+      .replace(/[lI]/g, '1')
+      .replace(/[?!;:]/g, '');
+    s = s.replace(/[.,]+$/, '');
+    if (!s) return null;
+    s = s.replace(',', '.');
+    if (!/^(\d{1,2})(\.\d{1,2})?$/.test(s)) return null;
+    const value = parseFloat(s);
+    if (!(value >= 0 && value <= MAX_NOTE)) return null;
+    return { value, doubtful };
+  }
+
+  /* Regroupe les mots par ligne de tableau puis les convertit en tokens
+     triés en X, avec la note extraite le cas échéant. */
+  function buildTokenLines(lines) {
+    return lines
+      .map((lineWords) =>
+        [...lineWords]
+          .sort((a, b) => a.bbox.x0 - b.bbox.x0)
+          .map((w) => {
+            const text = w.text.trim();
+            return {
+              text,
+              x: (w.bbox.x0 + w.bbox.x1) / 2,
+              conf: w.confidence / 100,
+              note: classifyNoteToken(text)
+            };
+          })
+      )
+      .filter((line) => line.length);
+  }
+
+  /* Détection « intelligente » des colonnes de notes : on regroupe les
+     abscisses des valeurs numériques (D1, D2, Compo) par proximité sur
+     l'ensemble du relevé, ce qui donne des colonnes homogènes quelle que
+     soit la longueur des noms. Retourne [ { cx, count } ] trié, ou null. */
+  function detectNoteColumns(tokenLines) {
+    const centers = [];
+    const COLUMN_GAP = 18;
+    tokenLines.forEach((line) => {
+      line.forEach((tok) => {
+        if (tok.note) centers.push(tok.x);
+      });
+    });
+    if (centers.length < 4) return null; /* pas assez de mesures fiables */
+
+    const xs = centers.slice().sort((a, b) => a - b);
+    const clusters = [];
+    let cur = [xs[0]];
+    for (let i = 1; i < xs.length; i++) {
+      if (xs[i] - xs[i - 1] <= COLUMN_GAP) cur.push(xs[i]);
+      else {
+        clusters.push(cur);
+        cur = [xs[i]];
+      }
+    }
+    clusters.push(cur);
+
+    const cols = clusters
+      .map((c) => ({
+        cx: c.reduce((s, v) => s + v, 0) / c.length,
+        count: c.length
+      }))
+      .filter((c) => c.count >= 2)
+      .sort((a, b) => a.cx - b.cx);
+
+    return cols.length >= 2 ? cols : null;
+  }
+
+  /* Attribue les tokens d'une ligne aux colonnes de notes détectées,
+     par proximité en X. Les tokens texte à gauche rejoignent le nom /
+     le prénom. */
+  function assignByColumns(tokens, noteCols) {
+    let doubtful = false;
+    const noteSlots = [];
+    const nameToks = [];
+
+    tokens.forEach((tok) => {
+      if (tok.note) {
+        let best = 0;
+        let bestD = Infinity;
+        noteCols.forEach((col, idx) => {
+          const d = Math.abs(col.cx - tok.x);
+          if (d < bestD) {
+            bestD = d;
+            best = idx;
+          }
+        });
+        noteSlots[best] = tok;
+        if (tok.note.doubtful) doubtful = true;
+      } else {
+        nameToks.push(tok);
+      }
+    });
+
+    const nameLimit = noteCols.length ? noteCols[0].cx : Infinity;
+    const names = nameToks.filter((t) => t.x < nameLimit);
+    const nameZone = names.length ? names : nameToks.slice(0, 2);
+
+    let nom = '';
+    let prenom = '';
+    if (nameZone.length === 1) {
+      nom = nameZone[0].text;
+    } else if (nameZone.length >= 2) {
+      nom = nameZone[0].text;
+      prenom = nameZone.slice(1).map((t) => t.text).join(' ');
+    }
+
+    const d1 = noteSlots[0] ? formatNote(noteSlots[0].note.value) : '';
+    const d2 = noteSlots[1] ? formatNote(noteSlots[1].note.value) : '';
+    const compo = noteSlots[2] ? formatNote(noteSlots[2].note.value) : '';
+
+    if (!(nom || prenom)) return null;
+    if (!d1 && !d2) return null;
+
+    const confParts = [];
+    nameZone.forEach((t) => confParts.push(t.conf));
+    noteSlots.filter(Boolean).forEach((t) => confParts.push(t.conf));
+    const avg = confParts.length ? confParts.reduce((s, v) => s + v, 0) / confParts.length : 0;
+
+    return {
+      nom,
+      prenom,
+      d1,
+      d2,
+      compo,
+      confidence: avg,
+      _doubtful: doubtful,
+      _raw: tokens.map((t) => t.text).join(' | ')
+    };
+  }
+
+  /* Repli séquentiel (sans détection de colonnes) : les valeurs numériques
+     en fin de ligne deviennent les notes, les textes au début le nom et
+     le prénom. */
+  function assignSequential(tokens) {
+    const nameValues = [];
+    const noteValues = [];
+
+    tokens.forEach((tok) => {
+      if (tok.note) noteValues.push(tok);
+      else nameValues.push(tok);
+    });
+
+    if (!nameValues.length || !noteValues.length) return null;
+
+    let nom = '';
+    let prenom = '';
+    if (nameValues.length >= 1) nom = nameValues[0].text;
+    if (nameValues.length >= 2) prenom = nameValues.slice(1).map((t) => t.text).join(' ');
+
+    const d1 = noteValues.length >= 1 ? formatNote(noteValues[0].note.value) : '';
+    const d2 = noteValues.length >= 2 ? formatNote(noteValues[1].note.value) : '';
+    const compo = noteValues.length >= 3 ? formatNote(noteValues[2].note.value) : '';
+
+    if (!nom && !prenom) return null;
+    if (!d1 && !d2) return null;
+
+    const confParts = nameValues.map((t) => t.conf).concat(noteValues.map((t) => t.conf));
+    const avg = confParts.length ? confParts.reduce((s, v) => s + v, 0) / confParts.length : 0;
+    const doubtful = nameValues.concat(noteValues).some((t) => t.note && t.note.doubtful);
+
+    return {
+      nom,
+      prenom,
+      d1,
+      d2,
+      compo,
+      confidence: avg,
+      _doubtful: doubtful,
+      _raw: tokens.map((t) => t.text).join(' | ')
+    };
+  }
 
   function parseOCRWords(ocrData) {
     if (!ocrData || !ocrData.words || !ocrData.words.length) return [];
@@ -404,63 +587,14 @@
     });
     if (currentLine.length) lines.push(currentLine);
 
+    const tokenLines = buildTokenLines(lines);
+    const noteCols = detectNoteColumns(tokenLines);
+
     const results = [];
-    lines.forEach((lineWords) => {
-      const sorted = [...lineWords].sort((a, b) => a.bbox.x0 - b.bbox.x0);
-      const texts = sorted.map((w) => ({
-        text: w.text.trim(),
-        conf: w.confidence / 100,
-        x: (w.bbox.x0 + w.bbox.x1) / 2,
-        isNote: false
-      }));
-
-      const noteValues = [];
-      const nameValues = [];
-
-      texts.forEach((item) => {
-        const cleaned = item.text.replace(/\s/g, '');
-        const normalized = cleaned.replace(',', '.');
-        if (NOTE_PATTERN.test(normalized)) {
-          const val = parseFloat(normalized);
-          if (val >= 0 && val <= MAX_NOTE) {
-            item.isNote = true;
-            item.numericValue = val;
-            noteValues.push(item);
-          } else {
-            nameValues.push(item);
-          }
-        } else if (/^\d+$/.test(cleaned) && parseInt(cleaned, 10) <= MAX_NOTE) {
-          item.isNote = true;
-          item.numericValue = parseInt(cleaned, 10);
-          noteValues.push(item);
-        } else {
-          nameValues.push(item);
-        }
-      });
-
-      if (nameValues.length >= 1 && noteValues.length >= 2) {
-        let nom = '';
-        let prenom = '';
-        if (nameValues.length >= 2) {
-          nom = nameValues[0].text;
-          prenom = nameValues[1].text;
-        } else {
-          nom = nameValues[0].text;
-        }
-        const avgConf = noteValues.reduce((s, n) => s + n.conf, 0) / noteValues.length;
-        const nameConf = nameValues.reduce((s, n) => s + n.conf, 0) / nameValues.length;
-
-        const row = {
-          nom: nom,
-          prenom: prenom,
-          d1: noteValues.length >= 1 ? formatNote(noteValues[0].numericValue) : '',
-          d2: noteValues.length >= 2 ? formatNote(noteValues[1].numericValue) : '',
-          compo: noteValues.length >= 3 ? formatNote(noteValues[2].numericValue) : '',
-          confidence: Math.min(avgConf, nameConf),
-          _raw: texts.map((t) => t.text).join(' | ')
-        };
-        results.push(row);
-      }
+    tokenLines.forEach((line) => {
+      let row = noteCols ? assignByColumns(line, noteCols) : null;
+      if (!row) row = assignSequential(line);
+      if (row) results.push(row);
     });
 
     return results;
@@ -511,6 +645,7 @@
           d2: noteCandidates.length >= 2 ? formatNote(noteCandidates[1].numericValue) : '',
           compo: noteCandidates.length >= 3 ? formatNote(noteCandidates[2].numericValue) : '',
           confidence: 0.4,
+          _doubtful: false,
           _raw: parts.join(' | ')
         });
       }
@@ -535,10 +670,12 @@
     return parseFloat(cleaned) <= MAX_NOTE;
   }
 
-  /* Une ligne est marquée "à vérifier" si la confiance est basse, si un nom
-     improbable est détecté, ou si une note est absente / invalide. */
+  /* Une ligne est marquée "à vérifier" si la confiance est basse, si un
+     nom improbable est détecté, si une note est absente / invalide, ou si
+     une note était douteuse à la lecture (« 1? »). */
   function rowCheckable(row) {
     if (!row) return true;
+    if (row._doubtful) return true;
     if ((row.confidence || 0) < CONFIDENCE_THRESHOLD) return true;
     const nom = String(row.nom || '').trim();
     const prenom = String(row.prenom || '').trim();
@@ -666,7 +803,8 @@
       d1: r.d1 || '',
       d2: r.d2 || '',
       compo: r.compo || '',
-      confidence: r.confidence || 0
+      confidence: r.confidence || 0,
+      _doubtful: !!r._doubtful
     }));
     ocrFilterToCheck = false;
 
@@ -819,7 +957,8 @@
       d1: '',
       d2: '',
       compo: '',
-      confidence: 1
+      confidence: 1,
+      _doubtful: false
     });
     renderOCRTable();
     const modal = createOCRModal();

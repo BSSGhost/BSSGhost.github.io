@@ -37,6 +37,7 @@
   const PROF_ROWS_PREFIX = 'lynaqe_prof_rows';
   const PROF_ACTIVITY_KEY = 'lynaqe_prof_activity';
   const PROF_TRASH_KEY = 'lynaqe_prof_trash';
+  const PROF_OWNER_KEY = 'lynaqe_prof_owner';
   const PROF_TRASH_LIMIT = 30;
   const NOTE_FIELDS = ['d1', 'd2', 'compo'];
   const SEMESTER_NAMES = ['Semestre1', 'Semestre2'];
@@ -215,6 +216,9 @@
     els.loginCard.hidden = true;
     els.console.hidden = false;
     showDash();
+    /* Corbeille : rapatrie la version serveur (Supabase) si configuré,
+       sinon tout reste en localStorage. Non bloquant. */
+    pullTrashFromServer();
   }
 
   /* -------------------- Stockage -------------------- */
@@ -376,28 +380,152 @@
   /* ================= Corbeille =================
      Supprimer une classe, un élève ou une matière ne l'efface plus
      définitivement : un instantané est conservé dans la corbeille et
-     peut être restauré tant qu'il n'est pas purgé explicitement. */
+     peut être restauré tant qu'il n'est pas purgé explicitement.
+     La corbeille vit en localStorage (hors-ligne). Si Supabase est
+     configuré (supabase.config.js), elle est synchronisée sur la
+     table « lynaqe_prof_trash » (30 éléments max, purge automatique
+     après 30 jours). Sans configuration, tout reste local. */
 
-  function readTrash() {
+  function supabaseCfg() {
+    return window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG === 'object'
+      ? window.SUPABASE_CONFIG
+      : {};
+  }
+
+  function supabaseEnabled() {
+    const cfg = supabaseCfg();
+    return Boolean(cfg.url && cfg.anonKey && /^https?:\/\//.test(String(cfg.url)));
+  }
+
+  function supabaseBase() {
+    return String(supabaseCfg().url || '').replace(/\/+$/, '');
+  }
+
+  function getOwnerId() {
     try {
-      const raw = localStorage.getItem(PROF_TRASH_KEY);
-      const list = raw ? JSON.parse(raw) : [];
-      return Array.isArray(list) ? list : [];
+      let id = localStorage.getItem(PROF_OWNER_KEY);
+      if (!id) {
+        id = 'd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12);
+        localStorage.setItem(PROF_OWNER_KEY, id);
+      }
+      return id;
     } catch {
-      return [];
+      return 'local';
     }
   }
 
-  function saveTrash(items) {
+  function supabaseFetch(path, options) {
+    const cfg = supabaseCfg();
+    const headers = Object.assign(
+      {
+        apikey: cfg.anonKey,
+        Authorization: 'Bearer ' + cfg.anonKey,
+        'Content-Type': 'application/json',
+        'X-Owner-Id': getOwnerId()
+      },
+      (options && options.headers) || {}
+    );
+    return fetch(supabaseBase() + path, Object.assign({}, options, { headers }));
+  }
+
+  /* Synchronise la corbeille locale vers Supabase (remplacement complet
+     des lignes de cet appareil : suppression puis réinsertion). */
+  async function syncTrashToServer(items) {
+    if (!supabaseEnabled()) return;
+    try {
+      const owner = getOwnerId();
+      await supabaseFetch('/rest/v1/lynaqe_prof_trash?owner_id=eq.' + encodeURIComponent(owner), {
+        method: 'DELETE',
+        headers: { Prefer: 'return=minimal' }
+      });
+      if (items && items.length) {
+        const rows = items.map((item) => ({
+          owner_id: owner,
+          payload: item,
+          deleted_at: new Date(Number(item.deletedAt) || Date.now()).toISOString()
+        }));
+        await supabaseFetch('/rest/v1/lynaqe_prof_trash', {
+          method: 'POST',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify(rows)
+        });
+      }
+    } catch (err) {
+      console.error('Synchronisation corbeille Supabase impossible :', err);
+    }
+  }
+
+  /* Récupère la corbeille du serveur au démarrage de session.
+     En cas d'erreur (ou Supabase non configuré), le local reste
+     la source de vérité. Si le serveur est vide et que du local
+     existe, on y remonte la corbeille locale. */
+  async function pullTrashFromServer() {
+    if (!supabaseEnabled()) return;
+    try {
+      const owner = getOwnerId();
+      const res = await supabaseFetch(
+        '/rest/v1/lynaqe_prof_trash?owner_id=eq.' +
+          encodeURIComponent(owner) +
+          '&select=payload&order=deleted_at.desc'
+      );
+      if (!res.ok) return;
+      const rows = await res.json();
+      const serverItems = (Array.isArray(rows) ? rows : [])
+        .map((r) => r && r.payload)
+        .filter((p) => p && typeof p === 'object' && p.id && p.type);
+      if (serverItems.length > 0) {
+        persistTrashLocal(serverItems.slice(0, PROF_TRASH_LIMIT));
+        updateTrashBadge();
+      } else {
+        syncTrashToServer(readTrash());
+      }
+    } catch (err) {
+      console.error('Lecture corbeille Supabase impossible :', err);
+    }
+  }
+
+  function trashRetentionMs() {
+    const days = Number(supabaseCfg().trashRetentionDays) || 30;
+    return days * 24 * 60 * 60 * 1000;
+  }
+
+  function trashNotExpired(item) {
+    const ts = Number(item && item.deletedAt) || 0;
+    return Date.now() - ts < trashRetentionMs();
+  }
+
+  function persistTrashLocal(items) {
     try {
       localStorage.setItem(PROF_TRASH_KEY, JSON.stringify(items));
     } catch {}
   }
 
+  function readTrash() {
+    let items = [];
+    try {
+      const raw = localStorage.getItem(PROF_TRASH_KEY);
+      items = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(items)) items = [];
+    } catch {
+      items = [];
+    }
+    /* Purge automatique : les éléments au-delà de la durée de rétention
+       disparaissent définitivement à la première lecture. */
+    const kept = items.filter(trashNotExpired);
+    if (kept.length !== items.length) persistTrashLocal(kept);
+    return kept;
+  }
+
+  function saveTrash(items) {
+    const limited = items.slice(0, PROF_TRASH_LIMIT);
+    persistTrashLocal(limited);
+    syncTrashToServer(limited);
+  }
+
   function addToTrash(item) {
     const list = readTrash();
     list.unshift(item);
-    saveTrash(list.slice(0, PROF_TRASH_LIMIT));
+    saveTrash(list);
   }
 
   function removeFromTrash(id) {
@@ -485,6 +613,27 @@
     if (months < 12) return t('prof_trash_ago', { n: months, unit: t('prof_trash_unit_month') });
     const years = Math.floor(months / 12);
     return t('prof_trash_ago', { n: years, unit: trashUnit(years, 'prof_trash_unit_year_s', 'prof_trash_unit_year_p') });
+  }
+
+  function trashRemainingDays(ts) {
+    if (!ts) return null;
+    const remain = trashRetentionMs() - (Date.now() - Number(ts));
+    if (remain <= 0) return 0;
+    return Math.ceil(remain / (24 * 60 * 60 * 1000));
+  }
+
+  /* Suffixe « · suppression définitive dans X jours » de chaque élément. */
+  function trashPurgeInfo(item) {
+    const remaining = trashRemainingDays(item && item.deletedAt);
+    if (remaining === null || remaining < 0) return '';
+    const text =
+      remaining === 0
+        ? t('prof_trash_purge_today')
+        : t('prof_trash_purge_in', {
+            n: remaining,
+            unit: t(remaining === 1 ? 'prof_trash_unit_day_s' : 'prof_trash_unit_day_p')
+          });
+    return ' • <span class="prof-trash-purge-hint">' + escHtml(text) + '</span>';
   }
 
   function trashTypeLabel(type) {
@@ -583,7 +732,7 @@
           <span class="prof-trash-item-icon" aria-hidden="true">${iconMap[item.type] || ICON_DOTS}</span>
           <div class="prof-trash-item-main">
             <strong class="prof-trash-item-label">${escHtml(item.label)}</strong>
-            <small class="prof-trash-item-meta">${escHtml(trashTypeLabel(item.type))} • ${escHtml(trashRelative(item.deletedAt))}</small>
+            <small class="prof-trash-item-meta">${escHtml(trashTypeLabel(item.type))} • ${escHtml(trashRelative(item.deletedAt))}${trashPurgeInfo(item)}</small>
           </div>
           <div class="prof-trash-item-actions">
             <button type="button" class="secondary-button prof-trash-restore">${t('prof_trash_restore')}</button>
@@ -682,6 +831,114 @@
 
   function isSameString(a, b) {
     return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  }
+
+  /* ---------- Détection de doublons ---------- */
+
+  /* Normalise un nom pour la comparaison : minuscules, sans accents,
+     apostrophes et tirets ignorés. */
+  function normName(s) {
+    return String(s || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[''’\-.]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /* Cherche un élève pouvant correspondre au nom/prénom saisi.
+     - mode 'all'    : formulaire & import — signale aussi les cas
+       partiels (même nom, prénom différent ; nom seul ; prénom seul).
+     - mode 'strict' : OCR — seulement les cas réellement ambigus
+       (ordre inversé ou champ unique), pour ne pas harceler l'utilisateur
+       en pleine saisie de notes.
+     Retourne { student, strong } (strong = correspondance exacte après
+     normalisation) ou null. */
+  function duplicateInfo(students, nom, prenom, mode) {
+    if (!Array.isArray(students) || !students.length) return null;
+    const n = normName(nom);
+    const p = normName(prenom);
+    if (!n && !p) return null;
+    const full = (p + ' ' + n).replace(/\s+/g, ' ').trim();
+
+    for (const e of students) {
+      const en = normName(e.nom);
+      const ep = normName(e.prenom);
+      if ((en === n || !n) && (ep === p || !p) && n && p) {
+        return { student: e, strong: true };
+      }
+    }
+
+    for (const e of students) {
+      const en = normName(e.nom);
+      const ep = normName(e.prenom);
+      let soft = false;
+      if (n && p) {
+        if (en === n && mode !== 'strict' && ep !== p) soft = true;
+        /* Même élève dont nom/prénom sont inversés entre le stockage
+           (nom, prénom) et la source (prénom, nom). */
+        if ((en + ' ' + ep).replace(/\s+/g, ' ').trim() === full) soft = true;
+      } else if (n && !p && en === n) {
+        soft = true;
+      } else if (!n && p && ep === p) {
+        soft = true;
+      }
+      if (soft) return { student: e, strong: false };
+    }
+    return null;
+  }
+
+  /* Toute correspondance (pour l'ajout manuel : on signale même si
+     l'élève rentré est identique à un existant). */
+  function findDuplicateStudent(students, nom, prenom) {
+    const info = duplicateInfo(students, nom, prenom, 'all');
+    return info ? info.student : null;
+  }
+
+  /* Modale « Doublon détecté » : Fusionner / Conserver les deux / Annuler.
+     Résout une Promise avec 'merge' | 'keepBoth' | 'cancel' | 'none'. */
+  function askDuplicateResolution(labels) {
+    return new Promise((resolve) => {
+      if (!labels || !labels.length) return resolve('none');
+      document.querySelectorAll('.prof-dup-modal').forEach((node) => node.remove());
+
+      const single = labels.length === 1;
+      const modal = document.createElement('div');
+      modal.className = 'prof-ocr-modal prof-trash-modal prof-dup-modal';
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      const items = labels.map((l) => `<li>${escHtml(l)}</li>`).join('');
+      modal.innerHTML = `
+        <div class="prof-ocr-overlay"></div>
+        <div class="prof-ocr-modal-card">
+          <div class="prof-ocr-header">
+            <h3>${escHtml(t('prof_dup_title'))}</h3>
+            <p class="prof-ocr-subtitle">${single ? escHtml(t('prof_dup_message', { label: labels[0] })) : escHtml(t('prof_dup_list_title'))}</p>
+          </div>
+          ${single ? '' : `<ul class="prof-dup-list">${items}</ul>`}
+          <div class="prof-ocr-actions prof-dup-actions">
+            <button type="button" class="secondary-button prof-dup-primary" data-dup="merge">${escHtml(t('prof_dup_merge'))}</button>
+            <button type="button" class="ghost-button" data-dup="keep">${escHtml(t('prof_dup_keep'))}</button>
+            <button type="button" class="ghost-button prof-danger-text" data-dup="cancel">${escHtml(t('prof_dup_cancel'))}</button>
+          </div>
+        </div>
+      `;
+      const done = (value) => {
+        modal.remove();
+        document.body.style.overflow = '';
+        resolve(value);
+      };
+      modal.querySelector('[data-dup="merge"]').addEventListener('click', () => done('merge'));
+      modal.querySelector('[data-dup="keep"]').addEventListener('click', () => done('keepBoth'));
+      modal.querySelector('[data-dup="cancel"]').addEventListener('click', () => done('cancel'));
+      modal.querySelector('.prof-ocr-overlay').addEventListener('click', () => done('cancel'));
+      modal.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') done('cancel');
+      });
+      document.body.appendChild(modal);
+      document.body.style.overflow = 'hidden';
+    });
   }
 
   function parseNote(raw) {
@@ -2105,11 +2362,19 @@
     window.setTimeout(() => els.studentNom.focus({ preventScroll: true }), prefersReducedMotion ? 0 : 220);
   }
 
-  function submitStudentForm() {
+  async function submitStudentForm() {
     const nom = els.studentNom.value.trim();
     const prenom = els.studentPrenom.value.trim();
     if (!nom && !prenom) return;
     const classeData = store[activeClass] || defaultClass();
+
+    const resetForm = () => {
+      els.studentForm.hidden = true;
+      els.studentNom.value = '';
+      els.studentPrenom.value = '';
+      editingStudentId = null;
+      renderClassView();
+    };
 
     if (editingStudentId) {
       const student = classeData.eleves.find((s) => s.id === editingStudentId);
@@ -2118,6 +2383,24 @@
         student.prenom = prenom;
       }
     } else {
+      const dup = findDuplicateStudent(classeData.eleves, nom, prenom);
+      if (dup) {
+        const choice = await askDuplicateResolution([getStudentName(dup)]);
+        if (choice === 'cancel' || choice === 'none') {
+          resetForm();
+          return;
+        }
+        if (choice === 'merge') {
+          saveStore();
+          recordActivity('student', `${prenom} ${nom}`.trim());
+          resetForm();
+          if (typeof showInfoDialog === 'function') {
+            showInfoDialog(t('prof_dup_merged', { label: getStudentName(dup) }));
+          }
+          return;
+        }
+        /* choice === 'keepBoth' : on enregistre malgré tout le nouvel élève */
+      }
       classeData.eleves.push({ id: newId(), nom, prenom });
     }
     saveStore();
@@ -2673,23 +2956,68 @@
     updateEditBanner();
   }
 
-  window.populateProfRows = function (ocrVerifiedRows) {
+  window.populateProfRows = async function (ocrVerifiedRows) {
     if (!Array.isArray(ocrVerifiedRows) || !ocrVerifiedRows.length) return;
     const classeData = store[activeClass] || defaultClass();
-    let added = false;
-    const conflicts = []; // { row, field, oldValue, newValue }
-    const safeOps = []; // { type: 'new-row' | 'field', ... } applied immediately
+
+    /* Chaque ligne OCR est rattachée à un élève :
+       - correspondance solide (même nom/prénom normalisés) → silencieuse ;
+       - correspondance ambiguë (ordre inversé, champ unique) → on demande ;
+       - aucun → nouvel élève créé à la volée. */
+    const seen = new Set();
+    const assignments = []; // { row, eleve|null }
+    const softDups = []; // { row, existing, label, nom, prenom }
 
     ocrVerifiedRows.forEach((r) => {
       const nom = String(r.nom || '').trim();
       const prenom = String(r.prenom || '').trim();
       if (!nom && !prenom) return;
-      let eleve = classeData.eleves.find((e) => isSameString(e.nom, nom) && isSameString(e.prenom, prenom));
+      const key = normName(nom) + '\u0000' + normName(prenom);
+      if (seen.has(key)) return; /* doublon interne au relevé scanné */
+      seen.add(key);
+
+      const info = duplicateInfo(classeData.eleves, nom, prenom, 'strict');
+      if (info && info.strong) {
+        assignments.push({ row: r, eleve: info.student });
+      } else if (info) {
+        softDups.push({ row: r, existing: info.student, label: getStudentName(info.student) });
+      } else {
+        assignments.push({ row: r, eleve: null });
+      }
+    });
+
+    if (softDups.length) {
+      const choice = await askDuplicateResolution(softDups.map((d) => d.label));
+      if (choice === 'cancel' || choice === 'none') return; /* on n'applique rien */
+      softDups.forEach((d) => {
+        assignments.push(
+          choice === 'keepBoth'
+            ? { row: d.row, eleve: null }
+            : { row: d.row, eleve: d.existing }
+        );
+      });
+    }
+
+    let added = false;
+    const conflicts = []; // { row, field, oldValue, newValue }
+
+    assignments.forEach((item) => {
+      const r = item.row;
+      const nom = String(r.nom || '').trim();
+      const prenom = String(r.prenom || '').trim();
+      let eleve = item.eleve;
+
       if (!eleve) {
         eleve = { id: newId(), nom, prenom };
         classeData.eleves.push(eleve);
         added = true;
+      } else {
+        /* L'OCR peut fournir une meilleure casse que l'existant : on ne
+           rempli jamais un champ déjà renseigné. */
+        if (!String(eleve.nom || '').trim() && nom) eleve.nom = nom;
+        if (!String(eleve.prenom || '').trim() && prenom) eleve.prenom = prenom;
       }
+
       let row = currentRows.find((x) => x.id === eleve.id);
       if (!row) {
         row = { id: eleve.id, nom: eleve.nom, prenom: eleve.prenom, d1: '', d2: '', compo: '' };
@@ -3337,7 +3665,7 @@
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.checked = true;
-      cb.setAttribute('aria-label', `${row.nom} ${row.prenom}`);
+      cb.setAttribute('aria-label', `${row.prenom} ${row.nom}`);
       cb.addEventListener('change', () => {
         row._keep = cb.checked;
         updateClassImportApply();
@@ -3360,7 +3688,7 @@
     if (btn) btn.textContent = t('prof_import_apply', { count });
   }
 
-  function applyClassImport() {
+  async function applyClassImport() {
     const modal = document.getElementById('prof-import-class-modal');
     if (!modal) return;
     const targetSel = modal.querySelector('#prof-import-class-target');
@@ -3371,16 +3699,42 @@
       return;
     }
     if (!store[target]) store[target] = defaultClass();
-    let count = 0;
-    importClassRows.forEach((row) => {
-      if (row._keep === false) return;
+
+    /* Correspondances exactes (même élève) : on saute silencieusement.
+       Correspondances ambiguës (nom/prénom différents seulement par
+       casse, accents ou ordre) : on demande à l'utilisateur. */
+    const incoming = importClassRows.filter((row) => row._keep !== false);
+    const dups = [];
+    incoming.forEach((row) => {
       const nom = String(row.nom || '').trim();
       const prenom = String(row.prenom || '').trim();
       if (!nom && !prenom) return;
-      const exists = store[target].eleves.some(
-        (e) => isSameString(e.nom, nom) && isSameString(e.prenom, prenom)
-      );
-      if (exists) return;
+      const info = duplicateInfo(store[target].eleves, nom, prenom, 'all');
+      if (info && !info.strong) dups.push({ row, label: getStudentName(row) });
+    });
+
+    let mergeAll = true;
+    if (dups.length) {
+      const choice = await askDuplicateResolution(dups.map((d) => d.label));
+      if (choice === 'cancel' || choice === 'none') return;
+      mergeAll = choice === 'merge';
+    }
+
+    let count = 0;
+    let merged = 0;
+    incoming.forEach((row) => {
+      const nom = String(row.nom || '').trim();
+      const prenom = String(row.prenom || '').trim();
+      if (!nom && !prenom) return;
+      const info = duplicateInfo(store[target].eleves, nom, prenom, 'all');
+      if (info && info.strong) return; /* même élève déjà présent : on saute */
+      if (info) {
+        if (mergeAll) {
+          merged++;
+          return;
+        }
+        /* « Conserver les deux » : on ajoute le doublon */
+      }
       store[target].eleves.push({ id: newId(), nom, prenom });
       count++;
     });
@@ -3388,7 +3742,11 @@
     recordActivity('import', `${t('prof_import_done', { count, classe: target })}`);
     closeClassImportModal();
     if (typeof showInfoDialog === 'function') {
-      showInfoDialog(t('prof_import_done', { count, classe: target }));
+      showInfoDialog(
+        merged > 0
+          ? t('prof_import_done_merged', { count, classe: target, merged })
+          : t('prof_import_done', { count, classe: target })
+      );
     }
     renderHome();
   }
