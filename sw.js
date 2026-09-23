@@ -26,8 +26,6 @@ const PRECACHE_URLS = [
   './vendor/tesseract/worker.min.js',
   './vendor/tesseract/fra.traineddata',
   './vendor/tesseract/eng.traineddata',
-  './vendor/tesseract/tesseract-core.wasm.js',
-  './vendor/tesseract/tesseract-core-simd.wasm.js',
   './vendor/tesseract/tesseract-core-lstm.wasm.js',
   './vendor/tesseract/tesseract-core-simd-lstm.wasm.js',
   './vendor/pdfjs/pdf.min.mjs',
