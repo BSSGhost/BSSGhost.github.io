@@ -991,7 +991,7 @@
   }
 
   function getStudentName(row) {
-    return [row.prenom, row.nom].filter(Boolean).join(' ').trim() || '—';
+    return [row.nom, row.prenom].filter(Boolean).join(' ').trim() || '—';
   }
 
   /* --------------- Moyennes & rangs par élève --------------- */
@@ -2311,11 +2311,13 @@
   }
 
   function renderStudentsTable(classeData) {
-    const students = classeData.eleves;
+    const ranks = rankClass();
+    const students = classeData.eleves
+      .slice()
+      .sort((a, b) => (ranks[a.id] || Infinity) - (ranks[b.id] || Infinity));
     els.studentsEmpty.hidden = students.length > 0;
     els.studentsEmpty.textContent = t('prof_students_empty');
     els.studentsTbody.innerHTML = '';
-    const ranks = rankClass();
 
     students.forEach((student, index) => {
       const tr = document.createElement('tr');
@@ -2392,7 +2394,7 @@
         }
         if (choice === 'merge') {
           saveStore();
-          recordActivity('student', `${prenom} ${nom}`.trim());
+          recordActivity('student', `${nom} ${prenom}`.trim());
           resetForm();
           if (typeof showInfoDialog === 'function') {
             showInfoDialog(t('prof_dup_merged', { label: getStudentName(dup) }));
@@ -2404,7 +2406,7 @@
       classeData.eleves.push({ id: newId(), nom, prenom });
     }
     saveStore();
-    recordActivity('student', `${prenom} ${nom}`.trim());
+    recordActivity('student', `${nom} ${prenom}`.trim());
     els.studentForm.hidden = true;
     els.studentNom.value = '';
     els.studentPrenom.value = '';
@@ -2432,7 +2434,7 @@
         });
       });
       saveStore();
-      recordActivity('student', `${student.prenom} ${student.nom}`.trim());
+      recordActivity('student', `${student.nom} ${student.prenom}`.trim());
       renderClassView();
     };
     if (typeof confirmModal !== 'undefined' && confirmModal.el) {
@@ -3665,7 +3667,7 @@
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.checked = true;
-      cb.setAttribute('aria-label', `${row.prenom} ${row.nom}`);
+      cb.setAttribute('aria-label', `${row.nom} ${row.prenom}`);
       cb.addEventListener('change', () => {
         row._keep = cb.checked;
         updateClassImportApply();
