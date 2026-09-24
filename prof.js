@@ -216,9 +216,6 @@
     els.loginCard.hidden = true;
     els.console.hidden = false;
     showDash();
-    /* Corbeille : rapatrie la version serveur (Supabase) si configuré,
-       sinon tout reste en localStorage. Non bloquant. */
-    pullTrashFromServer();
   }
 
   /* Stockage */
@@ -377,29 +374,12 @@
     }
   }
 
-  /* Corbeille
-     Supprimer une classe, un élève ou une matière ne l'efface plus
-     définitivement : un instantané est conservé dans la corbeille et
-     peut être restauré tant qu'il n'est pas purgé explicitement.
-     La corbeille vit en localStorage (hors-ligne). Si Supabase est
-     configuré (supabase.config.js), elle est synchronisée sur la
-     table « lynaqe_prof_trash » (30 éléments max, purge automatique
-     après 30 jours). Sans configuration, tout reste local. */
-
-  function supabaseCfg() {
-    return window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG === 'object'
-      ? window.SUPABASE_CONFIG
-      : {};
-  }
-
-  function supabaseEnabled() {
-    const cfg = supabaseCfg();
-    return Boolean(cfg.url && cfg.anonKey && /^https?:\/\//.test(String(cfg.url)));
-  }
-
-  function supabaseBase() {
-    return String(supabaseCfg().url || '').replace(/\/+$/, '');
-  }
+/* Corbeille
+      Supprimer une classe, un élève ou une matière ne l'efface plus
+      définitivement : un instantané est conservé dans la corbeille et
+      peut être restauré tant qu'il n'est pas purgé explicitement.
+      La corbeille vit en localStorage (hors-ligne), 30 éléments max,
+      purge automatique après 30 jours. */
 
   function getOwnerId() {
     try {
@@ -414,78 +394,8 @@
     }
   }
 
-  function supabaseFetch(path, options) {
-    const cfg = supabaseCfg();
-    const headers = Object.assign(
-      {
-        apikey: cfg.anonKey,
-        Authorization: 'Bearer ' + cfg.anonKey,
-        'Content-Type': 'application/json',
-        'X-Owner-Id': getOwnerId()
-      },
-      (options && options.headers) || {}
-    );
-    return fetch(supabaseBase() + path, Object.assign({}, options, { headers }));
-  }
-
-  /* Synchronise la corbeille locale vers Supabase (remplacement complet
-     des lignes de cet appareil : suppression puis réinsertion). */
-  async function syncTrashToServer(items) {
-    if (!supabaseEnabled()) return;
-    try {
-      const owner = getOwnerId();
-      await supabaseFetch('/rest/v1/lynaqe_prof_trash?owner_id=eq.' + encodeURIComponent(owner), {
-        method: 'DELETE',
-        headers: { Prefer: 'return=minimal' }
-      });
-      if (items && items.length) {
-        const rows = items.map((item) => ({
-          owner_id: owner,
-          payload: item,
-          deleted_at: new Date(Number(item.deletedAt) || Date.now()).toISOString()
-        }));
-        await supabaseFetch('/rest/v1/lynaqe_prof_trash', {
-          method: 'POST',
-          headers: { Prefer: 'return=minimal' },
-          body: JSON.stringify(rows)
-        });
-      }
-    } catch (err) {
-      console.error('Synchronisation corbeille Supabase impossible :', err);
-    }
-  }
-
-  /* Récupère la corbeille du serveur au démarrage de session.
-     En cas d'erreur (ou Supabase non configuré), le local reste
-     la source de vérité. Si le serveur est vide et que du local
-     existe, on y remonte la corbeille locale. */
-  async function pullTrashFromServer() {
-    if (!supabaseEnabled()) return;
-    try {
-      const owner = getOwnerId();
-      const res = await supabaseFetch(
-        '/rest/v1/lynaqe_prof_trash?owner_id=eq.' +
-          encodeURIComponent(owner) +
-          '&select=payload&order=deleted_at.desc'
-      );
-      if (!res.ok) return;
-      const rows = await res.json();
-      const serverItems = (Array.isArray(rows) ? rows : [])
-        .map((r) => r && r.payload)
-        .filter((p) => p && typeof p === 'object' && p.id && p.type);
-      if (serverItems.length > 0) {
-        persistTrashLocal(serverItems.slice(0, PROF_TRASH_LIMIT));
-        updateTrashBadge();
-      } else {
-        syncTrashToServer(readTrash());
-      }
-    } catch (err) {
-      console.error('Lecture corbeille Supabase impossible :', err);
-    }
-  }
-
   function trashRetentionMs() {
-    const days = Number(supabaseCfg().trashRetentionDays) || 30;
+    const days = 30;
     return days * 24 * 60 * 60 * 1000;
   }
 
@@ -519,7 +429,6 @@
   function saveTrash(items) {
     const limited = items.slice(0, PROF_TRASH_LIMIT);
     persistTrashLocal(limited);
-    syncTrashToServer(limited);
   }
 
   function addToTrash(item) {
