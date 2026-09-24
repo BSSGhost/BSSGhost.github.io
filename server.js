@@ -1,10 +1,5 @@
-/* =========================================================
-   SUNU MOYENNE — Serveur (fichiers statiques uniquement)
-   ----------------------------------------------------------
-   Sert les fichiers statiques du site.
-
-   Lancement :  node server.js          (variable PORT, défaut 3000)
-   ========================================================= */
+/* SUNU MOYENNE — serveur de fichiers statiques.
+   Lancement : node server.js (variable PORT, défaut 3000) */
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { join, normalize, extname } from 'node:path';
@@ -12,11 +7,7 @@ import { join, normalize, extname } from 'node:path';
 const ROOT = process.cwd();
 const PORT = Number(process.env.PORT || 3000);
 
-/* ----------------- Réponse HTTP ------------------- */
-
-/* -------------- Réponse HTTP / corps JSON ---------------- */
-
-/* -------------------- Fichiers statiques ----------------- */
+/* Fichiers statiques */
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -57,7 +48,6 @@ function resolveStaticPath(pathname) {
 function isForbiddenStaticFile(filePath) {
   const normalized = normalize(filePath);
   const forbidden = [
-    normalize(join(ROOT, 'data')),
     normalize(join(ROOT, 'node_modules')),
     normalize(join(ROOT, '.git')),
     normalize(join(ROOT, 'server.js')),
@@ -95,12 +85,12 @@ async function serveStatic(res, pathname) {
   res.writeHead(200, {
     'Content-Type': mime,
     'Content-Length': content.length,
-    'Cache-Control': pathname.startsWith('/api') ? 'no-store' : 'public, max-age=0, must-revalidate'
+    'Cache-Control': 'public, max-age=0, must-revalidate'
   });
   res.end(content);
 }
 
-/* ------------------------- Serveur ---------------------- */
+/* Serveur */
 
 const server = createServer(async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');

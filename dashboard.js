@@ -1,10 +1,10 @@
-/* =========================================================
+/*
    TABLEAU DE BORD ÉLÈVE — SUNU MOYENNE
    Écran "Accueil" (dashboard) + fiche "Mon profil scolaire".
    S'appuie sur les données déjà stockées par script.js
    (profil élève, notes par classe/semestre, objectif) et sur
    l'espace professeur pour le rang de la classe.
-   ========================================================= */
+*/
 (function () {
   'use strict';
 
@@ -43,7 +43,7 @@
     return '';
   }
 
-  /* ---------- Calculs (moyennes, progression, matière forte/faible) ---------- */
+  /* Calculs (moyennes, progression, matière forte/faible) */
 
   function moySemestre(classe, sem) {
     const notes = classe ? getStoredNotesForClasse(classe, sem) : {};
@@ -66,7 +66,7 @@
     return Math.min(20, Math.ceil((moyenneActuelle + 1.5) * 2) / 2);
   }
 
-  /* ---------- Rang de classe (depuis l'espace professeur) ---------- */
+  /* Rang de classe (depuis l'espace professeur) */
 
   function parseNote(raw) {
     const value = String(raw ?? '').trim();
@@ -137,7 +137,7 @@
     }
   }
 
-  /* ---------- Données agrégées du tableau de bord ---------- */
+  /* Données agrégées du tableau de bord */
 
   function dashData() {
     const prof = getProfile();
@@ -176,7 +176,7 @@
     return { prof, classe, sem, moyS1, moyS2, moyActuelle, moyAnnuelle, delta, objectif, progression, subjects };
   }
 
-  /* ---------- Écran "Accueil" ---------- */
+  /* Écran "Accueil" */
 
   function trendIcon(trend) {
     if (trend === 'up') return `<span class="dash-trend up">${t('dash_trend_up')}</span>`;
@@ -319,7 +319,7 @@
     });
   }
 
-  /* ---------- Écran "Mon profil scolaire" ---------- */
+  /* Écran "Mon profil scolaire" */
 
   let pendingPhoto = null;
 
@@ -554,7 +554,7 @@
     wireProfilForm();
   }
 
-  /* ---------- Hooks exposés (appelés par script.js) ---------- */
+  /* Hooks exposés (appelés par script.js) */
 
   window.refreshDashboardScreen = renderDashboard;
   window.refreshProfilScreen = refreshProfilScreen;

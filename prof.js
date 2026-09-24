@@ -1,4 +1,4 @@
-/* =========================================================
+/*
    MODE PROFESSEUR — SUNU MOYENNE / LYNAQE Sédhiou
    Accès réservé : mot de passe (LYNAQE2026), vérification locale.
    Gestion complète par classe :
@@ -10,7 +10,7 @@
      [Enregistrer] ; [Annuler] restaure la valeur précédente
      (Ancienne valeur → Nouvelle valeur).
    - Relevé de notes (photo/PDF), OCR, export PDF/CSV.
-   ========================================================= */
+*/
 (function () {
   'use strict';
 
@@ -159,7 +159,7 @@
     dashProfile: $('prof-dash-profile')
   };
 
-  /* ------------------ État global ------------------ */
+  /* État global */
 
   let store = null; /* { [classe]: { eleves: [], semestres: { Semestre1: {}, Semestre2: {} } } } */
   let activeClass = null;
@@ -174,7 +174,7 @@
   let dashStatsClass = null; /* classe sélectionnée dans les statistiques */
   let dashSelectedStudent = null; /* { classe, id } profil élève affiché */
 
-  /* ------------------ Authentification ------------------ */
+  /* Authentification */
 
   const PROF_AUTH_VALUE = 'ok';
 
@@ -221,7 +221,7 @@
     pullTrashFromServer();
   }
 
-  /* -------------------- Stockage -------------------- */
+  /* Stockage */
 
   function defaultClass() {
     return { eleves: [], semestres: { Semestre1: {}, Semestre2: {} } };
@@ -377,7 +377,7 @@
     }
   }
 
-  /* ================= Corbeille =================
+  /* Corbeille
      Supprimer une classe, un élève ou une matière ne l'efface plus
      définitivement : un instantané est conservé dans la corbeille et
      peut être restauré tant qu'il n'est pas purgé explicitement.
@@ -791,7 +791,7 @@
     });
   }
 
-  /* ------------------ Utilitaires ------------------ */
+  /* Utilitaires */
 
   function semLabel(sem) {
     return sem === 'Semestre1' ? t('table_semestre1_full') : t('table_semestre2_full');
@@ -833,7 +833,7 @@
     return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
   }
 
-  /* ---------- Détection de doublons ---------- */
+  /* Détection de doublons */
 
   /* Normalise un nom pour la comparaison : minuscules, sans accents,
      apostrophes et tirets ignorés. */
@@ -994,7 +994,7 @@
     return [row.nom, row.prenom].filter(Boolean).join(' ').trim() || '—';
   }
 
-  /* --------------- Moyennes & rangs par élève --------------- */
+  /* Moyennes & rangs par élève */
 
   function studentSemesterAverage(eleveId) {
     const semObj = store[activeClass]?.semestres?.[activeSem] || {};
@@ -1033,7 +1033,7 @@
     return avg.reduce((s, v) => s + v, 0) / avg.length;
   }
 
-  /* ================= Navigation (7 vues) ================= */
+  /* Navigation (7 vues) */
 
   function setBackLabel(key) {
     els.backLabel.textContent = t(key);
@@ -1121,7 +1121,7 @@
     });
   }
 
-  /* ================= Vue 0 : Tableau de bord ================= */
+  /* Vue 0 : Tableau de bord */
 
   const ICON_CLASSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
   const ICON_AVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17l-5.9 3 1.3-6.6L2.5 8.9l6.6-.8L12 2Z"/></svg>';
@@ -1320,7 +1320,7 @@
       .join('');
   }
 
-  /* ---------- Activité récente ---------- */
+  /* Activité récente */
 
   function readActivity() {
     try {
@@ -1377,7 +1377,7 @@
       .join('');
   }
 
-  /* ---------- Cartes portail (aperçu) ---------- */
+  /* Cartes portail (aperçu) */
 
   function dashPortalData() {
     const classes = dashClassNames();
@@ -1479,7 +1479,7 @@
     }
   }
 
-  /* ---------- Classement ---------- */
+  /* Classement */
 
   function fillRankSelectors() {
     const names = dashClassNames();
@@ -1588,7 +1588,7 @@
     });
   }
 
-  /* ---------- Statistiques ---------- */
+  /* Statistiques */
 
   function fillStatsSelectors() {
     const names = dashClassNames();
@@ -1749,7 +1749,7 @@
     els.dashStatsBody.innerHTML = summaryHtml + distHtml + avgHtml + compHtml + mentionHtml;
   }
 
-  /* ---------- Élèves : recherche + filtres ---------- */
+  /* Élèves : recherche + filtres */
 
   function fillStudentsFilters() {
     const names = dashClassNames();
@@ -1856,7 +1856,7 @@
     });
   }
 
-  /* ---------- Profil élève ---------- */
+  /* Profil élève */
 
   function showDashProfile(classe, student) {
     if (!els.dashProfile) return;
@@ -1981,7 +1981,7 @@
     }
   }
 
-  /* ================= Vue 1 : Mes classes ================= */
+  /* Vue 1 : Mes classes */
 
   const LEVEL_LABEL_KEYS = {
     '6e': 'prof_level_6e',
@@ -2274,7 +2274,7 @@
     showClassView();
   }
 
-  /* ================= Vue 2 : Détail de la classe ================= */
+  /* Vue 2 : Détail de la classe */
 
   function renderSemesterTabs() {
     els.semesterTabs.innerHTML = '';
@@ -2448,7 +2448,7 @@
     }
   }
 
-  /* ---------- Bulletin d'un élève (modale) ---------- */
+  /* Bulletin d'un élève (modale) */
 
   function showBulletin(student) {
     const modal = document.createElement('div');
@@ -2520,7 +2520,7 @@
     document.body.style.overflow = 'hidden';
   }
 
-  /* ---------- Matières du semestre ---------- */
+  /* Matières du semestre */
 
   function fillSubjectSelect() {
     els.subjectSelect.innerHTML = '';
@@ -2612,7 +2612,7 @@
     openSubject(matiere);
   }
 
-  /* ================= Vue 3 : Éditeur de matière ================= */
+  /* Vue 3 : Éditeur de matière */
 
   function refreshMatiereSelect() {
     const previous = els.matiere.value;
@@ -2729,7 +2729,7 @@
     els.context.textContent = `${activeClass} • ${semLabel(activeSem)} • ${showMatiere(activeSubject)}`;
   }
 
-  /* ---------- Rendu du tableau de notes ---------- */
+  /* Rendu du tableau de notes */
 
   function createTextInput(row, field, placeholder) {
     const input = document.createElement('input');
@@ -2834,7 +2834,7 @@
     updateSummary();
   }
 
-  /* ---------- Résumé & exports ---------- */
+  /* Résumé & exports */
 
   function updateSummary() {
     const hasRows = currentRows.length > 0 && Boolean(activeSubject);
@@ -2890,7 +2890,7 @@
     });
   }
 
-  /* ---------- Bannière "Ancienne / Nouvelle valeur" ---------- */
+  /* Bannière "Ancienne / Nouvelle valeur" */
 
   function computeAverage(notes, composition) {
     const avg = (store[activeClass]?.eleves || [])
@@ -3087,7 +3087,7 @@
     };
   };
 
-  /* ---------------------- Exports --------------------- */
+  /* Exports */
 
   function slugify(text) {
     return (
@@ -3269,7 +3269,7 @@
     doc.save(`releve_${slugify(matiere)}_${classe}.pdf`);
   }
 
-  /* ------------------- Preview fichier ------------------- */
+  /* Preview fichier */
 
   function handleFile(file) {
     if (!file) return;
@@ -3317,12 +3317,12 @@
     if (typeof window.onProfFileCleared === 'function') window.onProfFileCleared();
   }
 
-  /* =========================================================
+  /*
      IMPORT MASSIF — ÉLÈVES (CSV / XLSX / PDF) + NOTES (CSV / XLSX / PDF)
      Parsing 100 % côté client (PWA hors-ligne) : CSV lisible
      directement, XLSX décompressé via DecompressionStream, PDF
      via l'extraction de texte de ocr.js (pdf.js).
-     ========================================================= */
+*/
 
   function parseDelimitedCSV(text) {
     text = String(text || '');
@@ -3494,7 +3494,7 @@
     return parseDelimitedCSV(text);
   }
 
-  /* ---------- Import d'une liste d'élèves ---------- */
+  /* Import d'une liste d'élèves */
 
   function buildStudentsList(rows) {
     if (!rows.length) return [];
@@ -3753,7 +3753,7 @@
     renderHome();
   }
 
-  /* ---------- Import des notes (Nom;Prénom;D1;D2;Compo) ---------- */
+  /* Import des notes (Nom;Prénom;D1;D2;Compo) */
 
   function buildNotesList(rows) {
     if (!rows.length) return [];
@@ -3918,7 +3918,7 @@
   if (importClassBtn) importClassBtn.addEventListener('click', openClassImportModal);
   if (importNotesBtn) importNotesBtn.addEventListener('click', openNotesImportModal);
 
-  /* ===================== Events ===================== */
+  /* Events */
 
   if (els.togglePassword && els.password) {
     els.togglePassword.addEventListener('click', () => {
@@ -3988,19 +3988,19 @@
     els.trashBtn.addEventListener('click', () => openTrashModal());
   }
 
-    /* ---------- Sidebar navigation + sélecteurs ---------- */
+    /* Sidebar navigation + sélecteurs */
     if (els.tabDash) els.tabDash.addEventListener('click', showDash);
     if (els.tabClasses) els.tabClasses.addEventListener('click', showHome);
     if (els.tabStudents) els.tabStudents.addEventListener('click', () => showStudentsView());
     if (els.tabRanking) els.tabRanking.addEventListener('click', showRankingView);
     if (els.tabStats) els.tabStats.addEventListener('click', showStatsView);
 
-    /* ---------- Boutons de la bannière "Votre espace professeur" ---------- */
+    /* Boutons de la bannière "Votre espace professeur" */
     document.querySelectorAll('.prof-hero-cta[data-act]').forEach((btn) => {
       btn.addEventListener('click', () => handlePortalAction(btn.dataset.act));
     });
 
-    /* ---------- Mobile nav toggle ---------- */
+    /* Mobile nav toggle */
     if (els.mobileNavBtn && els.sidebar) {
       els.mobileNavBtn.addEventListener('click', () => {
         const isOpen = els.sidebar.classList.contains('is-open');
@@ -4226,7 +4226,7 @@
     els.saveBtn.addEventListener('click', commitSubject);
   }
 
-  /* ------- OCR / i18n : hooks ------- */
+  /* OCR / i18n : hooks */
 
   window.refreshProfesseurTexts = function () {
     if (!isAuthenticated()) return;

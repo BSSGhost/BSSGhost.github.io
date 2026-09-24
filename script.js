@@ -1,6 +1,6 @@
-﻿/* =========================================================
+﻿/*
    SYSTEME DE TRADUCTION FR / EN
-   ========================================================= */
+*/
 const LANG_KEY = 'sunu_moyenne_lang';
 
 /* Clés de stockage de l'espace professeur (définies ici aussi pour que la
@@ -576,7 +576,7 @@ const translations = {
     prof_crop_cancel: "Annuler",
     prof_crop_hint: "Tirez pour délimiter la zone à conserver.",
     prof_crop_reset: "Réinitialiser",
-    /* ---- Tableau de bord élève (Accueil) ---- */
+    /* Tableau de bord élève (Accueil) */
     tab_accueil: "Accueil",
     tab_profil: "Profil",
     dash_greeting: "Bonjour {prenom} 👋",
@@ -608,7 +608,7 @@ const translations = {
     dash_trend_down: "▼",
     dash_trend_flat: "=",
     dash_current_semestre: "Semestre en cours",
-    /* ---- Profil scolaire ---- */
+    /* Profil scolaire */
     profil_eyebrow: "Espace personnel",
     profil_screen_title: "Mon profil scolaire",
     profil_subtitle: "Vos informations et votre fiche récapitulative en un coup d'œil.",
@@ -640,7 +640,7 @@ const translations = {
     fiche_forces: "Matières fortes",
     fiche_faibles: "Matières faibles",
     fiche_vide: "—",
-    /* ---- Import élèves / notes (mode Professeur) ---- */
+    /* Import élèves / notes (mode Professeur) */
     prof_import_class: "Importer une classe",
     prof_import_class_desc: "Importez une liste d'élèves depuis un fichier CSV, Excel ou PDF.",
     prof_import_class_btn: "Importer",
@@ -664,7 +664,7 @@ const translations = {
     prof_import_notes_apply: "Importer les notes",
     prof_import_notes_done: "Notes importées pour {count} élève(s).",
     prof_import_notes_error: "Fichier invalide : aucune note exploitable n'a été trouvée.",
-    /* ---- OCR intelligent ---- */
+    /* OCR intelligent */
     prof_ocr_detected: "{count} élèves détectés",
     prof_ocr_reliable: "{count} lignes fiables",
     prof_ocr_to_check: "{count} lignes à vérifier",
@@ -1226,7 +1226,7 @@ const translations = {
     prof_crop_cancel: "Cancel",
     prof_crop_hint: "Drag to select the area to keep.",
     prof_crop_reset: "Reset",
-    /* ---- Student dashboard (Home) ---- */
+    /* Student dashboard (Home) */
     tab_accueil: "Home",
     tab_profil: "Profile",
     dash_greeting: "Hello {prenom} 👋",
@@ -1258,7 +1258,7 @@ const translations = {
     dash_trend_down: "▼",
     dash_trend_flat: "=",
     dash_current_semestre: "Current semester",
-    /* ---- School profile ---- */
+    /* School profile */
     profil_eyebrow: "Personal space",
     profil_screen_title: "My school profile",
     profil_subtitle: "Your details and summary sheet at a glance.",
@@ -1290,7 +1290,7 @@ const translations = {
     fiche_forces: "Strong subjects",
     fiche_faibles: "Weak subjects",
     fiche_vide: "—",
-    /* ---- Students / grades import (Teacher mode) ---- */
+    /* Students / grades import (Teacher mode) */
     prof_import_class: "Import a class",
     prof_import_class_desc: "Import a student list from a CSV, Excel or PDF file.",
     prof_import_class_btn: "Import",
@@ -1314,7 +1314,7 @@ const translations = {
     prof_import_notes_apply: "Import grades",
     prof_import_notes_done: "Grades imported for {count} student(s).",
     prof_import_notes_error: "Invalid file: no usable grade was found.",
-    /* ---- Smart OCR ---- */
+    /* Smart OCR */
     prof_ocr_detected: "{count} students detected",
     prof_ocr_reliable: "{count} reliable rows",
     prof_ocr_to_check: "{count} rows to check",
@@ -1491,11 +1491,11 @@ function getEmptySubjectsRowHtml() {
   `;
 }
 
-/* =========================================================
+/*
    OBJECTIF PERSONNEL DE MOYENNE
    Permet à l'élève de fixer sa propre cible de moyenne et de
    suivre visuellement l'écart au fil des matières saisies.
-   ========================================================= */
+*/
 const OBJECTIF_PERSONNEL_KEY = 'sunu_moyenne_objectif_personnel';
 
 function getObjectifPersonnel() {
@@ -1902,7 +1902,7 @@ function pulseCard() {
   calculatorCard.classList.add('just-saved');
 }
 
-/* ---------- Son discret et optionnel au moment du résultat ---------- */
+/* Son discret et optionnel au moment du résultat */
 
 const SOUND_STORAGE_KEY = 'lynaqe_sound_enabled';
 let audioContextInstance = null;
@@ -1991,7 +1991,7 @@ document.getElementById('toggle-son-btn')?.addEventListener('click', () => {
 
 updateSoundButtonUI();
 
-/* ---------- Frise d'étapes du formulaire ---------- */
+/* Frise d'étapes du formulaire */
 
 function updateProgressTracker(classeVal, notes) {
   updateDownloadButtonAvailability(classeVal, notes);
@@ -2061,7 +2061,7 @@ document.getElementById('prenom')?.addEventListener('input', function () {
   saveStudentProfile({ prenom: this.value.trim() });
 });
 
-/* ---------- Validation en temps réel des champs de notes ---------- */
+/* Validation en temps réel des champs de notes */
 /* Donne un retour visuel (bordure verte/rouge) dès la saisie, plutôt que
    d'attendre la soumission du formulaire pour signaler une erreur. */
 
@@ -2186,15 +2186,15 @@ const matieresCommunesBase = [
    matière comme les autres, avec un vrai coefficient au bulletin. */
 const LANGUE_OPTIONS = ['Espagnol', 'Arabe'];
 
-/* =========================================================
+/*
    COEFFICIENTS OFFICIELS SUGGERES
    Source lycée (S1/S2) : grille des épreuves du Baccalauréat
    sénégalais (Office du Bac), complétée pour les matières de
    bulletin non examinées au Bac (Espagnol, Arabe, EPS) sur
-   confirmation du porteur du projet. La 6e→3e n'a pas encore de grille
+   validation de l'établissement. La 6e→3e n'a pas encore de grille
    officielle confirmée : le pré-remplissage y reste désactivé
    tant qu'une source fiable n'est pas fournie.
-   ========================================================= */
+*/
 const COEFFICIENTS_OFFICIELS = {
   lycee: {
     S1: {
@@ -2263,7 +2263,7 @@ function updateCoefficientSuggestion() {
 
 const STORAGE_PREFIX = 'lynaqe_moyennes';
 
-/* =========================================================
+/*
    PROFIL ÉLÈVE (nom, prénom, classe)
    Avant, nom/prénom étaient dupliqués dans chaque matière
    enregistrée. Ils sont maintenant stockés une seule fois ici,
@@ -2271,7 +2271,7 @@ const STORAGE_PREFIX = 'lynaqe_moyennes';
    et permettre de restaurer l'identité de l'élève dès le
    chargement de la page (plus besoin de rouvrir une matière
    déjà saisie pour les retrouver).
-   ========================================================= */
+*/
 const STUDENT_PROFILE_KEY = 'lynaqe_student_profile';
 
 function getStudentProfile() {
@@ -2515,9 +2515,9 @@ function renderTableMatiere() {
   }
 }
 
-/* =========================================================
+/*
    COMPARAISON SEMESTRE 1 / SEMESTRE 2
-   ========================================================= */
+*/
 function updateCompareToggleVisibility() {
   if (!compareToggleBtn) return;
   const classe = classeSelect.value;
@@ -2626,14 +2626,14 @@ compareToggleBtn?.addEventListener('click', () => {
   }
 });
 
-/* =========================================================
+/*
    HISTORIQUE MULTI-ANNÉES ("Mon parcours scolaire")
    Contrairement au flux principal (qui exige que toutes les matières
    officielles d'une classe soient renseignées), cet écran affiche une
    moyenne pondérée "brute" à partir de ce qui a été rempli pour chaque
    classe/semestre — pour donner une vue d'ensemble même sur des
    données partielles ou une classe qu'on ne consulte plus au quotidien.
-   ========================================================= */
+*/
 const CLASSES_ORDRE = ['6e', '5e', '4e', '3e', '2nde', '1er', 'Tle'];
 
 function computeMoyenneBrute(notes) {
@@ -3021,9 +3021,9 @@ form.addEventListener('submit', function (event) {
   window.activateScreen?.('resultats');
 });
 
-/* =========================================================
+/*
    RACCOURCI "MATIÈRE SUIVANTE"
-   ========================================================= */
+*/
 function getMatieresRestantes(classe) {
   const semestre = getSemestreActuel();
   const notes = getStoredNotesForClasse(classe, semestre);
@@ -3640,7 +3640,7 @@ function getAnneeScolaire() {
 const anneeScolaireEl = document.getElementById('annee-scolaire');
 if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
 
-// PDF Premium Generation Function
+// Génération du bulletin PDF
 function generatePDFBulletin() {
   const { jsPDF } = window.jspdf;
   if (!jsPDF) {
@@ -3751,7 +3751,7 @@ function generatePDFBulletin() {
   doc.setTextColor(16, 28, 47);
   doc.text(t('pdf_moyenne_generale', { value: moyenneGen.toFixed(2) }), pageWidth - 18, 72, { align: "right" });
 
-  // Tableau des Notes Soigné avec Colonne d'Appréciation
+  // Tableau des notes avec colonne d'appréciation
   const startY = 90;
   const colWidths = [45, 20, 20, 22, 20, 22, 33]; // Somme = 182
   const headers = [t('pdf_th_discipline'), t('pdf_th_devoir1'), t('pdf_th_devoir2'), t('pdf_th_compo'), t('pdf_th_coeff'), t('pdf_th_moyenne'), t('pdf_th_appreciation')];
@@ -4092,9 +4092,9 @@ renderTableMatiere();
 animateHeroPreview();
 revealHeroPreviewGauges();
 
-/* =========================================================
+/*
    APERÇU ANIMÉ DU BULLETIN (hero)
-   ========================================================= */
+*/
 function animateHeroPreview() {
   const heroPreviewValue = document.getElementById('hero-preview-value');
   if (!heroPreviewValue) return;
@@ -4127,7 +4127,7 @@ function animateHeroPreview() {
    certains navigateurs mobiles ne la rejouent pas de façon fiable quand
    un ancêtre repasse de display:none à display:block, ce qui laissait
    auparavant cette zone entièrement blanche au retour sur l'écran.
-   ========================================================= */
+*/
 function revealHeroPreviewGauges() {
   if (prefersReducedMotion) return;
 
@@ -4147,9 +4147,9 @@ function revealHeroPreviewGauges() {
   setTimeout(clear, 2000);
 }
 
-/* =========================================================
+/*
    MODE CLAIR/SOMBRE
-   ========================================================= */
+*/
 (() => {
   const THEME_KEY = 'sunu_moyenne_theme';
   const REVEAL_MS = 480;
@@ -4244,9 +4244,9 @@ function revealHeroPreviewGauges() {
   });
 })();
 
-/* =========================================================
+/*
    LANGUE FR / EN
-   ========================================================= */
+*/
 (() => {
   const LANG_FADE_MS = 180;
 
@@ -4319,9 +4319,9 @@ function revealHeroPreviewGauges() {
   });
 })();
 
-/* =========================================================
+/*
    FAQ — animation d'ouverture / fermeture
-   ========================================================= */
+*/
 (() => {
   const items = document.querySelectorAll('.faq-item');
   if (!items.length) return;
@@ -4375,10 +4375,10 @@ function revealHeroPreviewGauges() {
   });
 })();
 
-/* =========================================================
+/*
    MODALE DE CONFIRMATION PERSONNALISÉE
    Remplace window.confirm() par une modale stylée du site.
-   ========================================================= */
+*/
 const confirmModal = {
   el: document.getElementById('confirm-modal'),
   titleEl: document.getElementById('confirm-modal-title'),
@@ -4495,12 +4495,12 @@ function showConfirmDialog(options) {
 function showInfoDialog(message) {
   confirmModal.show({ message, info: true });
 }
-/* =========================================================
+/*
    NAVIGATION PAR ÉCRANS (Calculer / Résultats / Évolution /
    Bulletin / Conseils). Purement visuel : les sections gardent
    leurs ids et leur logique d'origine, seule leur visibilité
    change selon l'onglet actif.
-   ========================================================= */
+*/
 (function setupScreenNavigation() {
   const tabs = Array.from(document.querySelectorAll('.app-tab'));
   const screens = Array.from(document.querySelectorAll('.app-screen'));

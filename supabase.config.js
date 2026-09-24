@@ -1,6 +1,5 @@
-/* =========================================================
+/*
    CONFIGURATION SUPABASE — SUNU MOYENNE (Espace professeur)
-   ----------------------------------------------------------
    La corbeille de l'espace professeur peut être synchronisée
    sur un projet Supabase (table « lynaqe_prof_trash »).
 
@@ -16,7 +15,7 @@
    La clé anon est publique (côté navigateur) ; la sécurité
    réelle repose sur les Row Level Security policies de ta
    table (voir supabase-schema.sql).
-   ========================================================= */
+*/
 window.SUPABASE_CONFIG = {
   /* URL du projet, ex : "https://abcdefgh.supabase.co" */
   url: "",

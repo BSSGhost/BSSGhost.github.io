@@ -2,13 +2,13 @@
   "name": "sunu-moyenne",
   "version": "1.0.0",
   "private": true,
-  "description": "SUNU MOYENNE — Calculateur de moyenne scolaire au Sénégal (LYNAQE Sédhiou) + backend de l'espace professeur",
+  "description": "SUNU MOYENNE — Calculateur de moyenne scolaire au Sénégal (LYNAQE Sédhiou)",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "engines": {
-    "node": ">=22.5.0"
+    "node": ">=18"
   }
 }

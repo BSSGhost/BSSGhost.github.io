@@ -1,13 +1,13 @@
-/* =========================================================
+/*
    OCR SEMI-AUTOMATIQUE — MODE PROFESSEUR
    Extrait les noms/prénoms et notes d'une photo de relevé
    via Tesseract.js (client-side, pas de serveur).
    L'utilisateur DOIT vérifier et corriger avant application.
-   ========================================================= */
+*/
 (function () {
   'use strict';
 
-  /* ---------- Configuration ---------- */
+  /* Configuration */
 
   const TESSERACT_SCRIPT = './vendor/tesseract/tesseract.min.js';
   const TESSERACT_WORKER = './vendor/tesseract/worker.min.js';
@@ -18,7 +18,7 @@
   const MAX_NOTE = 20;
   const OCR_TIMEOUT_MS = 60000;
 
-  /* ---------- Références DOM ---------- */
+  /* Références DOM */
 
   const $ = (id) => document.getElementById(id);
 
@@ -39,7 +39,7 @@
     imgEnhance: $('prof-img-enhance')
   };
 
-  /* ---------- État ---------- */
+  /* État */
 
   let tesseractLoaded = false;
   let tesseractWorker = null;
@@ -49,7 +49,7 @@
   let scanBtnEl = null;
   let ocrFilterToCheck = false;
 
-  /* ---------- État de prétraitement d'image ---------- */
+  /* État de prétraitement d'image */
 
   let imgRotationDeg = 0;
   let imgCropRect = null; /* {x, y, w, h} en pixels du canvas "rotation appliquée" */
@@ -57,7 +57,7 @@
   let imgSourceCanvas = null; /* canvas de l'image originale (dimensions natives) */
   let currentPdfBlob = null; /* pour PDF : blob converti en image */
 
-  /* ---------- Utilitaires ---------- */
+  /* Utilitaires */
 
   function t(key, vars) {
     if (typeof window.t === 'function') return window.t(key, vars);
@@ -74,7 +74,7 @@
     return document.querySelector('input[name="prof-composition"]:checked')?.value === 'oui';
   }
 
-  /* ---------- Chargement lazy de Tesseract.js ---------- */
+  /* Chargement lazy de Tesseract.js */
 
   function loadTesseractScript() {
     return new Promise((resolve, reject) => {
@@ -90,7 +90,7 @@
     });
   }
 
-  /* ---------- Prétraitement image : pipeline (rotation, recadrage, amélioration) ---------- */
+  /* Prétraitement image : pipeline (rotation, recadrage, amélioration) */
 
   function loadCanvasFromBlob(blob) {
     return new Promise((resolve, reject) => {
@@ -206,7 +206,7 @@
     }
   }
 
-  /* ---------- Modal de recadrage ---------- */
+  /* Modal de recadrage */
 
   let cropModalEl = null;
 
@@ -349,7 +349,7 @@
     }
   }
 
-  /* ---------- OCR via Tesseract.js ---------- */
+  /* OCR via Tesseract.js */
 
   async function runOCR(file, onProgress) {
     await loadTesseractScript();
@@ -372,7 +372,7 @@
     return result.data;
   }
 
-  /* ---------- Parsing des résultats OCR : détection du tableau ---------- */
+  /* Parsing des résultats OCR : détection du tableau */
 
   /* Un token « note » peut contenir du bruit OCR courant : « ? » (note
      douteuse), « O/l/I » à la place de « 0/1 », virgules ou points
@@ -606,7 +606,7 @@
     return str;
   }
 
-  /* ---------- Parsing alternatif : texte brut ---------- */
+  /* Parsing alternatif : texte brut */
 
   function parseOCRTextFallback(rawText) {
     if (!rawText || !rawText.trim()) return [];
@@ -654,7 +654,7 @@
     return results;
   }
 
-  /* ---------- UI : Modal de vérification ---------- */
+  /* UI : Modal de vérification */
 
   const NAME_OK_PATTERN = /^[\p{L}][\p{L}\s'’.-]*$/u;
 
@@ -989,7 +989,7 @@
     hideVerificationModal();
   }
 
-  /* ---------- Bouton "Scanner le relevé" ---------- */
+  /* Bouton "Scanner le relevé" */
 
   function createScanButton() {
     if (scanBtnEl) return scanBtnEl;
@@ -1027,7 +1027,7 @@
     }
   }
 
-  /* ---------- Progress overlay ---------- */
+  /* Progress overlay */
 
   let progressEl = null;
 
@@ -1068,7 +1068,7 @@
     }
   }
 
-  /* ---------- PDF → image conversion ---------- */
+  /* PDF → image conversion */
 
   const PDFJS_SCRIPT = './vendor/pdfjs/pdf.min.mjs';
   const PDFJS_WORKER = './vendor/pdfjs/pdf.worker.min.mjs';
@@ -1169,7 +1169,7 @@
     return allLines.join('\n');
   }
 
-  /* ---------- Scan principal ---------- */
+  /* Scan principal */
 
   async function onScanClick() {
     if (scanInProgress) return;
@@ -1269,7 +1269,7 @@
     }
   }
 
-  /* ---------- Hooks exposés (appelés par prof.js) ---------- */
+  /* Hooks exposés (appelés par prof.js) */
 
   window.onProfFileSelected = async function (file, isImage) {
     resetImageState();
@@ -1319,7 +1319,7 @@
     });
   }
 
-  /* ---------- Hook sur l'upload ---------- */
+  /* Hook sur l'upload */
 
   function hookFileUpload() {
     if (!els.fileInput) return;
@@ -1346,12 +1346,12 @@
     }
   }
 
-  /* ---------- Exposition globale ---------- */
+  /* Exposition globale */
 
   window.startOCRScan = onScanClick;
   window.extractPdfText = extractPdfText;
 
-  /* ---------- Initialisation ---------- */
+  /* Initialisation */
 
   function init() {
     hookFileUpload();

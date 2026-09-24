@@ -1,11 +1,11 @@
-/* =========================================================
+/*
    POLICES AUTO-HÉBERGÉES
    Les fichiers .woff2 doivent être placés dans ./fonts/ à la
-   racine du projet (voir liste exacte dans le README des polices).
+   racine du projet (voir la liste dans la précache de sw.js).
    Cela évite toute dépendance à Google Fonts au runtime, pour un
    mode hors-ligne fidèle après la première visite (le Service
    Worker met ces fichiers en cache comme les autres assets).
-   ========================================================= */
+*/
 @font-face {
   font-family: 'Plus Jakarta Sans';
   src: url('./fonts/plus-jakarta-sans-400.woff2') format('woff2');
@@ -917,9 +917,9 @@ h1 {
   transform: scale(1.08);
 }
 
-/* =========================================================
+/*
    APERÇU DU BULLETIN (hero preview)
-   ========================================================= */
+*/
 .hero-preview {
   position: relative;
   z-index: 1;
@@ -1480,7 +1480,7 @@ select option {
   color: var(--dark);
 }
 
-/* ---------- Wrapper de select avec flèche animée ---------- */
+/* Wrapper de select avec flèche animée */
 /* La flèche pivote à l'ouverture du menu (approximée par le focus du
    select, seul signal fiable en CSS pur, sans JS, cross-browser). */
 .select-wrap {
@@ -1592,7 +1592,7 @@ button:disabled {
     0 10px 22px rgba(160, 119, 35, 0.26);
 }
 
-/* ---------- Bouton principal : accent doré pour créer un point focal ---------- */
+/* Bouton principal : accent doré pour créer un point focal */
 
 .primary-button {
   position: relative;
@@ -2152,9 +2152,9 @@ html.dark-mode .result-card.error h3 {
   text-transform: uppercase;
 }
 
-/* =========================================================
+/*
    BOUTON "MATIÈRE SUIVANTE"
-   ========================================================= */
+*/
 .next-subject-button {
   display: flex;
   align-items: center;
@@ -2205,9 +2205,9 @@ html.dark-mode .result-card.error h3 {
   }
 }
 
-/* =========================================================
+/*
    BANNIÈRE "BULLETIN PRÊT" — écran Évolution
-   ========================================================= */
+*/
 .bulletin-ready-banner {
   display: flex;
   align-items: center;
@@ -2461,9 +2461,9 @@ html.dark-mode .bulletin-ready-btn:hover {
   letter-spacing: 0.02em;
 }
 
-/* =========================================================
+/*
    OBJECTIF PERSONNEL DE MOYENNE
-   ========================================================= */
+*/
 .objectif-widget {
   margin-bottom: 18px;
   padding: 16px 18px;
@@ -2776,9 +2776,9 @@ th {
   color: var(--muted);
 }
 
-/* =========================================================
+/*
    COMPARAISON SEMESTRE 1 / SEMESTRE 2
-   ========================================================= */
+*/
 .comparison-card {
   margin-top: 28px;
   padding: 22px 20px;
@@ -2935,12 +2935,12 @@ th {
   padding: 10px 0;
 }
 
-/* =========================================================
+/*
    HISTORIQUE MULTI-ANNÉES — "Mon parcours scolaire"
    Réutilise la structure visuelle de la comparaison Sem1/Sem2
    (.compare-row, .compare-bar-*) pour rester cohérent, avec
    quelques ajouts propres à la vue multi-classes.
-   ========================================================= */
+*/
 .historique-card {
   margin-top: 28px;
   padding: 22px 20px;
@@ -3026,9 +3026,9 @@ th {
   border-color: rgba(60, 72, 88, 0.3);
 }
 
-/* =========================================================
+/*
    FAQ — Comment ça marche
-   ========================================================= */
+*/
 .faq-card {
   margin-top: 28px;
   padding: 22px 20px;
@@ -3193,7 +3193,7 @@ html.dark-mode .faq-card {
   border-color: rgba(160, 174, 196, 0.14);
 }
 
-/* ---------- Section À propos ---------- */
+/* Section À propos */
 .about-card {
   margin-top: 0;
   margin-bottom: 20px;
@@ -3355,10 +3355,10 @@ html.dark-mode .about-privacy p {
   animation: shield-tap 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ============================================================
+/*
    Mise en page forcée selon l'appareil choisi dans la fenêtre
    d'accueil (indépendamment de la largeur réelle de l'écran)
-   ============================================================ */
+*/
 
 body.device-phone .hero,
 body.device-tablette .hero {
@@ -3734,7 +3734,7 @@ body.device-phone .topbar {
   }
 }
 
-/* ---------- Thème sombre & sélecteur de langue ---------- */
+/* Thème sombre & sélecteur de langue */
 .site-controls {
   display: flex;
   align-items: center;
@@ -3786,10 +3786,10 @@ html.dark-mode {
   color-scheme: dark;
 }
 
-/* =========================================================
+/*
    TRANSITION CLAIR/SOMBRE — voile circulaire léger (sans API
    expérimentale, pour rester fiable sur toutes les machines)
-   ========================================================= */
+*/
 #theme-reveal-overlay {
   position: fixed;
   inset: 0;
@@ -3832,9 +3832,9 @@ html.dark-mode {
   }
 }
 
-/* =========================================================
+/*
    TRANSITION FR / EN — pop sur le globe + fondu du contenu
-   ========================================================= */
+*/
 @keyframes lang-icon-pop {
   0%   { transform: scale(1) rotate(0deg); }
   40%  { transform: scale(0.6) rotate(-14deg); }
@@ -3978,9 +3978,9 @@ html.dark-mode .footer-copyright {
 }
 
 
-/* =========================================================
+/*
    MODE SOMBRE COMPLET — éléments qui restaient clairs
-   ========================================================= */
+*/
 html.dark-mode .info-panel {
   background: linear-gradient(145deg, #161f2d 0%, #11161d 65%, #0d1117 100%);
   color: #eaedf3;
@@ -4216,10 +4216,10 @@ html.dark-mode .quote-of-day {
   color: #dce1e8;
 }
 
-/* =========================================================
+/*
    MODE SOMBRE — compléments : éléments restés clairs
    (choix Oui/Non, étapes, barre de progression, conseiller)
-   ========================================================= */
+*/
 html.dark-mode .choice-option {
   background: rgba(31, 36, 45, 0.92);
   border-color: rgba(160, 174, 196, 0.18);
@@ -4300,9 +4300,9 @@ html.dark-mode .radar-axis {
 html.dark-mode .radar-label {
   fill: rgba(220, 225, 232, 0.65);
 }
-/* =========================================================
+/*
    NAVIGATION PAR ÉCRANS (5 onglets, pensée mobile-first)
-   ========================================================= */
+*/
 .app-tabbar {
   position: sticky;
   bottom: 0;
@@ -4494,9 +4494,9 @@ html.dark-mode .app-tab.is-active {
     height: 17px;
   }
 }
-/* =========================================================
+/*
    MODE PROFESSEUR — SUNU MOYENNE / LYNAQE Sédhiou
-   ========================================================= */
+*/
 .prof-card {
   background: var(--card-strong);
   border: 1px solid rgba(15, 23, 42, 0.04);
@@ -4623,7 +4623,7 @@ html.dark-mode .app-tab.is-active {
   overflow: visible;
 }
 
-/* ---------- Morphing réel fermé → ouvert ---------- */
+/* Morphing réel fermé → ouvert */
 /* Une seule forme (paupière + pupille) dont les coordonnées interpolent
    en douceur d'un état à l'autre, au lieu d'un changement brutal d'icône. */
 .prof-toggle-password .eye-lid {
@@ -5134,9 +5134,9 @@ html.dark-mode .prof-del-btn {
   to   { opacity: 1; }
 }
 
-/* =========================================================
+/*
    OCR SEMI-AUTOMATIQUE — Modal de vérification + bouton scan
-   ========================================================= */
+*/
 
 /* Bouton "Scanner le relevé" */
 .prof-ocr-scan-btn {
@@ -5519,9 +5519,9 @@ html.dark-mode .prof-ocr-progress-bar-wrap {
   }
 }
 
-/* =========================================================
+/*
    MODE PROFESSEUR — VUES RESTRUCTURÉES (Classes → Matière)
-   ========================================================= */
+*/
 
 /* Fil d'Ariane / navigation */
 .prof-breadcrumb {
@@ -7095,9 +7095,9 @@ html.dark-mode .prof-danger-text {
   }
 }
 
-/* =========================================================
+/*
    TABLEAU DE BORD (Vue 0)
-   ========================================================= */
+*/
 
 .prof-console-tabs {
   display: flex;
@@ -7144,9 +7144,9 @@ html.dark-mode .prof-console-tab.is-active {
   align-items: center;
 }
 
-/* =========================================================
+/*
    LAYOUT : SIDEBAR + TOPBAR + CONTENU
-   ========================================================= */
+*/
 
 .prof-layout {
   display: grid;
@@ -8299,9 +8299,9 @@ html.dark-mode .prof-dash-bar-fill {
   }
 }
 
-/* =========================================================
+/*
    TABLEAU DE BORD ÉLÈVE (Accueil) + FICHE PROFIL
-   ========================================================= */
+*/
 .dash-screen {
   display: flex;
   flex-direction: column;
@@ -8558,7 +8558,7 @@ html.dark-mode .dash-progress-head b { color: var(--yellow-400); }
   justify-content: center;
 }
 
-/* ---- Fiche profil ---- */
+/* Fiche profil */
 
 .profil-screen {
   display: flex;
@@ -8817,9 +8817,9 @@ html.dark-mode .profil-photo-pick {
   }
 }
 
-/* =========================================================
+/*
    OCR INTELLIGENT : bannière, filtre et fiabilité des lignes
-   ========================================================= */
+*/
 
 .prof-ocr-stats {
   display: flex;
@@ -8912,9 +8912,9 @@ html.dark-mode .prof-ocr-row.is-check td {
   background: rgba(217, 60, 60, 0.1);
 }
 
-/* =========================================================
+/*
    IMPORT MASSIF (élèves CSV/XLSX + notes CSV)
-   ========================================================= */
+*/
 
 .prof-add-card-import {
   margin-top: 10px;
@@ -9095,9 +9095,9 @@ html.dark-mode .prof-import-target-row input {
   }
 }
 
-/* =========================================================
+/*
    DOUBLON DÉTECTÉ (modal) + corbeille
-   ========================================================= */
+*/
 
 /* Corbeille : info de purge automatique */
 .prof-trash-item-meta .prof-trash-purge-hint {

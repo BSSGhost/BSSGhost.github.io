@@ -1,9 +1,9 @@
-/* =========================================================
+/*
    SERVICE WORKER — SUNU MOYENNE
    Mise en cache des fichiers statiques pour permettre un
    fonctionnement hors-ligne complet (calcul, PDF, OCR).
    Incrémenter CACHE_VERSION à chaque déploiement.
-   ========================================================= */
+*/
 const CACHE_VERSION = 'v43';
 const CACHE_NAME = `sunu-moyenne-${CACHE_VERSION}`;
 
@@ -41,7 +41,7 @@ const PRECACHE_URLS = [
   './fonts/fraunces-700.woff2',
 ];
 
-/* ------------------ Installation ------------------- */
+/* Installation */
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -57,7 +57,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-/* ------------------ Activation ------------------- */
+/* Activation */
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -71,7 +71,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-/* ------------------ Stratégies de cache ------------------- */
+/* Stratégies de cache */
 
 function isHTML(request) {
   return request.headers.get('accept')?.includes('text/html');
@@ -127,7 +127,7 @@ function networkCacheFallback(request) {
     .catch(() => caches.match(request));
 }
 
-/* ------------------ Intercepteur fetch ------------------- */
+/* Intercepteur fetch */
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
@@ -158,7 +158,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(networkFirst(event.request));
 });
 
-/* ------------------ Notification de mise à jour ------------------- */
+/* Notification de mise à jour */
 
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
