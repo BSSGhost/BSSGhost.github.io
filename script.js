@@ -618,13 +618,13 @@ const translations = {
     placeholder_etablissement: "Ex : LYNAQE Sédhiou",
     label_annee_scolaire: "Année scolaire",
     placeholder_annee_scolaire: "Ex : 2025-2026",
-    label_numero_eleve: "Numéro d'élève",
-    placeholder_numero_eleve: "Ex : 2025-0147",
+    label_matiere_preferee: "Matière préférée",
+    option_matiere_preferee_default: "-- Choisir une matière --",
     label_photo: "Photo (facultative)",
     btn_photo_remove: "Retirer la photo",
     btn_profil_save: "Enregistrer le profil",
     profil_delete_btn: "Supprimer mon profil",
-    profil_delete_confirm: "Voulez-vous vraiment supprimer votre profil ? Seuls votre nom, votre prénom, votre classe, votre établissement, votre numéro d'élève et votre photo seront effacés. Vos notes et votre objectif sont conservés.",
+    profil_delete_confirm: "Voulez-vous vraiment supprimer votre profil ? Seuls votre nom, votre prénom, votre classe, votre établissement, votre matière préférée et votre photo seront effacés. Vos notes et votre objectif sont conservés.",
     profil_deleted: "Profil supprimé !",
     profil_photo_pick: "Choisir une photo…",
     profil_photo_help: "La photo reste sur votre appareil, elle n'est jamais envoyée.",
@@ -639,6 +639,7 @@ const translations = {
     fiche_objectif: "Objectif",
     fiche_forces: "Matières fortes",
     fiche_faibles: "Matières faibles",
+    fiche_matiere_preferee: "Matière préférée",
     fiche_vide: "—",
     /* Import élèves / notes (mode Professeur) */
     prof_import_class: "Importer une classe",
@@ -1268,13 +1269,13 @@ const translations = {
     placeholder_etablissement: "e.g. LYNAQE Sédhiou",
     label_annee_scolaire: "School year",
     placeholder_annee_scolaire: "e.g. 2025-2026",
-    label_numero_eleve: "Student number",
-    placeholder_numero_eleve: "e.g. 2025-0147",
+    label_matiere_preferee: "Favourite subject",
+    option_matiere_preferee_default: "-- Choose a subject --",
     label_photo: "Photo (optional)",
     btn_photo_remove: "Remove photo",
     btn_profil_save: "Save profile",
     profil_delete_btn: "Delete my profile",
-    profil_delete_confirm: "Are you sure you want to delete your profile? Only your name, first name, class, establishment, student number and photo will be erased. Your grades and goal are kept.",
+    profil_delete_confirm: "Are you sure you want to delete your profile? Only your name, first name, class, establishment, favourite subject and photo will be erased. Your grades and goal are kept.",
     profil_deleted: "Profile deleted!",
     profil_photo_pick: "Choose a photo…",
     profil_photo_help: "The photo stays on your device, it is never sent.",
@@ -1289,6 +1290,7 @@ const translations = {
     fiche_objectif: "Goal",
     fiche_forces: "Strong subjects",
     fiche_faibles: "Weak subjects",
+    fiche_matiere_preferee: "Favourite subject",
     fiche_vide: "—",
     /* Students / grades import (Teacher mode) */
     prof_import_class: "Import a class",
@@ -4528,6 +4530,9 @@ function showInfoDialog(message) {
     }
     if (screenName === 'profil' && typeof window.refreshProfilScreen === 'function') {
       window.refreshProfilScreen();
+    }
+    if (screenName === 'calculer' && typeof window.syncCalcFromProfile === 'function') {
+      window.syncCalcFromProfile();
     }
 
     tabs.forEach((tab) => {

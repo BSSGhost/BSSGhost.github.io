@@ -8669,6 +8669,10 @@ html.dark-mode .dash-progress-head b { color: var(--yellow-400); }
   gap: 10px;
 }
 
+.profil-fiche-cell.is-wide {
+  grid-column: 1 / -1;
+}
+
 .profil-fiche-cell {
   display: flex;
   flex-direction: column;

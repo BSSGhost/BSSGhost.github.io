@@ -913,8 +913,12 @@
                   <input type="text" id="profil-annee" maxlength="9" pattern="\d{4}-\d{4}" data-i18n-placeholder="placeholder_annee_scolaire" placeholder="Ex : 2025-2026" />
                 </div>
                 <div class="field-group">
-                  <label for="profil-numero" data-i18n="label_numero_eleve">Numéro d'élève</label>
-                  <input type="text" id="profil-numero" maxlength="30" data-i18n-placeholder="placeholder_numero_eleve" placeholder="Ex : 2025-0147" />
+                  <label for="profil-matiere" data-i18n="label_matiere_preferee">Matière préférée</label>
+                  <div class="select-wrap">
+                    <select id="profil-matiere">
+                      <option value="" data-i18n="option_matiere_preferee_default">-- Choisir une matière --</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 

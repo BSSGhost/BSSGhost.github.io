@@ -330,16 +330,55 @@
     const classe = el('profil-classe');
     const etab = el('profil-etablissement');
     const annee = el('profil-annee');
-    const numero = el('profil-numero');
     if (nom) nom.value = prof.nom || '';
     if (prenom) prenom.value = prof.prenom || '';
     if (classe) classe.value = prof.classe || '';
     if (etab) etab.value = prof.etablissement || '';
     if (annee) annee.value = prof.anneeScolaire || (typeof getAnneeScolaire === 'function' ? getAnneeScolaire() : '');
-    if (numero) numero.value = prof.numeroEleve || '';
+    populateMatiereOptions(prof.classe || '', prof.matierePreferee || '');
 
     pendingPhoto = prof.photo || null;
     updatePhotoUI();
+  }
+
+  /* Matière préférée : la liste vient de la même source que l'écran
+     Calculer (getMatieresPourClasse + langues vivantes). Sans classe
+     choisie, on propose toutes les matières du site. */
+  const CLASSES_AVEC_LANGUE = ['4e', '3e', '2nde', '1er', 'Tle'];
+  const TOUTES_LES_CLASSES = ['6e', '5e', '4e', '3e', '2nde', '1er', 'Tle'];
+
+  function matieresPourProfil(classe) {
+    if (typeof getMatieresPourClasse !== 'function') return [];
+    if (!classe) {
+      const toutes = new Set();
+      TOUTES_LES_CLASSES.forEach((c) => matieresPourProfil(c).forEach((m) => toutes.add(m)));
+      return Array.from(toutes);
+    }
+    const langues = typeof LANGUE_OPTIONS !== 'undefined' ? LANGUE_OPTIONS : [];
+    const liste = getMatieresPourClasse(classe);
+    return Array.from(new Set(CLASSES_AVEC_LANGUE.includes(classe) ? [...liste, ...langues] : liste));
+  }
+
+  function populateMatiereOptions(classe, selected) {
+    const select = el('profil-matiere');
+    if (!select) return;
+    select.innerHTML = '';
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.setAttribute('data-i18n', 'option_matiere_preferee_default');
+    placeholder.textContent = t('option_matiere_preferee_default');
+    select.appendChild(placeholder);
+
+    const matieres = matieresPourProfil(classe);
+    matieres.forEach((matiere) => {
+      const option = document.createElement('option');
+      option.value = matiere;
+      option.textContent = typeof translateMatiere === 'function' ? translateMatiere(matiere) : matiere;
+      select.appendChild(option);
+    });
+
+    select.value = matieres.includes(selected) ? selected : '';
   }
 
   function updatePhotoUI() {
@@ -360,6 +399,14 @@
     const form = el('profil-form');
     if (!form || form.dataset.wired) return;
     form.dataset.wired = '1';
+
+    const classeProfil = el('profil-classe');
+    if (classeProfil) {
+      classeProfil.addEventListener('change', () => {
+        const matiere = el('profil-matiere');
+        populateMatiereOptions(classeProfil.value, matiere ? matiere.value : '');
+      });
+    }
 
     const input = el('profil-photo-input');
     if (input) {
@@ -396,7 +443,7 @@
         classe,
         etablissement: el('profil-etablissement').value.trim(),
         anneeScolaire: el('profil-annee').value.trim(),
-        numeroEleve: el('profil-numero').value.trim()
+        matierePreferee: el('profil-matiere').value
       };
       if (pendingPhoto) partial.photo = pendingPhoto;
       else if (getProfile().photo) partial.photo = null;
@@ -420,7 +467,7 @@
               prenom: '',
               classe: '',
               etablissement: '',
-              numeroEleve: ''
+              matierePreferee: ''
             });
             if (getProfile().photo) saveStudentProfile({ photo: null });
             pendingPhoto = null;
@@ -435,6 +482,27 @@
     }
   }
 
+  /* Sélectionne dans l'écran Calculer la classe enregistrée dans le profil.
+     Si la classe change, langue vivante et série sont réinitialisées
+     (comme lors d'un changement manuel de classe), car elles en dépendent. */
+  function syncCalcClasse(classe) {
+    if (!classe || typeof classeSelect === 'undefined' || !classeSelect) return;
+    const existe = Array.from(classeSelect.options).some((o) => o.value === classe);
+    if (!existe) return;
+
+    if (classeSelect.value !== classe) {
+      classeSelect.value = classe;
+      document.querySelectorAll('input[name="langue"], input[name="serie"]').forEach((radio) => {
+        radio.checked = false;
+      });
+      saveStudentProfile({ langue: null, serie: null });
+      if (typeof hideResultActionButtons === 'function') hideResultActionButtons();
+    }
+    if (typeof updateMatieres === 'function') updateMatieres();
+    if (typeof updateCoefficientSuggestion === 'function') updateCoefficientSuggestion();
+    if (typeof updateStepsTimeline === 'function') updateStepsTimeline();
+  }
+
   /* Synchronise le formulaire du calculateur avec le profil enregistré,
      pour que les écrans restent cohérents entre eux. */
   function syncCalcForm(nom, prenom, classe) {
@@ -442,17 +510,13 @@
     const prenomInput = document.getElementById('prenom');
     if (nomInput) nomInput.value = nom;
     if (prenomInput) prenomInput.value = prenom;
-    if (classe && typeof classeSelect !== 'undefined' && classeSelect) {
-      const options = Array.isArray(classeSelect.options)
-        ? Array.from(classeSelect.options)
-        : [];
-      if (options.some((o) => o.value === classe)) {
-        classeSelect.value = classe;
-      }
-      if (typeof updateMatieres === 'function') updateMatieres();
-      if (typeof updateCoefficientSuggestion === 'function') updateCoefficientSuggestion();
-    }
+    syncCalcClasse(classe);
   }
+
+  /* Appelé à l'ouverture de l'écran Calculer (script.js). */
+  window.syncCalcFromProfile = function () {
+    syncCalcClasse(getProfile().classe);
+  };
 
   /* Matières fortes / faibles à partir des moyennes annuelles par matière. */
   function subjectStrengths() {
@@ -515,8 +579,13 @@
 
     const { strong, weak } = subjectStrengths();
 
+    const matiereFav = prof.matierePreferee
+      ? esc(typeof translateMatiere === 'function' ? translateMatiere(prof.matierePreferee) : prof.matierePreferee)
+      : esc(t('fiche_vide'));
+
     fiche.innerHTML = `
       <div class="profil-fiche-grid">
+        <div class="profil-fiche-cell is-wide"><small>${esc(t('fiche_matiere_preferee'))}</small><b>${matiereFav}</b></div>
         <div class="profil-fiche-cell"><small>${esc(t('fiche_moyenne_actuelle'))}</small><b>${frNum(moyActuelle)}</b></div>
         <div class="profil-fiche-cell"><small>${esc(t('fiche_mention'))}</small>${mention}</div>
         <div class="profil-fiche-cell"><small>${esc(t('fiche_moyenne_s1'))}</small><b>${frNum(moyS1)}</b></div>
