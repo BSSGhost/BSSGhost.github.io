@@ -2755,6 +2755,7 @@ window.refreshHistoriqueScreen = refreshHistoriqueScreen;
 
 function updateMatieres() {
   const selectedClasse = classeSelect.value;
+  const previousMatiere = matiereSelect.value;
 
   matiereSelect.innerHTML = `<option value="">${t('option_matiere_default')}</option>`;
 
@@ -2787,6 +2788,13 @@ function updateMatieres() {
     option.textContent = translateMatiere(matiere);
     matiereSelect.appendChild(option);
   });
+
+  /* Restaurer la matière déjà sélectionnée si elle existe toujours dans la
+     nouvelle liste (ex : reconstruction du select suite à un changement de
+     langue), pour ne pas perdre le choix de l'utilisateur à chaque fois. */
+  if (previousMatiere && matieres.includes(previousMatiere)) {
+    matiereSelect.value = previousMatiere;
+  }
 
   renderTableMatiere();
 }

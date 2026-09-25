@@ -1446,6 +1446,12 @@ select:focus {
   outline: none;
   border-color: var(--blue-600);
   box-shadow: 0 0 0 4px rgba(41, 74, 128, 0.1);
+}
+
+/* Le transform est réservé aux <input> : appliqué à un <select> au focus,
+   il casse le rendu du menu déroulant natif sur Chrome/Edge (un rectangle
+   blanc fantôme reste visible derrière la liste d'options ouverte). */
+input:focus {
   transform: translateY(-1px);
 }
 
