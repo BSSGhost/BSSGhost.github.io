@@ -977,12 +977,20 @@ h1 {
 
 .hero-preview-row {
   display: grid;
-  grid-template-columns: 1fr 2fr auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
   align-items: center;
   gap: 10px;
   padding: 6px 0;
   opacity: 1;
   transform: none;
+}
+
+/* Sur téléphone le nom de la matière doit rester lisible en entier
+   ("Sciences Physiques" = 119px) : on rééquilibre le rapport matière/jauge,
+   sinon la colonne 1fr de la règle ci-dessus le tronque à 76px. */
+body.device-phone .hero-preview-row,
+body.device-tablette .hero-preview-row {
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.4fr) auto;
 }
 
 /* .is-revealing est ajoutée puis retirée par script.js juste après le
@@ -2501,10 +2509,14 @@ html.dark-mode .bulletin-ready-btn:hover {
 .objectif-input-group input[type="number"] {
   width: 76px;
   padding: 7px 10px;
+  /* Cible tactile confortable au doigt (mesurée à 37px avant). */
+  min-height: 42px;
   border-radius: 8px;
   border: 1px solid var(--soft-border);
   font-family: var(--font-main);
-  font-size: 0.92rem;
+  /* 16px minimum : en dessous, iOS/Android zooment automatiquement la page
+     au focus du champ, ce qui décale tout l'écran de la page. */
+  font-size: 1rem;
   color: var(--dark);
   background: var(--card-strong);
 }
@@ -2664,6 +2676,74 @@ html.dark-mode .bulletin-ready-btn:hover {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   touch-action: pan-x pan-y;
+  /* Ombres de défilement horizontales : apparaissent uniquement du côté où
+     du contenu reste hors écran, et disparaissent une fois arrivé au bout.
+     Les deux premiers dégradés ("local") servent de cache et glissent avec
+     le contenu, les deux derniers ("scroll") restent fixés au cadre visible. */
+  background:
+    linear-gradient(to right, var(--card-strong) 40%, rgba(248, 245, 238, 0)) left center,
+    linear-gradient(to left, var(--card-strong) 40%, rgba(248, 245, 238, 0)) right center,
+    radial-gradient(farthest-side at 0 50%, rgba(15, 23, 42, 0.16), rgba(15, 23, 42, 0)) left center,
+    radial-gradient(farthest-side at 100% 50%, rgba(15, 23, 42, 0.16), rgba(15, 23, 42, 0)) right center;
+  background-repeat: no-repeat;
+  background-size:
+    40px 100%,
+    40px 100%,
+    15px 100%,
+    15px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+html.dark-mode .table-wrap {
+  background:
+    linear-gradient(to right, var(--card-strong) 40%, rgba(17, 22, 29, 0)) left center,
+    linear-gradient(to left, var(--card-strong) 40%, rgba(17, 22, 29, 0)) right center,
+    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0)) left center,
+    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0)) right center;
+}
+
+/* Invite explicite sous les tableaux larges : sans elle, le contenu coupé
+   ressemble à un bug d'affichage et non à une zone défilante. */
+.table-scroll-hint {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+
+.table-scroll-hint svg {
+  flex: 0 0 auto;
+  animation: table-hint-nudge 1.8s ease-in-out infinite;
+}
+
+.table-scroll-hint.is-hidden {
+  display: none !important;
+}
+
+body.device-phone .table-scroll-hint,
+body.device-tablette .table-scroll-hint {
+  display: flex;
+}
+
+@keyframes table-hint-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table-scroll-hint svg {
+    animation: none;
+  }
 }
 
 table {
@@ -3368,7 +3448,7 @@ html.dark-mode .about-privacy p {
 
 body.device-phone .hero,
 body.device-tablette .hero {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   row-gap: 40px;
 }
 
@@ -3423,8 +3503,13 @@ body.device-ordinateur .calculator-card {
   padding: 30px 28px;
 }
 
+/* Le titre du hero est long (9 mots) : sur téléphone il doit rester fluide.
+   Une taille fixe (3.2rem = 51px) le rendait surdimensionné et occupait la
+   moitié de l'écran ; les clamps des media queries ci-dessous ne s'appliquent
+   jamais ici car `body.device-phone h1` est plus spécifique qu'un simple `h1`. */
 body.device-phone h1 {
-  font-size: 3.2rem;
+  font-size: clamp(1.85rem, 7.6vw, 2.4rem);
+  line-height: 1.15;
 }
 
 body.device-tablette h1 {
@@ -3530,6 +3615,57 @@ body.device-phone .topbar {
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
+}
+
+/* Plancher de lisibilité sur téléphone.
+   Plusieurs micro-libellés du site étaient figés entre 0.62rem (9.9px) et
+   0.7rem (11.2px) : illisibles sur un écran de téléphone tenu en portrait,
+   et les media queries ne les remontaient pas (device-* l'emporte sur elles).
+   On impose donc un minimum de 0.78rem (12.5px) sur les plus petits. */
+body.device-phone .eyebrow,
+body.device-phone .hero-preview-tag,
+body.device-phone .hero-preview-mention,
+body.device-phone .quote-of-day-label,
+body.device-phone .step-label,
+body.device-phone .progress-tracker-label,
+body.device-phone .coefficient-badge-icon,
+body.device-phone .hero-preview-total-label {
+  font-size: 0.78rem;
+}
+
+/* Le libellé d'étape est contraint à 68px de large par le media query
+   "max-width: 480px" : on le relâche pour éviter un titre sur 3 lignes.
+   Les 3 étapes partagent ensuite la largeur au lieu de déborder, car
+   3 × 96px ne tiennent plus dans les 276px utiles d'un écran de 320px. */
+body.device-phone .step-label {
+  max-width: 100%;
+  line-height: 1.3;
+}
+
+body.device-phone .step-item {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+body.device-phone .step-connector {
+  flex: 0 0 14px;
+}
+
+/* Les libellés de la barre d'onglets doivent rester une ligne lisible
+   (0.66rem = 10.5px était trop petit) sans faire déborder les 8 onglets. */
+body.device-phone .app-tab {
+  font-size: 0.75rem;
+}
+
+body.device-phone .table-action {
+  font-size: 0.78rem;
+}
+
+/* Micro-libellés de l'espace prof et de la fiche profil (0.66-0.68rem). */
+body.device-phone .prof-sidebar-group-label,
+body.device-phone .prof-class-stat-label,
+body.device-phone .profil-fiche-cell small {
+  font-size: 0.78rem;
 }
 
 @media (max-width: 380px) {
@@ -4418,6 +4554,7 @@ html.dark-mode .radar-label {
 
 .bulletin-screen-card .pdf-button {
   width: 100%;
+  flex: 0 0 auto;
 }
 
 .bulletin-preview {
@@ -6515,7 +6652,7 @@ html.dark-mode .prof-semester-tab.is-active {
 
 @media (max-width: 900px) {
   .prof-class-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -7665,7 +7802,7 @@ html.dark-mode .prof-mobile-nav-btn {
 /* Cartes portail */
 .prof-portal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
   gap: 14px;
 }
 
@@ -7885,7 +8022,7 @@ html.dark-mode .prof-activity-icon {
   }
 
   .prof-portal-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .prof-activity-item time {
@@ -8928,6 +9065,7 @@ html.dark-mode .prof-ocr-row.is-check td {
 
 .prof-add-card-import {
   margin-top: 10px;
+  flex: 0 0 auto;
 }
 
 .prof-upload-head {
@@ -9087,20 +9225,24 @@ html.dark-mode .prof-import-target-row input {
   }
 }
 
-/* Barre de navigation : 9 onglets — défilement horizontal sur petit écran */
+/* Barre de navigation : 8 onglets sur petit écran.
+   En une seule ligne, 2 onglets ("Profil", "Prof") sortaient de l'écran
+   sans qu'aucune indication ne le signale : on passe à une grille 4×2,
+   où tous les onglets restent visibles avec leur libellé complet. */
 @media (max-width: 640px) {
   .app-tabbar {
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .app-tabbar::-webkit-scrollbar {
-    display: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 4px;
+    row-gap: 4px;
   }
   .app-tab {
     flex: 0 0 auto;
-    min-width: 58px;
+    min-width: 0;
   }
-  .app-tab-label {
+  /* Le libellé est un <span data-i18n> sans classe : cibler .app-tab-label
+     ne sélectionnait rien (règle morte) et la ligne pouvait se couper. */
+  .app-tab > span:not(.app-tab-icon) {
     white-space: nowrap;
   }
 }

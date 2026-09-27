@@ -277,6 +277,7 @@ const translations = {
     msg_matieres_incompletes: "Le bulletin n'est téléchargeable que lorsque toutes les matières de la classe ont leur moyenne renseignée.",
 
     tab_professeur: "Prof",
+    table_scroll_hint: "Glissez le tableau pour voir toutes les colonnes",
     prof_login_eyebrow: "Espace réservé",
     prof_login_title: "Espace Professeur",
     prof_login_subtitle: "Mode réservé aux enseignants et surveillants : calculez en quelques secondes la moyenne de matière de chaque élève de la classe à partir du relevé de notes (photo ou PDF).",
@@ -928,6 +929,7 @@ const translations = {
     msg_matieres_incompletes: "The report card can only be downloaded once every subject in the class has its average filled in.",
 
     tab_professeur: "Teacher",
+    table_scroll_hint: "Swipe the table to see every column",
     prof_login_eyebrow: "Restricted area",
     prof_login_title: "Teacher area",
     prof_login_subtitle: "Restricted to teachers and supervisors: compute the subject average for every student in the class in seconds, from the grade sheet (photo or PDF).",
@@ -1366,6 +1368,50 @@ function t(key, vars) {
     });
   }
   return str;
+}
+
+/* Les tableaux ont un min-width de 480px : sur téléphone ils débordent donc
+   de leur conteneur. Sans indication, la partie masquée passe pour un bug
+   d'affichage. On insère une invite sous chaque tableau réellement
+   défilable, et on la masque dès que l'utilisateur a tout vu. */
+const TABLE_HINT_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+  'stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true">' +
+  '<line x1="4" y1="12" x2="20" y2="12"></line><polyline points="9 7 4 12 9 17"></polyline>' +
+  '<polyline points="15 7 20 12 15 17"></polyline></svg>';
+
+function setupTableScrollHints() {
+  document.querySelectorAll('.table-wrap').forEach((wrap) => {
+    let hint = wrap.nextElementSibling;
+    if (!hint || !hint.classList.contains('table-scroll-hint')) {
+      hint = document.createElement('p');
+      hint.className = 'table-scroll-hint';
+      // data-i18n va sur le <span> interne : applyStaticTranslations()
+      // écrase textContent, ce qui supprimerait l'icône SVG.
+      hint.innerHTML = TABLE_HINT_SVG + '<span data-i18n="table_scroll_hint"></span>';
+      wrap.insertAdjacentElement('afterend', hint);
+    }
+
+    const sync = () => {
+      /* Un onglet masqué (display:none) mesure 0px : on ne peut rien
+         conclure, donc on laisse l'invite en l'état plutôt que de la
+         masquer. activateScreen() relance la mesure à l'affichage. */
+      if (!wrap.clientWidth) return;
+      const overflowing = wrap.scrollWidth - wrap.clientWidth > 2;
+      const atEnd = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 2;
+      hint.classList.toggle('is-hidden', !overflowing || atEnd);
+      hint.hidden = !overflowing;
+    };
+
+    /* La fonction de sync est mémorisée sur l'élément : le listener de
+       scroll reste ainsi lié à l'invite courante même après un re-rendu
+       qui aurait remplacé le contenu du tableau. */
+    if (typeof wrap.__tableHintSync !== 'function') {
+      wrap.__tableHintSync = sync;
+      wrap.addEventListener('scroll', sync, { passive: true });
+    }
+    wrap.__tableHintSync();
+  });
 }
 
 /* Applique les traductions statiques du HTML : tout élément portant
@@ -4288,11 +4334,30 @@ function revealHeroPreviewGauges() {
   applyStaticTranslations();
   applyLangButton();
   setPdfButtonLabel(t('pdf_button_default'));
+  setupTableScrollHints();
+  window.refreshTableScrollHints = setupTableScrollHints;
+
+  /* Les tableaux de l'espace prof sont reconstruits en JS à chaque rendu :
+     on observe le DOM pour raccrocher une invite aux nouveaux. */
+  if (typeof MutationObserver === 'function') {
+    let pending = false;
+    new MutationObserver(() => {
+      if (pending) return;
+      pending = true;
+      window.requestAnimationFrame(() => {
+        pending = false;
+        setupTableScrollHints();
+      });
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+
+  window.addEventListener('resize', setupTableScrollHints, { passive: true });
 
   document.addEventListener('DOMContentLoaded', () => {
     applyStaticTranslations();
     applyLangButton();
     setPdfButtonLabel(t('pdf_button_default'));
+    setupTableScrollHints();
 
     document.getElementById('toggle-lang-btn')?.addEventListener('click', (event) => {
       const btn = event.currentTarget;
@@ -4542,6 +4607,9 @@ function showInfoDialog(message) {
     if (screenName === 'calculer' && typeof window.syncCalcFromProfile === 'function') {
       window.syncCalcFromProfile();
     }
+    /* Les tableaux ne sont mesurables qu'une fois l'écran visible : on
+       rel donc les invites de défilement à chaque changement d'onglet. */
+    setupTableScrollHints();
 
     tabs.forEach((tab) => {
       // L'écran "historique" n'a pas d'onglet dédié dans la barre de

@@ -965,6 +965,11 @@
     if (els.breadcrumbText) els.breadcrumbText.textContent = opts.breadcrumb || '';
     if (typeof opts.afterShow === 'function') opts.afterShow();
     closeSidebarMobile();
+    /* Les tableaux ne mesurent leur débordement qu'une fois la vue visible :
+       on recalcule les invites de défilement à chaque changement de vue. */
+    if (typeof window.refreshTableScrollHints === 'function') {
+      window.requestAnimationFrame(window.refreshTableScrollHints);
+    }
   }
 
   function showDash() {
