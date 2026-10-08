@@ -3454,7 +3454,11 @@
 
     let nomIdx = 0;
     let prenomIdx = 1;
+    let genreIdx = -1;
     if (isHeader) {
+      header.forEach((h, i) => {
+        if (genreIdx < 0 && /^(genre|sexe|sex|gender)$/.test(h.trim())) genreIdx = i;
+      });
       let prenomFound = false;
       header.forEach((h, i) => {
         if (h.includes('prénom') || h.includes('prenom') || h.includes('first name') || h.includes('given name')) {
@@ -3481,9 +3485,23 @@
         }
       }
       if (!nom && !prenom) return;
-      list.push({ nom, prenom });
+      /* Le genre brut du fichier est seulement mémorisé ici : il est converti
+         et enregistré dans applyClassImport, une fois l'import validé. */
+      const genreRaw = genreIdx >= 0 && genreIdx < cells.length ? String(cells[genreIdx] || '').trim() : '';
+      list.push({ nom, prenom, genreRaw });
     });
     return list;
+  }
+
+  /* Convertit une valeur de fichier (F, Fille, Féminin, M, Garçon…) en 'fille' / 'garçon'. */
+  function normalizeGenre(raw) {
+    const v = String(raw || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+    if (/^(f|fille|filles|feminin|female|girl|femme)$/.test(v)) return 'fille';
+    return 'garçon';
   }
 
   let importClassRows = [];
@@ -3684,7 +3702,7 @@
         }
         /* « Conserver les deux » : on ajoute le doublon */
       }
-      store[target].eleves.push({ id: newId(), nom, prenom });
+      store[target].eleves.push({ id: newId(), nom, prenom, genre: normalizeGenre(row.genreRaw) });
       count++;
     });
     saveStore();
