@@ -1122,6 +1122,7 @@
                               <div class="select-wrap"><select id="prof-dash-filter-class" data-i18n-aria-label="prof_filter_class_label" aria-label="Classe"></select></div>
                               <div class="select-wrap"><select id="prof-dash-filter-perf" data-i18n-aria-label="prof_dash_filter_perf" aria-label="Performance"></select></div>
                               <div class="select-wrap"><select id="prof-dash-filter-rank" data-i18n-aria-label="prof_filter_rank_label" aria-label="Rang"></select></div>
+                              <div class="select-wrap"><select id="prof-dash-filter-genre" data-i18n-aria-label="prof_filter_genre_label" aria-label="Genre"></select></div>
                             </div>
                             <input type="search" id="prof-dash-search" class="prof-dash-search" data-i18n-placeholder="prof_dash_search_placeholder" placeholder="Rechercher un élève…" autocomplete="off" />
                             <div class="table-wrap prof-table-wrap prof-dash-clickable">
@@ -1247,6 +1248,19 @@
                               <form id="prof-student-form" class="prof-inline-form" hidden>
                                 <input type="text" id="prof-student-nom" maxlength="40" data-i18n-placeholder="label_nom" placeholder="Nom" required />
                                 <input type="text" id="prof-student-prenom" maxlength="40" data-i18n-placeholder="label_prenom" placeholder="Prénom" />
+                                <div class="field-group">
+                                  <label data-i18n="prof_th_eleve">Genre</label>
+                                  <div class="choice-group" role="radiogroup" aria-label="Genre de l'élève">
+                                    <label class="choice-option">
+                                      <input type="radio" name="prof-student-genre" value="garçon" checked />
+                                      <span data-i18n="prof_garcon">Garçon</span>
+                                    </label>
+                                    <label class="choice-option">
+                                      <input type="radio" name="prof-student-genre" value="fille" />
+                                      <span data-i18n="prof_fille">Fille</span>
+                                    </label>
+                                  </div>
+                                </div>
                                 <button type="submit" id="prof-student-form-ok" class="primary-button prof-inline-ok" data-i18n="prof_student_form_ok">Valider</button>
                                 <button type="button" id="prof-student-form-cancel" class="ghost-button prof-inline-cancel" data-i18n="prof_ocr_cancel">Annuler</button>
                               </form>

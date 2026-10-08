@@ -84,6 +84,7 @@
     studentForm: $('prof-student-form'),
     studentNom: $('prof-student-nom'),
     studentPrenom: $('prof-student-prenom'),
+    studentGenre: $('prof-student-genre'),
     studentFormOk: $('prof-student-form-ok'),
     studentFormCancel: $('prof-student-form-cancel'),
     studentsTbody: $('prof-students-tbody'),
@@ -173,6 +174,7 @@
   let dashRankSubject = null; /* matière sélectionnée dans le classement (null = moyenne générale) */
   let dashStatsClass = null; /* classe sélectionnée dans les statistiques */
   let dashSelectedStudent = null; /* { classe, id } profil élève affiché */
+  let profGenreFilter = null; /* filtre genre: 'garçon' ou 'fille' */
 
   /* Authentification */
 
@@ -986,6 +988,7 @@
           if (els.dashSearch) els.dashSearch.value = '';
           if (els.dashFilterClass) els.dashFilterClass.value = '';
           if (els.dashFilterRank) els.dashFilterRank.value = '';
+          if (els.dashFilterGenre) els.dashFilterGenre.value = '';
         }
         renderDashStudents();
       }
@@ -1686,6 +1689,12 @@
         `<option value="top10">${escHtml(t('prof_dash_filter_top10'))}</option>` +
         `<option value="improve">${escHtml(t('prof_dash_filter_improve'))}</option>`;
     }
+    if (els.dashFilterGenre) {
+      els.dashFilterGenre.innerHTML =
+        `<option value="">${escHtml(t('prof_dash_filter_all'))}</option>` +
+        `<option value="garçon">${escHtml(t('prof_garcon'))}</option>` +
+        `<option value="fille">${escHtml(t('prof_fille'))}</option>`;
+    }
   }
 
   function dashStudentScope() {
@@ -1727,6 +1736,7 @@
     const query = (els.dashSearch ? els.dashSearch.value : '').trim().toLowerCase();
     const perf = els.dashFilterPerf ? els.dashFilterPerf.value : '';
     const rankf = els.dashFilterRank ? els.dashFilterRank.value : '';
+    const genref = els.dashFilterGenre ? els.dashFilterGenre.value : '';
 
     const filtered = list.filter((x) => {
       if (query && !getStudentName(x).toLowerCase().includes(query)) return false;
@@ -1737,7 +1747,12 @@
       if (rankf === 'top5' && rankById[x.id] > 5) return false;
       if (rankf === 'top10' && rankById[x.id] > 10) return false;
       if (rankf === 'improve' && !(totalWithAvg > 0 && rankById[x.id] >= totalWithAvg - 4)) return false;
-      return true;
+      if (genref) {
+      // Apply genre filter only to students with a genre field
+      if (x.genre && x.genre !== genref) return false;
+      // Students without a genre field are shown (they'll appear under both filters eventually)
+    }
+    return true;
     });
 
     const tbody = filtered.length
@@ -2220,15 +2235,21 @@
     els.studentFormOk.textContent = t('prof_student_form_ok');
 
     renderSemesterTabs();
-    renderStudentsTable(classeData);
+    renderStudentsTable(classeData, profGenreFilter);
     renderSubjectsList(classeData);
   }
 
-  function renderStudentsTable(classeData) {
+  function renderStudentsTable(classeData, genreFilter) {
     const ranks = rankClass();
-    const students = classeData.eleves
+    let students = classeData.eleves
       .slice()
       .sort((a, b) => (ranks[a.id] || Infinity) - (ranks[b.id] || Infinity));
+
+    // Filtrer par genre si spécifié
+    if (genreFilter) {
+      students = students.filter((s) => s.genre === genreFilter);
+    }
+
     els.studentsEmpty.hidden = students.length > 0;
     els.studentsEmpty.textContent = t('prof_students_empty');
     els.studentsTbody.innerHTML = '';
@@ -2281,6 +2302,7 @@
   async function submitStudentForm() {
     const nom = els.studentNom.value.trim();
     const prenom = els.studentPrenom.value.trim();
+    const genre = els.studentGenre ? els.studentGenre.value : 'garçon';
     if (!nom && !prenom) return;
     const classeData = store[activeClass] || defaultClass();
 
@@ -2288,6 +2310,7 @@
       els.studentForm.hidden = true;
       els.studentNom.value = '';
       els.studentPrenom.value = '';
+      els.studentGenre && (els.studentGenre.value = 'garçon');
       editingStudentId = null;
       renderClassView();
     };
@@ -2297,6 +2320,7 @@
       if (student) {
         student.nom = nom;
         student.prenom = prenom;
+        student.genre = genre;
       }
     } else {
       const dup = findDuplicateStudent(classeData.eleves, nom, prenom);
@@ -2317,7 +2341,7 @@
         }
         /* choice === 'keepBoth' : on enregistre malgré tout le nouvel élève */
       }
-      classeData.eleves.push({ id: newId(), nom, prenom });
+      classeData.eleves.push({ id: newId(), nom, prenom, genre });
     }
     saveStore();
     recordActivity('student', `${nom} ${prenom}`.trim());
@@ -2332,6 +2356,9 @@
     editingStudentId = student.id;
     els.studentNom.value = student.nom;
     els.studentPrenom.value = student.prenom;
+    if (els.studentGenre) {
+      els.studentGenre.value = student.genre || 'garçon';
+    }
     els.studentFormOk.textContent = t('prof_student_form_ok');
     showStudentForm();
   }
