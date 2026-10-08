@@ -277,6 +277,10 @@
         entry.eleves = entry.eleves.filter(
           (e) => e && typeof e === 'object' && (e.nom || e.prenom)
         );
+        // Ajout du champ genre par défaut pour les anciens élèves
+        entry.eleves.forEach((e) => {
+          if (!e.genre) e.genre = 'garçon';
+        });
       }
 
       if (!entry.semestres || typeof entry.semestres !== 'object') {
@@ -3680,7 +3684,7 @@
         }
         /* « Conserver les deux » : on ajoute le doublon */
       }
-      store[target].eleves.push({ id: newId(), nom, prenom });
+      store[target].eleves.push({ id: newId(), nom, prenom, genre: 'garçon' });
       count++;
     });
     saveStore();
