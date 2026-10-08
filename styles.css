@@ -9294,3 +9294,31 @@ html.dark-mode .prof-dup-list {
 html.dark-mode .prof-dup-list li {
   border-color: rgba(134, 159, 200, 0.12);
 }
+/* Fenêtre d'import : contenu défilable, boutons toujours visibles */
+.prof-import-modal .prof-ocr-modal-card {
+  overflow-y: auto;
+}
+
+.prof-import-modal .prof-import-file,
+.prof-import-modal .prof-import-preview {
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+
+.prof-import-modal .prof-import-table-wrap {
+  max-height: min(260px, 28vh);
+}
+
+.prof-import-modal .prof-ocr-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--card-strong, #fff);
+}
+
+@media (max-width: 640px) {
+  .prof-import-modal .prof-import-file,
+  .prof-import-modal .prof-import-preview {
+    padding: 0 16px;
+  }
+}
