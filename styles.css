@@ -9294,6 +9294,7 @@ html.dark-mode .prof-dup-list {
 html.dark-mode .prof-dup-list li {
   border-color: rgba(134, 159, 200, 0.12);
 }
+
 /* Fenêtre d'import : contenu défilable, boutons toujours visibles */
 .prof-import-modal .prof-ocr-modal-card {
   overflow-y: auto;
