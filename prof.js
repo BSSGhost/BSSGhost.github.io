@@ -89,6 +89,7 @@
     studentFormCancel: $('prof-student-form-cancel'),
     studentsTbody: $('prof-students-tbody'),
     studentsEmpty: $('prof-students-empty'),
+    dashFilterGenre: $('prof-dash-filter-genre'),
 
     subjectAdd: $('prof-subject-add'),
     subjectForm: $('prof-subject-form'),
@@ -1710,6 +1711,7 @@
           nom: e.nom,
           prenom: e.prenom,
           classe,
+          genre: e.genre,
           avg: dashAnnualAvg(cd, e.id),
           s1: dashSemAvg(cd, 'Semestre1', e.id),
           s2: dashSemAvg(cd, 'Semestre2', e.id)
