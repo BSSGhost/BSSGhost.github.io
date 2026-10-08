@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SUNU MOYENNE — Calculateur de moyenne scolaire au Sénégal | LYNAQE</title>
+    <meta
+      name="description"
+      content="Calculez votre moyenne de matière, de semestre et annuelle au Sénégal. Saisissez vos notes et coefficients, suivez votre progression et téléchargez votre bulletin PDF."
+    />
+    <meta name="robots" content="index, follow" />
+    <!-- À adapter : adresse réelle du site -->
+    <link rel="canonical" href="https://sunumoyenne.lynaqesedhiou.com/" />
+
+    <!-- Open Graph / réseaux sociaux -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SUNU MOYENNE — LYNAQE Sédhiou" />
+    <meta property="og:title" content="SUNU MOYENNE — Calculateur de moyenne scolaire au Sénégal" />
+    <meta property="og:description" content="Calculez votre moyenne de matière, de semestre et annuelle au Sénégal. Saisissez vos notes et coefficients, suivez votre progression et téléchargez votre bulletin PDF." />
+    <meta property="og:url" content="https://sunumoyenne.lynaqesedhiou.com/" />
+    <meta property="og:image" content="LYNAQE.png" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="SUNU MOYENNE — Calculateur de moyenne scolaire au Sénégal" />
+    <meta name="twitter:description" content="Calculez votre moyenne de matière, de semestre et annuelle au Sénégal. Saisissez vos notes et coefficients, suivez votre progression et téléchargez votre bulletin PDF." />
+    <meta name="twitter:image" content="LYNAQE.png" />
+
+    <!-- Données structurées Schema.org -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "SUNU MOYENNE",
+      "alternateName": "LYNAQE Sédhiou — Calcul de moyenne",
+      "url": "https://sunumoyenne.lynaqesedhiou.com/",
+      "description": "Calculateur de moyenne scolaire pour les élèves du Sénégal (6e à Terminale) : moyenne de matière, de semestre, moyenne annuelle et bulletin PDF téléchargeable.",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any",
+      "inLanguage": ["fr", "en"],
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "XOF"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "LYNAQE Sédhiou",
+        "url": "https://lynaqesedhiou.com/"
+      }
+    }
+    </script>
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#172b4b" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="LYNAQE.png" />
+
+    <!-- Polices auto-hébergées (voir @font-face dans styles.css) : plus de
+         dépendance à Google Fonts, pour un mode hors-ligne 100% fidèle. -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" sizes="512x512" href="LYNAQE.png">
+  </head>
+  <body>
+    <div id="loading-screen">
+      <img src="LYNAQE.png" alt="LYNAQE" class="loading-logo" width="120" height="177" />
+      <p class="loading-text">LYNAQE SENEGAL</p>
+    </div>
+
+    <div id="device-modal" class="device-modal" role="dialog" aria-modal="true" aria-labelledby="device-modal-title">
+      <div class="device-modal-card">
+        <p class="eyebrow" data-i18n="device_modal_eyebrow">Paramètres d'affichage</p>
+        <h2 id="device-modal-title" data-i18n="device_modal_title">Adapter l'affichage</h2>
+        <p class="device-modal-subtitle" data-i18n="device_modal_subtitle">
+          Le site détecte automatiquement la taille de votre écran. Vous pouvez forcer un affichage ci-dessous si besoin.
+        </p>
+
+        <div class="device-options">
+          <button type="button" class="device-option" data-device="auto">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M39 24a15 15 0 1 1-4.4-10.6"></path>
+              <path d="M39 8v9h-9"></path>
+            </svg>
+            <span data-i18n="device_auto">Automatique</span>
+          </button>
+
+          <button type="button" class="device-option" data-device="phone">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="14" y="4" width="20" height="40" rx="4"></rect>
+              <line x1="20" y1="38" x2="28" y2="38"></line>
+            </svg>
+            <span data-i18n="device_phone">Téléphone</span>
+          </button>
+
+          <button type="button" class="device-option" data-device="tablette">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="7" y="6" width="34" height="36" rx="4"></rect>
+              <line x1="21" y1="36" x2="27" y2="36"></line>
+            </svg>
+            <span data-i18n="device_tablet">Tablette</span>
+          </button>
+
+          <button type="button" class="device-option" data-device="ordinateur">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="5" y="8" width="38" height="24" rx="3"></rect>
+              <line x1="18" y1="40" x2="30" y2="40"></line>
+              <line x1="24" y1="32" x2="24" y2="40"></line>
+            </svg>
+            <span data-i18n="device_computer">Ordinateur</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="confirm-modal" class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" aria-describedby="confirm-modal-message" hidden>
+      <div class="confirm-modal-card">
+        <div class="confirm-modal-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h2 id="confirm-modal-title" class="confirm-modal-title" data-i18n="confirm_modal_title">Êtes-vous sûr ?</h2>
+        <p id="confirm-modal-message" class="confirm-modal-message"></p>
+        <div class="confirm-modal-actions">
+          <button type="button" id="confirm-modal-cancel" class="ghost-button confirm-cancel-btn" data-i18n="confirm_modal_cancel">Annuler</button>
+          <button type="button" id="confirm-modal-alt" class="confirm-alt-btn" hidden></button>
+          <button type="button" id="confirm-modal-ok" class="confirm-ok-btn" data-i18n="confirm_modal_ok">Confirmer</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="device-viewport-outer">
+      <div id="device-viewport">
+        <div class="page-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark-wrap">
+            <img src="LYNAQE.png" alt="Logo du LYNAQE de Sédhiou" class="brand-logo" width="300" height="300" />
+          </div>
+          <div>
+            <p class="brand-name">LYNAQE SENEGAL</p>
+            <small>Lycée Nation-Armée pour la Qualité et l'Équité</small>
+            <small id="annee-scolaire" class="annee-scolaire-badge"></small>
+          </div>
+        </div>
+        <div class="badge">SN</div>
+        <div class="site-controls" aria-label="Préférences du site">
+          <button type="button" id="toggle-theme-btn" class="device-change-btn" aria-pressed="false" title="Changer de thème">
+            <span class="theme-icon" aria-hidden="true">🌙</span>
+            <span class="theme-label">Mode sombre</span>
+          </button>
+          <button type="button" id="toggle-lang-btn" class="device-change-btn" aria-label="Passer en anglais">
+            <span class="lang-icon-wrap" aria-hidden="true">
+              <svg class="lang-icon lang-icon-gb" viewBox="0 0 60 30" width="18" height="13" role="img" aria-hidden="true">
+                <rect width="60" height="30" fill="#00247d"></rect>
+                <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"></path>
+                <path d="M0,0 L60,30 M60,0 L0,30" stroke="#cf142b" stroke-width="2"></path>
+                <path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"></path>
+                <path d="M30,0 V30 M0,15 H60" stroke="#cf142b" stroke-width="6"></path>
+              </svg>
+              <svg class="lang-icon lang-icon-fr" viewBox="0 0 3 2" width="18" height="13" role="img" aria-hidden="true" hidden>
+                <rect width="1" height="2" x="0" fill="#002395"></rect>
+                <rect width="1" height="2" x="1" fill="#fff"></rect>
+                <rect width="1" height="2" x="2" fill="#ed2939"></rect>
+              </svg>
+            </span>
+            <span class="lang-label">English</span>
+          </button>
+        </div>
+        <button type="button" id="toggle-son-btn" class="device-change-btn" aria-pressed="true">
+          <svg class="son-icon-on" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 18v12h8l12 10V8L14 18H6Z"></path>
+            <path d="M33 16c3 2.6 3 13.4 0 16"></path>
+            <path d="M39 11c6 5.6 6 20.4 0 26"></path>
+          </svg>
+          <svg class="son-icon-off" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+            <path d="M6 18v12h8l12 10V8L14 18H6Z"></path>
+            <line x1="32" y1="18" x2="44" y2="30"></line>
+            <line x1="44" y1="18" x2="32" y2="30"></line>
+          </svg>
+          <span class="son-label">Son activé</span>
+        </button>
+        <button type="button" id="change-device-btn" class="device-change-btn">
+          <span class="settings-icon" aria-hidden="true">⚙️</span>
+          <span data-i18n="change_device_btn">Affichage</span>
+        </button>
+      </header>
+
+      <nav class="app-tabbar" aria-label="Navigation principale">
+        <button type="button" class="app-tab is-active" data-target-screen="accueil" aria-current="page">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 3l9 8.5"></path><path d="M5 10v11h14V10"></path><path d="M9.5 21v-6h5v6"></path></svg></span>
+          <span data-i18n="tab_accueil">Accueil</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="calculer">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="8" y1="11" x2="8" y2="11.01"></line><line x1="12" y1="11" x2="12" y2="11.01"></line><line x1="16" y1="11" x2="16" y2="11.01"></line><line x1="8" y1="15" x2="8" y2="15.01"></line><line x1="12" y1="15" x2="12" y2="15.01"></line><line x1="16" y1="15" x2="16" y2="15.01"></line><line x1="8" y1="19" x2="16" y2="19"></line></svg></span>
+          <span data-i18n="tab_calculer">Calculer</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="resultats">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path><line x1="9" y1="10" x2="15" y2="10"></line><line x1="9" y1="14" x2="15" y2="14"></line><line x1="9" y1="18" x2="12" y2="18"></line></svg></span>
+          <span data-i18n="tab_resultats">Résultats</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="evolution">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 6"></polyline><polyline points="14 6 21 6 21 13"></polyline></svg></span>
+          <span data-i18n="tab_evolution">Évolution</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="bulletin">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg></span>
+          <span data-i18n="tab_bulletin">Bulletin</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="conseils">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
+          <span data-i18n="tab_conseils">Conseils</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="profil">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+          <span data-i18n="tab_profil">Profil</span>
+        </button>
+        <button type="button" class="app-tab" data-target-screen="professeur">
+          <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path><path d="M22 10v6"></path></svg></span>
+          <span data-i18n="tab_professeur">Prof</span>
+        </button>
+      </nav>
+
+      <main class="hero app-screen" data-screen="calculer">
+        <section class="info-panel">
+          <p class="eyebrow" data-i18n="hero_eyebrow">Outil scolaire officiel</p>
+          <h1 data-i18n="hero_h1">Calculez votre moyenne de matière et semestrielle en quelques secondes</h1>
+          <p class="subtitle" data-i18n="hero_subtitle">
+            Renseignez vos matières, vos notes et leurs coefficients pour obtenir votre moyenne en quelques secondes. Générez ensuite un bulletin scolaire clair, téléchargeable en PDF, aussi bien sur téléphone que sur ordinateur.
+          </p>
+
+          <div class="hero-preview" aria-hidden="true">
+            <div class="hero-preview-window">
+              <div class="hero-preview-dots"><span></span><span></span><span></span></div>
+              <span class="hero-preview-tag" data-i18n="hero_preview_tag">Aperçu du bulletin</span>
+            </div>
+            <div class="hero-preview-body">
+              <div class="hero-preview-row" style="--delay: 0">
+                <span class="hero-preview-subject" data-i18n="hero_preview_subject1">Mathématiques</span>
+                <span class="hero-preview-track"><span class="hero-preview-fill grade-bien" style="--value: 82%"></span></span>
+                <span class="hero-preview-grade">16.50</span>
+              </div>
+              <div class="hero-preview-row" style="--delay: 1">
+                <span class="hero-preview-subject" data-i18n="hero_preview_subject2">Français</span>
+                <span class="hero-preview-track"><span class="hero-preview-fill grade-moyen" style="--value: 66%"></span></span>
+                <span class="hero-preview-grade">13.25</span>
+              </div>
+              <div class="hero-preview-row" style="--delay: 2">
+                <span class="hero-preview-subject" data-i18n="hero_preview_subject3">Sciences Physiques</span>
+                <span class="hero-preview-track"><span class="hero-preview-fill grade-bien" style="--value: 75%"></span></span>
+                <span class="hero-preview-grade">15.00</span>
+              </div>
+              <div class="hero-preview-total">
+                <span class="hero-preview-total-label" data-i18n="hero_preview_total_label">Moyenne générale</span>
+                <strong class="hero-preview-total-value" id="hero-preview-value">0.00</strong>
+                <span class="hero-preview-mention" data-i18n="hero_preview_mention">Très bon travail</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div>
+              <strong>7</strong>
+              <span data-i18n="stat_classes_label">Classes couvertes (6e → Tle)</span>
+            </div>
+            <div>
+              <strong>10+</strong>
+              <span data-i18n="stat_matieres_label">Matières disponibles</span>
+            </div>
+            <div>
+              <strong>100%</strong>
+              <span data-i18n="stat_gratuit_label">Gratuit, en ligne comme hors-ligne</span>
+            </div>
+          </div>
+
+          <div class="partner-visuals" aria-label="Partenaires institutionnels">
+            <div class="partner-visual" tabindex="0">
+              <img src="force-armee.webp" alt="Emblème des forces armées du Sénégal" width="400" height="400" />
+            </div>
+            <div class="partner-visual partner-visual-wide" tabindex="0">
+              <img src="MEN.webp" alt="Logo du Ministère de l'Éducation nationale du Sénégal" width="400" height="200" />
+            </div>
+          </div>
+
+          <div class="quote-of-day" id="quote-of-day">
+            <span class="quote-of-day-label" data-i18n="quote_of_day_label">Conseil du jour</span>
+            <p class="quote-of-day-text" id="quote-of-day-text"></p>
+            <span class="quote-of-day-author" id="quote-of-day-author" hidden></span>
+          </div>
+        </section>
+
+        <section class="calculator-card">
+          <h2 data-i18n="calculator_h2">Formulaire</h2>
+
+          <ol class="steps-timeline" id="steps-timeline" aria-label="Étapes à suivre">
+            <li class="step-item" data-step="1">
+              <span class="step-number">1</span>
+              <span class="step-label" data-i18n="step1_label">Renseigner les infos</span>
+            </li>
+            <li class="step-connector" aria-hidden="true"></li>
+            <li class="step-item" data-step="2">
+              <span class="step-number">2</span>
+              <span class="step-label" data-i18n="step2_label">Ajouter les matières</span>
+            </li>
+            <li class="step-connector" aria-hidden="true"></li>
+            <li class="step-item" data-step="3">
+              <span class="step-number">3</span>
+              <span class="step-label" data-i18n="step3_label">Télécharger le bulletin</span>
+            </li>
+          </ol>
+
+          <div class="progress-tracker" id="progress-tracker" hidden>
+            <div class="progress-tracker-bar">
+              <div class="progress-tracker-fill" id="progress-tracker-fill"></div>
+            </div>
+            <span class="progress-tracker-label" id="progress-tracker-label">0 / 0 matières renseignées</span>
+          </div>
+
+          <form id="moyenne-form">
+            <div class="two-columns">
+              <div class="field-group">
+                <label for="nom" data-i18n="label_nom">Nom</label>
+                <input type="text" id="nom" name="nom" autocomplete="family-name" placeholder="Ex : Diop" data-i18n-placeholder="placeholder_nom" required />
+              </div>
+
+              <div class="field-group">
+                <label for="prenom" data-i18n="label_prenom">Prénom</label>
+                <input type="text" id="prenom" name="prenom" autocomplete="given-name" placeholder="Ex : Mamadou" data-i18n-placeholder="placeholder_prenom" required />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="classe" data-i18n="label_classe">Classe</label>
+              <div class="select-wrap">
+                <select id="classe" name="classe" required>
+                  <option value="" data-i18n="option_classe_default">-- Sélectionner votre classe --</option>
+                  <option value="6e">6e</option>
+                  <option value="5e">5e</option>
+                  <option value="4e">4e</option>
+                  <option value="3e">3e</option>
+                  <option value="2nde">2nde</option>
+                  <option value="1er">1er</option>
+                  <option value="Tle">Tle</option>
+                </select>
+              </div>
+            </div>
+
+            <fieldset class="field-group">
+              <legend data-i18n="legend_semestre">Semestre</legend>
+              <div class="choice-group" role="radiogroup" aria-label="Choix du semestre">
+                <label class="choice-option">
+                  <input type="radio" name="semestre" value="Semestre1" checked />
+                  <span data-i18n="radio_semestre1">Semestre 1</span>
+                </label>
+                <label class="choice-option">
+                  <input type="radio" name="semestre" value="Semestre2" />
+                  <span data-i18n="radio_semestre2">Semestre 2</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="field-group" id="langue-group" hidden>
+              <legend data-i18n="legend_langue">Quelle langue choisissez-vous ?</legend>
+              <div class="choice-group" role="radiogroup" aria-label="Choix de langue">
+                <label class="choice-option">
+                  <input type="radio" name="langue" value="Espagnol" />
+                  <span data-i18n="opt_espagnol">Espagnol</span>
+                </label>
+                <label class="choice-option">
+                  <input type="radio" name="langue" value="Arabe" />
+                  <span data-i18n="opt_arabe">Arabe</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="field-group" id="serie-group" hidden>
+              <legend data-i18n="legend_serie">Quelle série suivez-vous ?</legend>
+              <div class="choice-group" role="radiogroup" aria-label="Choix de série">
+                <label class="choice-option">
+                  <input type="radio" name="serie" value="S1" />
+                  <span data-i18n="opt_serie_s1">S1</span>
+                </label>
+                <label class="choice-option">
+                  <input type="radio" name="serie" value="S2" />
+                  <span data-i18n="opt_serie_s2">S2</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="field-group">
+              <label for="matiere" data-i18n="label_matiere">Matière</label>
+              <div class="select-wrap">
+                <select id="matiere" name="matiere" required>
+                  <option value="" data-i18n="option_matiere_default">-- Sélectionner une matière --</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="coefficient" data-i18n="label_coefficient">Coefficient</label>
+              <input
+                type="number"
+                id="coefficient"
+                name="coefficient"
+                min="1"
+                max="8"
+                step="1"
+                placeholder="Ex : 4"
+                data-i18n-placeholder="placeholder_coefficient"
+                inputmode="numeric"
+                required
+              />
+              <p class="coefficient-badge" id="coefficient-badge" hidden>
+                <span class="coefficient-badge-icon" aria-hidden="true">✓</span>
+                <span data-i18n="coefficient_badge_text">Coefficient officiel suggéré — modifiable si besoin</span>
+              </p>
+            </div>
+
+            <div class="two-columns">
+              <div class="field-group">
+                <label for="devoir1" data-i18n="label_devoir1">Note de devoir 1</label>
+                <input
+                  type="text"
+                  id="devoir1"
+                  class="note-input"
+                  min="0"
+                  max="20"
+                  pattern="(?:[0-9]|1[0-9]|20)(?:[,.](?:25|50|75))?"
+                  placeholder="Ex : 15,25"
+                  data-i18n-placeholder="placeholder_devoir1"
+                  inputmode="decimal"
+                  required
+                />
+              </div>
+
+              <div class="field-group">
+                <label for="devoir2" data-i18n="label_devoir2">Note de devoir 2</label>
+                <input
+                  type="text"
+                  id="devoir2"
+                  class="note-input"
+                  min="0"
+                  max="20"
+                  pattern="(?:[0-9]|1[0-9]|20)(?:[,.](?:25|50|75))?"
+                  placeholder="Ex : 12,25"
+                  data-i18n-placeholder="placeholder_devoir2"
+                  inputmode="decimal"
+                  required
+                />
+              </div>
+            </div>
+
+            <fieldset class="field-group">
+              <legend data-i18n="legend_composition">La matière comporte-t-elle une composition ?</legend>
+              <div class="choice-group" role="radiogroup" aria-label="Composition disponible">
+                <label class="choice-option">
+                  <input type="radio" name="hasComposition" value="oui" checked />
+                  <span data-i18n="radio_oui">Oui</span>
+                </label>
+                <label class="choice-option">
+                  <input type="radio" name="hasComposition" value="non" />
+                  <span data-i18n="radio_non">Non</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="field-group composition-group" id="composition-group">
+              <label for="composition" data-i18n="label_composition">Note de composition</label>
+              <input
+                type="text"
+                id="composition"
+                class="note-input"
+                min="0"
+                max="20"
+                pattern="(?:[0-9]|1[0-9]|20)(?:[,.](?:25|50|75))?"
+                placeholder="Ex : 17,25"
+                data-i18n-placeholder="placeholder_composition"
+                inputmode="decimal"
+              />
+            </div>
+
+            <div class="button-row">
+              <button type="submit" class="primary-button" data-i18n="btn_calculer_matiere">Calculer la moyenne de la matière</button>
+              <button type="button" id="calculer-semestre" class="secondary-button" data-i18n="btn_calculer_semestre">
+                Calculer ma moyenne du semestre
+              </button>
+            </div>
+
+            <div class="button-row">
+              <button type="button" id="calculer-annee" class="secondary-button" data-i18n="btn_calculer_annee">
+                Calculer ma moyenne annuelle
+              </button>
+            </div>
+
+            <div class="button-row reset-row">
+              <button type="button" id="reset-donnees" class="ghost-button" data-i18n="btn_reset">
+                Réinitialiser les données
+              </button>
+            </div>
+          </form>
+        </section>
+      </main>
+
+      <div class="app-screen is-active" data-screen="accueil">
+        <section id="dash-screen" class="dash-screen" aria-live="polite"></section>
+      </div>
+
+      <div class="app-screen" data-screen="resultats">
+      <section id="resultat" class="result-card" aria-live="polite">
+        <p class="result-label" data-i18n="result_label">Résultat</p>
+        <div class="result-content">
+          <div class="result-placeholder">
+            <svg class="result-placeholder-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="10" y="5" width="28" height="38" rx="4"></rect>
+              <line x1="15" y1="12" x2="33" y2="12"></line>
+              <circle cx="16.5" cy="21" r="1.6" fill="currentColor" stroke="none"></circle>
+              <circle cx="24" cy="21" r="1.6" fill="currentColor" stroke="none"></circle>
+              <circle cx="31.5" cy="21" r="1.6" fill="currentColor" stroke="none"></circle>
+              <circle cx="16.5" cy="28" r="1.6" fill="currentColor" stroke="none"></circle>
+              <circle cx="24" cy="28" r="1.6" fill="currentColor" stroke="none"></circle>
+              <circle cx="31.5" cy="28" r="1.6" fill="currentColor" stroke="none"></circle>
+              <circle cx="16.5" cy="35" r="1.6" fill="currentColor" stroke="none"></circle>
+              <circle cx="24" cy="35" r="1.6" fill="currentColor" stroke="none"></circle>
+              <circle cx="31.5" cy="35" r="1.6" fill="currentColor" stroke="none"></circle>
+            </svg>
+            <h3 data-i18n="result_placeholder_h3">Votre moyenne apparaîtra ici.</h3>
+          </div>
+        </div>
+        <button type="button" id="next-subject-btn" class="next-subject-button" hidden>
+          <span data-i18n="next_subject_btn">Matière suivante</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+        <button type="button" id="back-to-calculer-btn" class="next-subject-button icon-reverse" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span data-i18n="back_to_calculer_btn">Revenir à l'écran calculer</span>
+        </button>
+        <button type="button" id="see-evolution-btn" class="next-subject-button" hidden>
+          <span data-i18n="see_evolution_btn">Voir mon évolution</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3 17 9 11 13 15 21 6"></polyline>
+            <polyline points="14 6 21 6 21 13"></polyline>
+          </svg>
+        </button>
+      </section>
+
+      <section id="conseiller-scolaire" class="advisor-card" aria-live="polite" hidden>
+        <div class="advisor-header">
+          <span class="advisor-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path></svg></span>
+          <h3 data-i18n="advisor_header_h3">Conseiller scolaire</h3>
+        </div>
+        <div class="advisor-body">
+          <p class="advisor-line advisor-strong" id="advisor-points-forts">
+            <span class="advisor-emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="8 12.5 11 15.5 16 9"></polyline></svg></span>
+            <span class="advisor-text"></span>
+          </p>
+          <p class="advisor-line advisor-warning" id="advisor-a-ameliorer">
+            <span class="advisor-emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"></path><line x1="12" y1="10" x2="12" y2="14"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
+            <span class="advisor-text"></span>
+          </p>
+          <p class="advisor-line advisor-evolution" id="advisor-evolution" hidden>
+            <span class="advisor-emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg></span>
+            <span class="advisor-text"></span>
+          </p>
+          <p class="advisor-line advisor-conseil" id="advisor-conseil" hidden>
+            <span class="advisor-emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 21h4"></path><path d="M12 3a6 6 0 0 0-3.5 10.9c.8.6 1.2 1.6 1.2 2.6h4.6c0-1 .4-2 1.2-2.6A6 6 0 0 0 12 3Z"></path></svg></span>
+            <span class="advisor-text"></span>
+          </p>
+          <p class="advisor-line advisor-goal" id="advisor-objectif">
+            <span class="advisor-emoji" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><circle cx="12" cy="12" r="0.7" fill="currentColor" stroke="none"></circle></svg></span>
+            <span class="advisor-text"></span>
+          </p>
+        </div>
+      </section>
+      </div>
+
+      <div class="app-screen" data-screen="evolution">
+      <div id="bulletin-ready-banner" class="bulletin-ready-banner" hidden>
+        <span class="bulletin-ready-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
+        </span>
+        <span class="bulletin-ready-text" data-i18n="bulletin_ready_text">Votre bulletin est prêt ! Vous pouvez le télécharger dans l'onglet Bulletin.</span>
+        <button type="button" id="goto-bulletin-btn" class="bulletin-ready-btn" data-i18n="goto_bulletin_btn">Voir mon bulletin</button>
+      </div>
+      <section id="tableau-matieres" class="subjects-card" aria-live="polite">
+        <div class="subjects-header">
+          <h3 data-i18n="subjects_h3">Matières enregistrées</h3>
+          <div class="subjects-header-right">
+            <span id="classe-label">Aucune classe sélectionnée</span>
+            <button type="button" id="open-historique-btn" class="compare-toggle-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 16 14"></polyline></svg>
+              <span data-i18n="historique_open_btn">Mon parcours</span>
+            </button>
+            <button type="button" id="toggle-comparaison-btn" class="compare-toggle-btn" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+              <span>Comparer Sem1 / Sem2</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="objectif-widget" id="objectif-widget">
+          <div class="objectif-widget-row">
+            <label for="objectif-personnel-input" data-i18n="objectif_label">Mon objectif de moyenne</label>
+            <div class="objectif-input-group">
+              <input
+                type="number"
+                id="objectif-personnel-input"
+                min="0"
+                max="20"
+                step="0.25"
+                inputmode="decimal"
+                data-i18n-placeholder="objectif_placeholder"
+                placeholder="Ex : 14"
+              />
+              <span class="objectif-unit">/20</span>
+            </div>
+          </div>
+          <div class="objectif-progress" id="objectif-progress" hidden>
+            <div class="objectif-progress-track">
+              <div class="objectif-progress-fill" id="objectif-progress-fill"></div>
+              <div class="objectif-progress-target" id="objectif-progress-target"></div>
+            </div>
+            <p class="objectif-progress-text" id="objectif-progress-text"></p>
+          </div>
+        </div>
+
+        <div class="radar-wrap" id="radar-wrap" hidden>
+          <svg id="radar-chart" viewBox="0 0 360 360" role="img" aria-label="Graphique radar des moyennes par matière"></svg>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="th_matiere">Matière</th>
+                <th data-i18n="th_moyenne">Moyenne</th>
+                <th data-i18n="th_coefficient">Coefficient</th>
+                <th data-i18n="th_points">Points</th>
+                <th data-i18n="th_actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="matiere-table-body">
+              <tr>
+                <td colspan="5" class="empty-state">
+                  <svg class="empty-state-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 14a3 3 0 0 1 3-3h9l3 4h18a3 3 0 0 1 3 3v20a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V14Z"></path>
+                    <path d="M18 27l4 4 8-9"></path>
+                  </svg>
+                  <p class="empty-state-title" data-i18n="empty_state_title">Aucune matière enregistrée pour le moment</p>
+                  <p class="empty-state-subtitle" data-i18n="empty_state_subtitle">Ajoutez votre première matière ci-dessus pour voir apparaître votre tableau.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="comparaison-panel" class="comparison-card" aria-live="polite" hidden>
+        <div class="comparison-header">
+          <span class="comparison-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="21" x2="5" y2="10"></line><line x1="12" y1="21" x2="12" y2="4"></line><line x1="19" y1="21" x2="19" y2="14"></line></svg></span>
+          <div>
+            <h3 data-i18n="comparison_h3">Comparaison Semestre 1 / Semestre 2</h3>
+            <span class="comparison-subtitle" id="comparaison-subtitle"></span>
+          </div>
+        </div>
+        <div class="comparison-list" id="comparaison-list"></div>
+      </section>
+      </div>
+
+      <div class="app-screen" data-screen="historique">
+      <section id="historique-screen-card" class="historique-card" aria-live="polite">
+        <div class="comparison-header">
+          <span class="comparison-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 16 14"></polyline></svg></span>
+          <div>
+            <h3 data-i18n="historique_h3">Mon parcours scolaire</h3>
+            <span class="comparison-subtitle" data-i18n="historique_subtitle">Votre progression, de la 6e à la Terminale</span>
+          </div>
+        </div>
+
+        <div class="historique-chart-wrap" id="historique-chart-wrap" hidden>
+          <svg id="historique-chart" viewBox="0 0 340 140" role="img" aria-label="Courbe de la moyenne annuelle par classe"></svg>
+        </div>
+
+        <div class="historique-list" id="historique-list"></div>
+
+        <button type="button" id="back-to-evolution-btn" class="next-subject-button icon-reverse">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span data-i18n="historique_back_btn">Revenir à l'écran évolution</span>
+        </button>
+      </section>
+      </div>
+
+      <div class="app-screen" data-screen="bulletin">
+      <section id="bulletin-screen-card" class="bulletin-screen-card">
+        <span class="bulletin-screen-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg></span>
+        <h2 data-i18n="bulletin_screen_title">Mon bulletin</h2>
+        <p data-i18n="bulletin_screen_subtitle">
+          Téléchargez un récapitulatif de vos notes en PDF, dès que toutes les matières de la classe sont renseignées.
+        </p>
+
+        <div class="bulletin-preview" id="bulletin-preview">
+          <div class="bulletin-preview-header">
+            <span data-i18n="pdf_etablissement">LYNAQE Sédhiou</span>
+            <span id="bulletin-preview-semestre"></span>
+          </div>
+          <div class="bulletin-preview-rows" id="bulletin-preview-rows"></div>
+        </div>
+
+        <button type="button" id="telecharger-bulletin" class="pdf-button" disabled>
+          <span class="pdf-button-spinner" aria-hidden="true"></span>
+          <svg class="pdf-button-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="4 13 9 18 20 6"></polyline>
+          </svg>
+          <span class="pdf-button-label" data-i18n="pdf_button_default">Télécharger mon bulletin (PDF)</span>
+          <span class="pdf-button-progress" aria-hidden="true">
+            <span class="pdf-button-progress-fill"></span>
+          </span>
+        </button>
+      </section>
+      </div>
+
+      <div class="app-screen" data-screen="conseils">
+      <section id="about" class="about-card" aria-label="À propos de SUNU MOYENNE">
+        <div class="faq-header">
+          <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="11" x2="12" y2="16"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+          <div>
+            <h3 data-i18n="about_h3">À propos de SUNU MOYENNE</h3>
+            <span class="faq-subtitle" data-i18n="about_subtitle">Le projet, ses fonctionnalités et vos données</span>
+          </div>
+        </div>
+
+        <p class="about-intro" data-i18n="about_intro">
+          SUNU MOYENNE est un outil numérique qui permet aux élèves du LYNAQE de Sédhiou de calculer, suivre et analyser leurs résultats scolaires, du collège (6e) au lycée (Terminale).
+        </p>
+
+        <h4 class="about-subheading" data-i18n="about_features_title">Ce que fait l'application</h4>
+        <ul class="about-features">
+          <li data-i18n="about_feature_1">Calcul des moyennes de matière, de semestre et annuelle</li>
+          <li data-i18n="about_feature_2">Suivi de la progression par semestre</li>
+          <li data-i18n="about_feature_3">Comparaison entre le semestre 1 et le semestre 2</li>
+          <li data-i18n="about_feature_4">Génération d'un bulletin scolaire en PDF</li>
+          <li data-i18n="about_feature_5">Sauvegarde automatique sur l'appareil</li>
+          <li data-i18n="about_feature_6">Fonctionnement hors ligne une fois le site déjà visité</li>
+        </ul>
+
+        <div class="about-privacy">
+          <span class="about-privacy-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
+          <div>
+            <strong data-i18n="about_privacy_title">Confidentialité</strong>
+            <p data-i18n="about_privacy_text">Vos notes restent sur votre appareil. Elles ne sont jamais envoyées ni stockées sur un serveur.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" class="faq-card" aria-label="Comment ça marche">
+        <div class="faq-header">
+          <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
+          <div>
+            <h3 data-i18n="faq_h3">Comment ça marche ?</h3>
+            <span class="faq-subtitle" data-i18n="faq_subtitle">Comprendre le calcul de votre moyenne en quelques points</span>
+          </div>
+        </div>
+
+        <div class="faq-list" id="faq-list">
+          <details class="faq-item">
+            <summary data-i18n="faq_q1">Les coefficients officiels sont-ils pré-remplis automatiquement ?</summary>
+            <div class="faq-answer">
+              <div class="faq-answer-inner">
+                <p data-i18n="faq_a1">
+                  Oui, pour les classes de 2nde, 1ère et Terminale, le site vous suggère automatiquement les coefficients officiels
+                  de chaque matière (basés sur la grille des épreuves du Baccalauréat sénégalais) dès que vous choisissez votre série.
+                  Ce coefficient reste modifiable si votre établissement en utilise un différent.
+                </p>
+              </div>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary data-i18n="faq_q2">Qu'est-ce qu'un coefficient et à quoi sert-il ?</summary>
+            <div class="faq-answer">
+              <div class="faq-answer-inner">
+                <p data-i18n="faq_a2">
+                  Le coefficient représente l'importance d'une matière dans votre semestre. Une matière à fort coefficient (ex : 4 ou 5)
+                  pèse davantage dans votre moyenne générale qu'une matière à faible coefficient (ex : 1 ou 2).
+                  Les points d'une matière sont calculés en multipliant sa moyenne par son coefficient.
+                </p>
+              </div>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary data-i18n="faq_q3">Comment est calculée la moyenne du semestre ?</summary>
+            <div class="faq-answer">
+              <div class="faq-answer-inner">
+                <p data-i18n="faq_a3">
+                  On additionne les <strong>points</strong> de toutes les matières de la classe
+                  (moyenne × coefficient de chaque matière), puis on divise le total par la somme de tous les coefficients.
+                  C'est donc une moyenne pondérée.
+                </p>
+              </div>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary data-i18n="faq_q4">Comment est calculée la moyenne annuelle ?</summary>
+            <div class="faq-answer">
+              <div class="faq-answer-inner">
+                <p data-i18n="faq_a4">
+                  La moyenne annuelle est la moyenne simple des moyennes des semestres 1 et 2,
+                  calculée sur la base des matières renseignées dans les deux semestres.
+                  Pensez à remplir toutes les matières pour les deux semestres pour obtenir un résultat fiable.
+                </p>
+              </div>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary data-i18n="faq_q5">Mes notes sont-elles sauvegardées ?</summary>
+            <div class="faq-answer">
+              <div class="faq-answer-inner">
+                <p data-i18n="faq_a5">
+                  Oui, vos notes sont enregistrées automatiquement sur votre appareil (localStorage) pendant que vous les calculez.
+                  Elles restent disponibles lors de vos prochaines visites sur ce même appareil.
+                  Pensez à télécharger votre bulletin en PDF pour garder une trace de vos résultats.
+                </p>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+      </div>
+
+      <div class="app-screen" data-screen="profil">
+        <section class="profil-screen">
+          <div class="profil-head">
+            <span class="profil-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+            <div>
+              <p class="eyebrow" data-i18n="profil_eyebrow">Espace personnel</p>
+              <h2 data-i18n="profil_screen_title">Mon profil scolaire</h2>
+              <p class="subtitle" data-i18n="profil_subtitle">Vos informations et votre fiche récapitulative en un coup d'œil.</p>
+            </div>
+          </div>
+
+          <div class="profil-layout">
+            <form id="profil-form" class="prof-panel profil-form-panel">
+              <div class="profil-form-head">
+                <h3 data-i18n="profil_section_infos">Informations personnelles</h3>
+              </div>
+
+              <div class="profil-photo" id="profil-photo-block" hidden>
+                <img id="profil-photo-img" alt="" />
+                <button type="button" id="profil-photo-remove" class="ghost-button" data-i18n="btn_photo_remove">Retirer la photo</button>
+              </div>
+
+              <div class="field-group">
+                <label for="profil-photo-input" data-i18n="label_photo">Photo (facultative)</label>
+                <div class="profil-photo-upload">
+                  <label for="profil-photo-input" class="profil-photo-pick">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>
+                    <span data-i18n="profil_photo_pick">Choisir une photo…</span>
+                  </label>
+                  <input type="file" id="profil-photo-input" accept="image/*" hidden />
+                  <p class="profil-photo-help" data-i18n="profil_photo_help">La photo reste sur votre appareil, elle n'est jamais envoyée.</p>
+                </div>
+              </div>
+
+              <div class="two-columns">
+                <div class="field-group">
+                  <label for="profil-nom" data-i18n="label_nom">Nom</label>
+                  <input type="text" id="profil-nom" autocomplete="family-name" maxlength="40" data-i18n-placeholder="placeholder_nom" placeholder="Ex : Diop" />
+                </div>
+                <div class="field-group">
+                  <label for="profil-prenom" data-i18n="label_prenom">Prénom</label>
+                  <input type="text" id="profil-prenom" autocomplete="given-name" maxlength="40" data-i18n-placeholder="placeholder_prenom" placeholder="Ex : Mamadou" />
+                </div>
+              </div>
+
+              <div class="two-columns">
+                <div class="field-group">
+                  <label for="profil-classe" data-i18n="label_classe">Classe</label>
+                  <div class="select-wrap">
+                    <select id="profil-classe">
+                      <option value="" data-i18n="option_classe_default">-- Sélectionner votre classe --</option>
+                      <option value="6e">6e</option>
+                      <option value="5e">5e</option>
+                      <option value="4e">4e</option>
+                      <option value="3e">3e</option>
+                      <option value="2nde">2nde</option>
+                      <option value="1er">1er</option>
+                      <option value="Tle">Tle</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field-group">
+                  <label for="profil-etablissement" data-i18n="label_etablissement">Établissement</label>
+                  <input type="text" id="profil-etablissement" maxlength="60" data-i18n-placeholder="placeholder_etablissement" placeholder="Ex : LYNAQE Sédhiou" />
+                </div>
+              </div>
+
+              <div class="two-columns">
+                <div class="field-group">
+                  <label for="profil-annee" data-i18n="label_annee_scolaire">Année scolaire</label>
+                  <input type="text" id="profil-annee" maxlength="9" pattern="\d{4}-\d{4}" data-i18n-placeholder="placeholder_annee_scolaire" placeholder="Ex : 2025-2026" />
+                </div>
+                <div class="field-group">
+                  <label for="profil-matiere" data-i18n="label_matiere_preferee">Matière préférée</label>
+                  <div class="select-wrap">
+                    <select id="profil-matiere">
+                      <option value="" data-i18n="option_matiere_preferee_default">-- Choisir une matière --</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button type="submit" id="profil-save-btn" class="primary-button" data-i18n="btn_profil_save">Enregistrer le profil</button>
+                <button type="button" id="profil-delete-btn" class="ghost-button prof-danger-text" data-i18n="profil_delete_btn">Supprimer mon profil</button>
+              </div>
+            </form>
+
+            <section class="prof-panel profil-fiche-panel">
+              <div class="profil-form-head">
+                <h3 data-i18n="profil_section_fiche">Ma fiche</h3>
+              </div>
+              <div id="profil-fiche" class="profil-fiche" aria-live="polite"></div>
+            </section>
+          </div>
+        </section>
+      </div>
+
+      <div class="app-screen" data-screen="professeur" id="prof-screen">
+        <section id="prof-login-card" class="prof-card prof-login-card">
+          <span class="prof-login-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path><path d="M22 10v6"></path></svg>
+          </span>
+          <p class="eyebrow" data-i18n="prof_login_eyebrow">Espace réservé</p>
+          <h2 data-i18n="prof_login_title">Espace Professeur</h2>
+          <p class="prof-login-subtitle" data-i18n="prof_login_subtitle">
+            Mode réservé aux enseignants et surveillants : calculez en quelques secondes la moyenne de matière de chaque élève de la classe à partir du relevé de notes (photo ou PDF).
+          </p>
+
+          <form id="prof-login-form" class="prof-login-form">
+            <div class="field-group">
+              <label for="prof-password" data-i18n="prof_password_label">Mot de passe</label>
+              <div class="prof-password-wrap">
+                <input
+                  type="password"
+                  id="prof-password"
+                  name="password"
+                  autocomplete="off"
+                  data-i18n-placeholder="prof_password_placeholder"
+                  placeholder="Entrez le mot de passe"
+                  required
+                />
+                <button type="button" id="prof-toggle-password" class="prof-toggle-password" data-i18n-aria-label="prof_password_show" aria-label="Afficher le mot de passe" tabindex="-1" aria-pressed="false">
+                  <svg class="eye-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path class="eye-lid" d="M2 12C2 12 7 5 12 5C17 5 22 12 22 12C22 12 17 19 12 19C7 19 2 12 2 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <circle class="eye-pupil" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <p class="prof-error" id="prof-login-error" data-i18n="prof_login_error" hidden>
+              Mot de passe incorrect. Veuillez réessayer.
+            </p>
+            <div class="button-row">
+              <button type="submit" id="prof-login-btn" class="primary-button" data-i18n="prof_login_btn">Se connecter</button>
+            </div>
+          </form>
+          <p class="prof-login-hint" data-i18n="prof_login_hint">Réservé au corps enseignant du LYNAQE Sédhiou.</p>
+        </section>
+
+                <section id="prof-console" class="prof-console" hidden>
+                  <div class="prof-layout">
+                    <!-- SIDEBAR -->
+                    <aside class="prof-sidebar" id="prof-sidebar">
+                      <div class="prof-sidebar-brand">
+                        <span class="prof-sidebar-logo" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"></path><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path><path d="M22 10v6"></path></svg>
+                        </span>
+                        <span class="prof-sidebar-brand-text">
+                          <strong>SUNU MOYENNE</strong>
+                          <small data-i18n="prof_sidebar_sub">Espace Professeur</small>
+                        </span>
+                      </div>
+
+                      <div class="prof-sidebar-nav-wrap">
+                        <span class="prof-sidebar-group-label" data-i18n="prof_sidebar_nav_label">Menu</span>
+                        <nav class="prof-sidebar-nav" data-i18n-aria-label="prof_nav_main_label" aria-label="Navigation principale du mode professeur">
+                          <button type="button" id="prof-tab-dash" class="prof-sidebar-item is-active" data-view="dash">
+                            <span class="prof-sidebar-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.4"></rect><rect x="14" y="3" width="7" height="5" rx="1.4"></rect><rect x="14" y="12" width="7" height="9" rx="1.4"></rect><rect x="3" y="16" width="7" height="5" rx="1.4"></rect></svg></span>
+                            <span class="prof-sidebar-item-label" data-i18n="prof_tab_dash">Tableau de bord</span>
+                          </button>
+                          <button type="button" id="prof-tab-classes" class="prof-sidebar-item" data-view="home">
+                            <span class="prof-sidebar-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3Z"></path></svg></span>
+                            <span class="prof-sidebar-item-label" data-i18n="prof_tab_classes">Mes classes</span>
+                          </button>
+                          <button type="button" id="prof-tab-students" class="prof-sidebar-item" data-view="students">
+                            <span class="prof-sidebar-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+                            <span class="prof-sidebar-item-label" data-i18n="sidebar_students">Élèves</span>
+                          </button>
+                          <button type="button" id="prof-tab-ranking" class="prof-sidebar-item" data-view="ranking">
+                            <span class="prof-sidebar-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v4a5 5 0 0 1-10 0Z"></path><path d="M17 5h2a2 2 0 0 1 2 2c0 2.2-2 4-4 4"></path><path d="M7 5H5a2 2 0 0 0-2 2c0 2.2 2 4 4 4"></path></svg></span>
+                            <span class="prof-sidebar-item-label" data-i18n="sidebar_ranking">Classement</span>
+                          </button>
+                          <button type="button" id="prof-tab-stats" class="prof-sidebar-item" data-view="stats">
+                            <span class="prof-sidebar-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="14"></line><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line></svg></span>
+                            <span class="prof-sidebar-item-label" data-i18n="sidebar_stats">Statistiques</span>
+                          </button>
+                        </nav>
+                      </div>
+
+                      <div class="prof-sidebar-footer">
+                        <span class="prof-sidebar-group-label" data-i18n="prof_sidebar_account_label">Compte</span>
+                        <button type="button" id="prof-reset-data-btn" class="prof-sidebar-btn prof-sidebar-reset">
+                          <span class="prof-sidebar-btn-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.64-6.36"></path><path d="M3 4v5h5"></path></svg></span>
+                          <span class="prof-sidebar-btn-label" data-i18n="prof_reset_data_btn">Réinitialiser les données</span>
+                        </button>
+                        <button type="button" id="prof-logout-btn" class="prof-sidebar-btn">
+                          <span class="prof-sidebar-btn-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></span>
+                          <span class="prof-sidebar-btn-label" data-i18n="prof_logout_btn">Se déconnecter</span>
+                        </button>
+                      </div>
+                    </aside>
+
+                    <!-- CONTENU PRINCIPAL -->
+                    <div class="prof-main">
+                      <header class="prof-topbar">
+                        <div class="prof-topbar-left">
+                          <button type="button" id="prof-mobile-nav-btn" class="prof-mobile-nav-btn" aria-label="Menu" aria-expanded="false">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true">
+                              <rect class="pmb-bar" x="3.4" y="4.4" width="17.2" height="15.2" rx="4"></rect>
+                              <line class="pmb-bar" x1="9.4" y1="4.8" x2="9.4" y2="19.2"></line>
+                              <line class="pmb-bar pmb-bar-1" x1="5.6" y1="9" x2="7.2" y2="9"></line>
+                              <line class="pmb-bar pmb-bar-3" x1="5.6" y1="12.4" x2="7.2" y2="12.4"></line>
+                            </svg>
+                          </button>
+                          <nav class="prof-breadcrumb" data-i18n-aria-label="prof_nav_breadcrumb_label" aria-label="Fil d'Ariane du mode professeur">
+                            <button type="button" id="prof-back-btn" class="ghost-button prof-back-btn" hidden>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                              <span id="prof-back-label" data-i18n="prof_back_classes">Mes classes</span>
+                            </button>
+                            <span id="prof-breadcrumb-text" class="prof-breadcrumb-text" aria-live="polite"></span>
+                          </nav>
+                        </div>
+                        <div class="prof-topbar-right">
+                          <span class="prof-avatar" aria-hidden="true">P</span>
+                        </div>
+                      </header>
+
+                      <div class="prof-views">
+                        <!-- VUE 0 : TABLEAU DE BORD (APERÇU) -->
+                        <div id="prof-view-dash" class="prof-view" hidden>
+                          <div class="prof-view-head prof-dash-welcome">
+                            <div>
+                              <h3 data-i18n="prof_dash_greeting">Bonjour, Professeur 👋</h3>
+                              <p class="prof-view-subtitle" data-i18n="prof_dash_subtitle">Voici un aperçu de votre activité.</p>
+                            </div>
+                          </div>
+
+                          <div class="prof-kpi-grid" id="prof-dash-head-stats" aria-live="polite"></div>
+
+                          <section class="prof-hero-card">
+                            <div class="prof-hero-content">
+                              <span class="eyebrow" data-i18n="prof_hero_eyebrow">Votre espace</span>
+                              <h4 data-i18n="prof_hero_title">Votre espace professeur</h4>
+                              <p data-i18n="prof_hero_text">Gérez vos classes, vos élèves et saisissez les notes de chaque matière. Les moyennes se calculent instantanément.</p>
+                              <div class="prof-hero-actions">
+                                <button type="button" class="primary-button prof-hero-cta" data-act="classes" data-i18n="prof_hero_cta_classes">Gérer mes classes</button>
+                                <button type="button" class="secondary-button prof-hero-cta" data-act="students" data-i18n="prof_hero_cta_students">Voir mes élèves</button>
+                                <button type="button" class="ghost-button prof-hero-cta" data-act="notes" data-i18n="prof_hero_cta_notes">Saisir les notes</button>
+                              </div>
+                            </div>
+                            <div class="prof-hero-visual" aria-hidden="true">
+                              <svg viewBox="0 0 260 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="20" y="20" width="220" height="120" rx="16" fill="rgba(78,113,170,0.08)" stroke="rgba(78,113,170,0.14)" stroke-width="1.5"/>
+                                <rect x="44" y="46" width="70" height="10" rx="5" fill="rgba(78,113,170,0.16)"/>
+                                <rect x="44" y="64" width="120" height="7" rx="3.5" fill="rgba(78,113,170,0.10)"/>
+                                <rect x="44" y="78" width="98" height="7" rx="3.5" fill="rgba(78,113,170,0.10)"/>
+                                <rect x="44" y="92" width="82" height="7" rx="3.5" fill="rgba(78,113,170,0.10)"/>
+                                <rect x="170" y="76" width="52" height="44" rx="10" fill="rgba(210,168,74,0.12)" stroke="rgba(210,168,74,0.25)" stroke-width="1.5"/>
+                                <text x="196" y="106" text-anchor="middle" fill="rgba(210,168,74,0.7)" font-family="sans-serif" font-size="9">20</text>
+                                <circle cx="204" cy="52" r="6" fill="rgba(78,113,170,0.25)"/>
+                                <circle cx="222" cy="60" r="6" fill="rgba(210,168,74,0.35)"/>
+                              </svg>
+                            </div>
+                          </section>
+
+                          <div id="prof-dash-quick" class="prof-portal-grid" aria-label="Accès rapides"></div>
+
+                          <section class="prof-panel prof-dash-activity-panel">
+                            <div class="prof-panel-head">
+                              <h4 data-i18n="prof_activity_title">Activité récente</h4>
+                            </div>
+                            <div id="prof-dash-activity" class="prof-dash-activity" aria-live="polite"></div>
+                          </section>
+                        </div>
+
+                        <!-- VUE 1 : ÉLÈVES -->
+                        <div id="prof-view-students" class="prof-view" hidden>
+                          <div class="prof-view-head">
+                            <div>
+                              <h3 data-i18n="sidebar_students">Élèves</h3>
+                              <p class="prof-view-subtitle" data-i18n="prof_students_view_subtitle">Recherchez, filtrez et consultez le profil de tous vos élèves.</p>
+                            </div>
+                          </div>
+                          <section class="prof-panel prof-dash-panel" id="prof-dash-students-panel">
+                            <div class="prof-panel-head">
+                              <h4 data-i18n="prof_dash_students_title">Mes élèves</h4>
+                            </div>
+                            <div class="prof-dash-toolbar prof-dash-students-toolbar">
+                              <div class="select-wrap"><select id="prof-dash-filter-class" data-i18n-aria-label="prof_filter_class_label" aria-label="Classe"></select></div>
+                              <div class="select-wrap"><select id="prof-dash-filter-perf" data-i18n-aria-label="prof_dash_filter_perf" aria-label="Performance"></select></div>
+                              <div class="select-wrap"><select id="prof-dash-filter-rank" data-i18n-aria-label="prof_filter_rank_label" aria-label="Rang"></select></div>
+                              <div class="select-wrap"><select id="prof-dash-filter-genre" data-i18n-aria-label="prof_filter_genre_label" aria-label="Genre"></select></div>
+                            </div>
+                            <input type="search" id="prof-dash-search" class="prof-dash-search" data-i18n-placeholder="prof_dash_search_placeholder" placeholder="Rechercher un élève…" autocomplete="off" />
+                            <div class="table-wrap prof-table-wrap prof-dash-clickable">
+                              <table class="prof-table prof-dash-students-table">
+                                <thead>
+                                  <tr>
+                                    <th class="prof-col-rank" data-i18n="prof_dash_rank_col_rank">Rang</th>
+                                    <th data-i18n="prof_dash_rank_col_student">Élève</th>
+                                    <th data-i18n="prof_dash_quick_classes">Classe</th>
+                                    <th data-i18n="prof_dash_rank_col_avg">Moyenne</th>
+                                    <th data-i18n="prof_dash_rank_col_mention">Mention</th>
+                                  </tr>
+                                </thead>
+                                <tbody id="prof-dash-students-tbody"></tbody>
+                              </table>
+                            </div>
+                            <p id="prof-dash-students-empty" class="prof-empty" hidden></p>
+                          </section>
+                        </div>
+
+                        <!-- VUE 2 : CLASSEMENT -->
+                        <div id="prof-view-ranking" class="prof-view" hidden>
+                          <div class="prof-view-head">
+                            <div>
+                              <h3 data-i18n="sidebar_ranking">Classement</h3>
+                              <p class="prof-view-subtitle" data-i18n="prof_ranking_view_subtitle">Classez vos élèves selon leur moyenne et suivez leur évolution.</p>
+                            </div>
+                          </div>
+                          <section class="prof-panel prof-dash-panel" id="prof-dash-rank-panel">
+                            <div class="prof-panel-head">
+                              <h4 data-i18n="prof_dash_rank_title">Classement des élèves</h4>
+                            </div>
+                            <div class="prof-dash-toolbar">
+                              <div class="select-wrap"><select id="prof-dash-rank-class" data-i18n-aria-label="prof_filter_class_label" aria-label="Classe"></select></div>
+                              <div class="select-wrap"><select id="prof-dash-rank-subject" data-i18n-aria-label="prof_filter_subject_label" aria-label="Matière"></select></div>
+                            </div>
+                            <div id="prof-dash-rank-body"></div>
+                          </section>
+                        </div>
+
+                        <!-- VUE 3 : STATISTIQUES -->
+                        <div id="prof-view-stats" class="prof-view" hidden>
+                          <div class="prof-view-head">
+                            <div>
+                              <h3 data-i18n="sidebar_stats">Statistiques</h3>
+                              <p class="prof-view-subtitle" data-i18n="prof_stats_view_subtitle">Consultez les moyennes, répartitions et tendances de chaque classe.</p>
+                            </div>
+                          </div>
+                          <section class="prof-panel prof-dash-panel" id="prof-dash-stats-panel">
+                            <div class="prof-panel-head">
+                              <h4 data-i18n="prof_dash_stats_title">Statistiques de la classe</h4>
+                              <div class="select-wrap prof-dash-stats-select"><select id="prof-dash-stats-class" data-i18n-aria-label="prof_filter_class_label" aria-label="Classe"></select></div>
+                            </div>
+                            <div id="prof-dash-stats-body"></div>
+                          </section>
+                        </div>
+
+                        <!-- VUE 4 : MES CLASSES -->
+                        <div id="prof-view-home" class="prof-view">
+                          <div class="prof-view-head">
+                            <div>
+                              <h3 data-i18n="prof_classes_title">Mes classes</h3>
+                              <p class="prof-view-subtitle" data-i18n="prof_classes_subtitle">Choisissez une classe, puis ouvrez vos élèves et vos matières.</p>
+                            </div>
+                            <div class="prof-view-head-right">
+                              <div class="prof-view-head-stats" id="prof-classes-head-stats" aria-live="polite"></div>
+                              <button type="button" id="prof-trash-btn" class="ghost-button prof-trash-btn" data-i18n-aria-label="prof_trash_btn_aria" aria-label="Ouvrir la corbeille">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                <span data-i18n="prof_trash_btn">Corbeille</span>
+                                <span class="prof-trash-count" id="prof-trash-count" hidden>0</span>
+                              </button>
+                            </div>
+                          </div>
+                          <div id="prof-classes-grid" class="prof-classes-grid">
+                            <div class="prof-add-card" id="prof-add-class-card">
+                              <div class="prof-add-card-state" id="prof-add-card-promo" data-role="promo">
+                                <span class="prof-add-card-plus" aria-hidden="true">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                </span>
+                                <h4 class="prof-add-card-title" data-i18n="prof_create_class_title">Créer une classe</h4>
+                                <p class="prof-add-card-desc" data-i18n="prof_create_class_desc">Ajoutez une nouvelle classe pour gérer vos élèves.</p>
+                                <button type="button" id="prof-add-card-open" class="prof-add-card-cta" data-i18n="prof_new_class_btn">Nouvelle classe</button>
+                                <button type="button" id="prof-import-class-btn" class="ghost-button prof-add-card-import" data-i18n="prof_import_class_btn">Importer</button>
+                              </div>
+                              <form class="prof-add-card-form" id="prof-add-class-form" hidden>
+                                <input
+                                  type="text"
+                                  id="prof-new-class"
+                                  maxlength="30"
+                                  data-i18n-placeholder="prof_new_class_placeholder"
+                                  placeholder="Nouvelle classe (ex : 2nde S04)"
+                                  autocomplete="off"
+                                />
+                                <div class="prof-add-card-form-actions">
+                                  <button type="button" id="prof-add-class-btn" class="secondary-button" data-i18n="prof_add_class">Ajouter</button>
+                                  <button type="button" id="prof-add-card-cancel" class="ghost-button" data-i18n="prof_ocr_cancel">Annuler</button>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- VUE 5 : DÉTAIL D'UNE CLASSE -->
+                        <div id="prof-view-class" class="prof-view" hidden>
+                          <div class="prof-view-head prof-class-head">
+                            <div>
+                              <h3 id="prof-class-name"></h3>
+                              <p class="prof-view-subtitle" id="prof-class-meta"></p>
+                            </div>
+                            <div class="prof-semester-tabs" id="prof-semester-tabs" role="tablist" data-i18n-aria-label="label_semestre_aria" aria-label="Semestre"></div>
+                          </div>
+
+                          <div class="prof-class-grid">
+                            <section class="prof-panel">
+                              <div class="prof-panel-head">
+                                <h4 data-i18n="prof_class_students">Élèves</h4>
+                                <button type="button" id="prof-student-add" class="secondary-button prof-add-btn">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                  <span data-i18n="prof_student_add">Ajouter un élève</span>
+                                </button>
+                              </div>
+
+                              <form id="prof-student-form" class="prof-inline-form" hidden>
+                                <input type="text" id="prof-student-nom" maxlength="40" data-i18n-placeholder="label_nom" placeholder="Nom" required />
+                                <input type="text" id="prof-student-prenom" maxlength="40" data-i18n-placeholder="label_prenom" placeholder="Prénom" />
+                                <div class="field-group">
+                                  <label data-i18n="prof_th_eleve">Genre</label>
+                                  <div class="choice-group" role="radiogroup" aria-label="Genre de l'élève">
+                                    <label class="choice-option">
+                                      <input type="radio" name="prof-student-genre" value="garçon" checked />
+                                      <span data-i18n="prof_garcon">Garçon</span>
+                                    </label>
+                                    <label class="choice-option">
+                                      <input type="radio" name="prof-student-genre" value="fille" />
+                                      <span data-i18n="prof_fille">Fille</span>
+                                    </label>
+                                  </div>
+                                </div>
+                                <button type="submit" id="prof-student-form-ok" class="primary-button prof-inline-ok" data-i18n="prof_student_form_ok">Valider</button>
+                                <button type="button" id="prof-student-form-cancel" class="ghost-button prof-inline-cancel" data-i18n="prof_ocr_cancel">Annuler</button>
+                              </form>
+
+                              <div class="table-wrap prof-table-wrap">
+                                <table class="prof-table prof-students-table">
+                                  <thead>
+                                    <tr>
+                                      <th class="prof-col-rank">#</th>
+                                      <th data-i18n="label_nom">Nom</th>
+                                      <th data-i18n="label_prenom">Prénom</th>
+                                      <th data-i18n="prof_th_moyenne">Moyenne</th>
+                                      <th data-i18n="prof_th_rang">Rang</th>
+                                      <th class="prof-col-actions">&nbsp;</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody id="prof-students-tbody"></tbody>
+                                </table>
+                              </div>
+                              <p id="prof-students-empty" class="prof-empty" data-i18n="prof_students_empty"></p>
+                            </section>
+
+                            <section class="prof-panel">
+                              <div class="prof-panel-head">
+                                <h4 data-i18n="prof_class_subjects">Matières du semestre</h4>
+                                <button type="button" id="prof-subject-add" class="secondary-button prof-add-btn">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                  <span data-i18n="prof_add_subject">Ajouter une matière</span>
+                                </button>
+                              </div>
+
+                              <div id="prof-subject-form" class="prof-inline-form prof-subject-form" hidden>
+                                <div class="select-wrap prof-subject-select">
+                                  <select id="prof-subject-select"></select>
+                                </div>
+                                <div class="field-group prof-subject-coef">
+                                  <input type="number" id="prof-subject-coef" min="1" max="8" step="1" inputmode="numeric" data-i18n-placeholder="placeholder_coefficient" placeholder="Coef." />
+                                </div>
+                                <button type="button" id="prof-subject-form-ok" class="primary-button prof-inline-ok" data-i18n="prof_subject_create">Créer</button>
+                                <button type="button" id="prof-subject-form-cancel" class="ghost-button prof-inline-cancel" data-i18n="prof_ocr_cancel">Annuler</button>
+                              </div>
+
+                              <div id="prof-subjects-list" class="prof-subjects-list"></div>
+                              <p id="prof-subjects-empty" class="prof-empty" data-i18n="prof_subjects_empty"></p>
+                            </section>
+                          </div>
+                        </div>
+
+                        <!-- VUE 6 : ÉDITION D'UNE MATIÈRE -->
+                        <div id="prof-view-subject" class="prof-view" hidden>
+                          <div id="prof-edit-banner" class="prof-edit-banner" hidden>
+                            <span class="prof-edit-banner-icon" aria-hidden="true">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                            </span>
+                            <div class="prof-edit-banner-info">
+                              <span class="prof-edit-banner-title" id="prof-edit-title"></span>
+                              <span class="prof-edit-banner-values" id="prof-edit-values"></span>
+                            </div>
+                            <div class="prof-edit-banner-actions">
+                              <button type="button" id="prof-edit-cancel" class="ghost-button" data-i18n="prof_edit_annuler">Annuler</button>
+                              <button type="button" id="prof-edit-save" class="primary-button" data-i18n="prof_edit_enregistrer">Enregistrer</button>
+                            </div>
+                          </div>
+
+                          <div class="prof-settings">
+                            <p class="prof-context-line" id="prof-subject-context"></p>
+                            <div class="two-columns">
+                              <div class="field-group" hidden>
+                                <label for="prof-classe" data-i18n="label_classe">Classe</label>
+                                <div class="select-wrap">
+                                  <select id="prof-classe" name="prof-classe">
+                                    <option value="" data-i18n="option_classe_default">-- Sélectionner votre classe --</option>
+                                    <option value="6e">6e</option>
+                                    <option value="5e">5e</option>
+                                    <option value="4e">4e</option>
+                                    <option value="3e">3e</option>
+                                    <option value="2nde">2nde</option>
+                                    <option value="1er">1er</option>
+                                    <option value="Tle">Tle</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div class="field-group" hidden>
+                                <label for="prof-semestre" data-i18n="legend_semestre">Semestre</label>
+                                <div class="select-wrap">
+                                  <select id="prof-semestre" name="prof-semestre">
+                                    <option value="Semestre1" data-i18n="table_semestre1_full">Semestre 1</option>
+                                    <option value="Semestre2" data-i18n="table_semestre2_full">Semestre 2</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div class="field-group">
+                                <label for="prof-matiere" data-i18n="label_matiere">Matière</label>
+                                <div class="select-wrap">
+                                  <select id="prof-matiere" name="prof-matiere">
+                                    <option value="" data-i18n="option_matiere_default">-- Sélectionner une matière --</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div class="field-group">
+                                <label for="prof-coefficient" data-i18n="label_coefficient">Coefficient</label>
+                                <input
+                                  type="number"
+                                  id="prof-coefficient"
+                                  name="prof-coefficient"
+                                  min="1"
+                                  max="8"
+                                  step="1"
+                                  inputmode="numeric"
+                                  data-i18n-placeholder="placeholder_coefficient"
+                                  placeholder="Ex : 4"
+                                />
+                              </div>
+                            </div>
+
+                            <div class="field-group" id="prof-matiere-custom-group" hidden>
+                              <label for="prof-matiere-custom" data-i18n="prof_matiere_custom_label">Autre matière</label>
+                              <input
+                                type="text"
+                                id="prof-matiere-custom"
+                                maxlength="40"
+                                data-i18n-placeholder="prof_matiere_custom_placeholder"
+                                placeholder="Saisissez le nom de la matière"
+                              />
+                            </div>
+
+                            <fieldset class="field-group">
+                              <legend data-i18n="legend_composition">La matière comporte-t-elle une composition ?</legend>
+                              <div class="choice-group" role="radiogroup" data-i18n-aria-label="label_composition_dispo" aria-label="Composition disponible">
+                                <label class="choice-option">
+                                  <input type="radio" name="prof-composition" value="oui" checked />
+                                  <span data-i18n="radio_oui">Oui</span>
+                                </label>
+                                <label class="choice-option">
+                                  <input type="radio" name="prof-composition" value="non" />
+                                  <span data-i18n="radio_non">Non</span>
+                                </label>
+                              </div>
+                            </fieldset>
+                          </div>
+
+                          <div class="prof-upload">
+                            <div class="prof-upload-head">
+                              <span class="prof-section-label" data-i18n="prof_upload_label">Relevé de notes de la matière</span>
+                              <button type="button" id="prof-import-notes-btn" class="secondary-button prof-import-notes-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <span data-i18n="prof_import_notes_btn">Importer les notes (CSV/PDF)</span>
+                              </button>
+                            </div>
+                            <div id="prof-dropzone" class="prof-dropzone" role="button" tabindex="0" data-i18n-aria-label="prof_dropzone_aria">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                              <p class="prof-dropzone-title" data-i18n="prof_dropzone_title">Glissez le relevé (photo ou PDF) ici</p>
+                              <p class="prof-dropzone-subtitle" data-i18n="prof_dropzone_subtitle">ou cliquez pour parcourir vos fichiers</p>
+                              <input type="file" id="prof-file-input" accept="image/*,application/pdf" hidden />
+                            </div>
+
+                            <p class="prof-upload-note" data-i18n="prof_upload_note">
+                              Le relevé sert d'aide visuelle pour la saisie. Reportez simplement les notes de chaque élève dans le tableau ci-dessous : les moyennes se calculent en direct.
+                            </p>
+                          </div>
+
+                          <div class="prof-students">
+                            <div class="prof-students-header">
+                              <h3 data-i18n="prof_students_title">Notes des élèves</h3>
+                            </div>
+                            <div class="table-wrap prof-table-wrap">
+                              <table class="prof-table">
+                                <thead>
+                                  <tr>
+                                    <th class="prof-col-rank">#</th>
+                                    <th class="prof-col-name" data-i18n="prof_th_eleve">Élève</th>
+                                    <th data-i18n="label_devoir1">Note de devoir 1</th>
+                                    <th data-i18n="label_devoir2">Note de devoir 2</th>
+                                    <th id="prof-th-composition" data-i18n="label_composition">Note de composition</th>
+                                    <th data-i18n="th_moyenne">Moyenne</th>
+                                  </tr>
+                                </thead>
+                                <tbody id="prof-tbody"></tbody>
+                              </table>
+                            </div>
+                            <p class="prof-empty" id="prof-empty" data-i18n="prof_no_students">
+                              Aucun élève ajouté pour le moment. Cliquez sur « Ajouter un élève » puis reportez les notes depuis le relevé.
+                            </p>
+
+                            <span class="prof-section-label prof-preview-label" id="prof-preview-label" data-i18n="prof_preview_label" hidden>Relevé importé</span>
+                            <div id="prof-file-preview" class="prof-file-preview" hidden>
+                              <div id="prof-img-tools" class="prof-img-tools" hidden>
+                                <button type="button" id="prof-img-rot-l" class="secondary-button prof-img-tool" data-i18n="prof_img_rotate_left">Pivoter ↶</button>
+                                <button type="button" id="prof-img-rot-r" class="secondary-button prof-img-tool" data-i18n="prof_img_rotate_right">Pivoter ↷</button>
+                                <button type="button" id="prof-img-crop" class="secondary-button prof-img-tool" data-i18n="prof_img_crop">Recadrer</button>
+                                <button type="button" id="prof-img-enhance" class="secondary-button prof-img-tool is-on prof-img-enhance-on" data-i18n="prof_img_enhance">Améliorer</button>
+                              </div>
+                              <img id="prof-file-img" alt="Aperçu du relevé de notes" hidden />
+                              <iframe id="prof-file-pdf" title="Aperçu PDF du relevé de notes" hidden></iframe>
+                              <div class="prof-file-meta">
+                                <span id="prof-file-name" class="prof-file-name"></span>
+                                <button type="button" id="prof-file-remove" class="ghost-button" data-i18n="prof_file_remove">Retirer</button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <section id="prof-summary" class="prof-summary" hidden>
+                            <h3 class="prof-summary-title" data-i18n="prof_summary_title">Résultats de la classe</h3>
+                            <div class="prof-summary-stats" id="prof-summary-stats"></div>
+                            <div class="button-row">
+                              <button type="button" id="prof-save-btn" class="primary-button" data-i18n="prof_save_btn">Sauvegarder les notes</button>
+                              <button type="button" id="prof-export-pdf" class="pdf-button" disabled data-i18n="prof_export_pdf">Télécharger le relevé (PDF)</button>
+                              <button type="button" id="prof-export-csv" class="secondary-button" disabled data-i18n="prof_export_csv">Exporter en CSV</button>
+                            </div>
+                          </section>
+                        </div>
+
+                        <!-- PROFIL ÉLÈVE (partagé) -->
+                        <aside class="prof-dash-profile" id="prof-dash-profile" hidden></aside>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+      </div>
+
+      <footer class="site-footer">
+        <a
+          class="official-site-button"
+          href="https://lynaqesedhiou.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="En savoir plus sur le LYNAQE"
+        >
+          <img
+            src="LYNAQE.png"
+            alt="En savoir plus sur le LYNAQE"
+            class="official-site-logo"
+            width="220"
+            height="325"
+          />
+        </a>
+        <p class="footer-copyright">
+          © 2026 LYNAQE Sédhiou — <span data-i18n="footer_rights">Tous droits réservés</span>
+          <span class="footer-separator" aria-hidden="true">·</span>
+          <span data-i18n="footer_credit_label">Fait par</span> <span class="footer-credit">Ahmadou Bamba Bousso SANKHARE</span>
+        </p>
+      </footer>
+        </div>
+      </div>
+    </div>
+
+    <div id="theme-reveal-overlay" aria-hidden="true"></div>
+
+    <script src="./js/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+    <script src="dashboard.js"></script>
+    <script src="prof.js"></script>
+    <script src="ocr.js"></script>
+    <script>
+      // Aperçu miniature sur l'écran "Bulletin" : purement visuel, ne touche
+      // pas au moteur de calcul ni à la génération du PDF. Se met à jour à
+      // chaque ouverture de l'onglet, à partir des mêmes données (localStorage)
+      // que celles utilisées ailleurs dans le site.
+      function refreshBulletinPreview() {
+        const rowsEl = document.getElementById('bulletin-preview-rows');
+        const semestreEl = document.getElementById('bulletin-preview-semestre');
+        if (!rowsEl || !semestreEl || typeof classeSelect === 'undefined') return;
+
+        const tFn = typeof t === 'function' ? t : (key) => key;
+        const classe = classeSelect.value.trim();
+        const semestreVal = typeof getSemestreActuel === 'function' ? getSemestreActuel() : 'Semestre1';
+        semestreEl.textContent = semestreVal === 'Semestre1' ? tFn('table_semestre1_full') : tFn('table_semestre2_full');
+
+        const notes = classe && typeof getStoredNotesForClasse === 'function'
+          ? getStoredNotesForClasse(classe, semestreVal)
+          : {};
+        const entries = Object.entries(notes || {});
+
+        if (!entries.length) {
+          rowsEl.innerHTML = `<p class="bulletin-preview-empty">${tFn('bulletin_preview_empty')}</p>`;
+          return;
+        }
+
+        rowsEl.innerHTML = entries.map(([matiere, data]) => {
+          const nom = typeof translateMatiere === 'function' ? translateMatiere(matiere) : matiere;
+          const moyenne = Number(data.moyenne).toFixed(2);
+          return `<div class="bulletin-preview-row"><span>${nom}</span><span>${moyenne}</span></div>`;
+        }).join('');
+      }
+
+      // Exposée pour que activateScreen() (script.js) puisse rafraîchir
+      // le résumé quel que soit le chemin utilisé pour arriver sur
+      // l'onglet Bulletin (onglet de nav, bouton "Voir mon bulletin", etc.)
+      window.refreshBulletinPreview = refreshBulletinPreview;
+    </script>
+    <script>
+      (function () {
+        if (!('serviceWorker' in navigator)) return;
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('sw.js').catch(function () {});
+        });
+      })();
+    </script>
+  </body>
+  
+</html>
