@@ -3684,7 +3684,7 @@
         }
         /* « Conserver les deux » : on ajoute le doublon */
       }
-      store[target].eleves.push({ id: newId(), nom, prenom, genre: 'garçon' });
+      store[target].eleves.push({ id: newId(), nom, prenom });
       count++;
     });
     saveStore();
