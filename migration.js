@@ -71,6 +71,8 @@
     if (!raw) return '';
     try {
       const parsed = new URL(raw, window.location.origin);
+      const fromQuery = parsed.searchParams.get('migration');
+      if (fromQuery) return fromQuery;
       const parts = parsed.pathname.split('/').filter(Boolean);
       const idx = parts.indexOf('migration');
       if (idx >= 0 && parts[idx + 1]) return decodeURIComponent(parts[idx + 1]);
@@ -93,7 +95,10 @@
           const code = qrcode(0, 'M');
           code.addData(result.url);
           code.make();
-          qr.innerHTML = code.createImgTag(5, 0);
+          // SVG vectoriel : reste net à toute taille et garde sa zone de silence blanche
+          qr.innerHTML = code.createSvgTag({ cellSize: 4, scalable: true });
+          const svg = qr.querySelector('svg');
+          if (svg) { svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', tLocal('migration_qr_help')); }
         }
       } catch (error) {
         console.warn('QR Code:', error);
@@ -154,13 +159,16 @@
     } finally { importBtn.disabled = false; }
   });
 
-  // Un lien /migration/SM-... ouvre directement l'espace Migration et préremplit le champ.
+  // Un lien /migration/SM-... est redirigé par le serveur vers /?migration=SM-...
+  // On ouvre alors l'espace Migration, on préremplit le champ puis on nettoie l'URL.
   const pathParts = window.location.pathname.split('/').filter(Boolean);
   const migrationIndex = pathParts.indexOf('migration');
-  if (migrationIndex >= 0 && pathParts[migrationIndex + 1]) {
-    const code = decodeURIComponent(pathParts[migrationIndex + 1]);
-    input.value = `${window.location.origin}/migration/${encodeURIComponent(code)}`;
-    const tab = document.querySelector('.app-tab[data-target-screen="migration"]');
-    tab?.click();
+  const queryCode = new URLSearchParams(window.location.search).get('migration');
+  const incomingCode = queryCode || (migrationIndex >= 0 && pathParts[migrationIndex + 1]
+    ? decodeURIComponent(pathParts[migrationIndex + 1]) : '');
+  if (incomingCode) {
+    input.value = `${window.location.origin}/migration/${encodeURIComponent(incomingCode)}`;
+    document.querySelector('.app-tab[data-target-screen="migration"]')?.click();
+    try { history.replaceState(null, '', `${window.location.origin}/#migration`); } catch {}
   }
 })();

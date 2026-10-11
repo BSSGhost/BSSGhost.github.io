@@ -131,7 +131,10 @@ async function createMigration(req, res) {
       }
     }
 
-    const origin = `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers['x-forwarded-host'] || req.headers.host}`;
+    const firstValue = (value) => String(value || '').split(',')[0].trim();
+    const proto = firstValue(req.headers['x-forwarded-proto']) || 'http';
+    const host = firstValue(req.headers['x-forwarded-host']) || req.headers.host;
+    const origin = `${proto}://${host}`;
     const migrationUrl = `${origin}/migration/${encodeURIComponent(code)}`;
     return json(res, 201, {
       ok: true,
@@ -191,7 +194,7 @@ async function importMigration(req, res, code) {
 }
 
 function resolveStaticPath(pathname) {
-  if (pathname === '/' || pathname === '/migration' || pathname.startsWith('/migration/')) return join(ROOT, 'index.html');
+  if (pathname === '/') return join(ROOT, 'index.html');
   let decoded;
   try { decoded = decodeURIComponent(pathname); } catch { return null; }
   const resolved = normalize(join(ROOT, decoded));
@@ -203,12 +206,16 @@ function resolveStaticPath(pathname) {
 
 function isForbiddenStaticFile(filePath) {
   const normalized = normalize(filePath);
+  const root = normalize(ROOT);
+  const sep = process.platform === 'win32' ? '\\' : '/';
+  const relative = normalized.slice(root.length).split(/[\\/]/).filter(Boolean);
+  // Fichiers cachés (.env, .git, .gitignore…) : jamais publics, sauf .well-known
+  if (relative.some((part) => part.startsWith('.') && part !== '.well-known')) return true;
   const forbidden = [
-    normalize(join(ROOT, 'node_modules')), normalize(join(ROOT, '.git')),
-    normalize(join(ROOT, 'server.js')), normalize(join(ROOT, 'package.json')),
-    normalize(join(ROOT, 'package-lock.json'))
-  ];
-  return forbidden.some((entry) => normalized === entry || normalized.startsWith(entry + (process.platform === 'win32' ? '\\' : '/')));
+    'node_modules', 'data', 'server.js', 'package.json', 'package-lock.json',
+    'migration.sql', 'MIGRATION-README.md'
+  ].map((entry) => normalize(join(ROOT, entry)));
+  return forbidden.some((entry) => normalized === entry || normalized.startsWith(entry + sep));
 }
 
 async function serveStatic(res, pathname) {
@@ -242,6 +249,25 @@ const server = createServer(async (req, res) => {
   if (url.pathname === '/api/migration/health' && req.method === 'GET') {
     try { await getDb(); return json(res, 200, { ok: true, database: true }); }
     catch { return json(res, 503, { ok: false, database: false }); }
+  }
+  // Lien de migration : on redirige vers la racine pour que les chemins relatifs
+  // (styles.css, script.js, polices, images…) restent valides sur l'appareil cible.
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    const migrationMatch = url.pathname.match(/^\/migration\/([^/]+)\/?$/);
+    if (migrationMatch) {
+      let code = '';
+      try { code = decodeURIComponent(migrationMatch[1]); } catch {}
+      res.writeHead(302, {
+        Location: code ? `/?migration=${encodeURIComponent(code)}#migration` : '/#migration',
+        'Cache-Control': 'no-store',
+        'Referrer-Policy': 'no-referrer'
+      });
+      return res.end();
+    }
+    if (url.pathname === '/migration' || url.pathname === '/migration/') {
+      res.writeHead(302, { Location: '/#migration', 'Cache-Control': 'no-store' });
+      return res.end();
+    }
   }
   return serveStatic(res, url.pathname);
 });

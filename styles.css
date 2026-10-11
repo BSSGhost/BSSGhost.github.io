@@ -9339,8 +9339,9 @@ html.dark-mode .prof-dup-list li {
 .migration-url-row input, .migration-input { width:100%; min-width:0; border:1px solid var(--border-color, #d7dde6); border-radius:13px; padding:13px 14px; background:var(--input-bg, #fff); color:inherit; font:inherit; }
 .migration-url-row .ghost-button { flex:0 0 auto; }
 .migration-help { color:var(--muted-text, #667085); font-size:.88rem; line-height:1.5; margin:10px 0 0; }
-.migration-qr { width:210px; min-height:210px; margin:20px auto 10px; display:grid; place-items:center; background:#fff; border-radius:14px; padding:10px; }
-.migration-qr img, .migration-qr canvas { max-width:100%; height:auto; }
+.migration-qr { width:min(260px, 100%); aspect-ratio:1; margin:20px auto 10px; background:#fff; border-radius:14px; overflow:hidden; }
+.migration-qr:empty { display:none; }
+.migration-qr svg, .migration-qr img, .migration-qr canvas { display:block; width:100%; height:auto; }
 .migration-status { min-height:24px; margin:14px 0 0; font-weight:600; }
 .migration-status.is-success { color:#16834a; }
 .migration-status.is-error { color:#b42318; }

@@ -4,7 +4,7 @@
    fonctionnement hors-ligne complet (calcul, PDF, OCR).
    Incrémenter CACHE_VERSION à chaque déploiement.
 */
-const CACHE_VERSION = 'v49';
+const CACHE_VERSION = 'v50';
 const CACHE_NAME = `sunu-moyenne-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -15,12 +15,14 @@ const PRECACHE_URLS = [
   './dashboard.js',
   './prof.js',
   './ocr.js',
+  './migration.js',
   './manifest.json',
   './LYNAQE.png',
   './force-armee.webp',
   './MEN.webp',
   './lynaqe-03.webp',
   './js/jspdf.umd.min.js',
+  './js/qrcode-generator.js',
   './vendor/tesseract/tesseract.min.js',
   './vendor/tesseract/worker.min.js',
   './vendor/tesseract/fra.traineddata',
@@ -134,6 +136,9 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const pathname = url.pathname;
+
+  /* Migration et API : toujours le réseau, jamais de cache (le code est à usage unique) */
+  if (pathname.startsWith('/api/') || pathname === '/migration' || pathname.startsWith('/migration/') || url.searchParams.has('migration')) return;
 
   /* Fonts et images → cache-first */
   if (isFont(event.request) || isImage(event.request)) {
