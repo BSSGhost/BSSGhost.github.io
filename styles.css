@@ -9323,3 +9323,30 @@ html.dark-mode .prof-dup-list li {
     padding: 0 16px;
   }
 }
+
+/* ==================== MIGRATION DE NOTES ==================== */
+.migration-screen { padding: 32px 0 70px; }
+.migration-head { display:flex; gap:18px; align-items:flex-start; margin-bottom:26px; }
+.migration-head-icon { width:52px; height:52px; flex:0 0 52px; display:grid; place-items:center; border-radius:16px; background:var(--primary, #172b4b); color:#fff; font-size:27px; font-weight:800; box-shadow:0 10px 24px rgba(23,43,75,.18); }
+.migration-head h2 { margin:0 0 8px; }
+.migration-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.migration-card { background:var(--card-bg, #fff); border:1px solid var(--border-color, #e3e8ef); border-radius:24px; padding:26px; box-shadow:0 12px 32px rgba(23,43,75,.08); }
+.migration-card-icon { width:42px; height:42px; display:grid; place-items:center; border-radius:13px; background:rgba(23,43,75,.08); color:var(--primary, #172b4b); font-size:23px; font-weight:800; margin-bottom:14px; }
+.migration-card h3 { margin:0 0 8px; }
+.migration-card > p { color:var(--muted-text, #667085); line-height:1.65; margin:0 0 20px; }
+.migration-result { margin-top:22px; padding-top:22px; border-top:1px solid var(--border-color, #e3e8ef); }
+.migration-url-row { display:flex; gap:8px; margin-top:8px; }
+.migration-url-row input, .migration-input { width:100%; min-width:0; border:1px solid var(--border-color, #d7dde6); border-radius:13px; padding:13px 14px; background:var(--input-bg, #fff); color:inherit; font:inherit; }
+.migration-url-row .ghost-button { flex:0 0 auto; }
+.migration-help { color:var(--muted-text, #667085); font-size:.88rem; line-height:1.5; margin:10px 0 0; }
+.migration-qr { width:210px; min-height:210px; margin:20px auto 10px; display:grid; place-items:center; background:#fff; border-radius:14px; padding:10px; }
+.migration-qr img, .migration-qr canvas { max-width:100%; height:auto; }
+.migration-status { min-height:24px; margin:14px 0 0; font-weight:600; }
+.migration-status.is-success { color:#16834a; }
+.migration-status.is-error { color:#b42318; }
+.migration-security { margin-top:20px; display:flex; gap:10px; align-items:flex-start; padding:15px 18px; border-radius:16px; background:rgba(23,43,75,.055); color:var(--muted-text, #667085); line-height:1.55; }
+.migration-security strong { color:inherit; white-space:nowrap; }
+html.dark-mode .migration-card { background:#101a2b; border-color:#26344a; box-shadow:none; }
+html.dark-mode .migration-url-row input, html.dark-mode .migration-input { background:#0b1422; border-color:#304057; color:#fff; }
+html.dark-mode .migration-security { background:rgba(255,255,255,.06); }
+@media (max-width: 820px) { .migration-grid { grid-template-columns:1fr; } .migration-url-row { flex-direction:column; } .migration-url-row .ghost-button { width:100%; } }

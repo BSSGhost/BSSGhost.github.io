@@ -5,3 +5,5 @@ argv.json
 # Backend — données locales (comptes + sessions) et dépendances
 data/
 node_modules/
+.env
+*.env

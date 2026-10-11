@@ -213,6 +213,10 @@
           <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
           <span data-i18n="tab_conseils">Conseils</span>
         </button>
+        <button type="button" class="app-tab" data-target-screen="migration">
+          <span class="app-tab-icon" aria-hidden="true">↔</span>
+          <span data-i18n="tab_migration">Migration</span>
+        </button>
         <button type="button" class="app-tab" data-target-screen="profil">
           <span class="app-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
           <span data-i18n="tab_profil">Profil</span>
@@ -938,6 +942,51 @@
         </section>
       </div>
 
+      <div class="app-screen" data-screen="migration">
+        <section class="migration-screen">
+          <div class="migration-head">
+            <span class="migration-head-icon" aria-hidden="true">↔</span>
+            <div>
+              <p class="eyebrow" data-i18n="migration_eyebrow">Transfert entre appareils</p>
+              <h2 data-i18n="migration_title">Migration de notes</h2>
+              <p class="subtitle" data-i18n="migration_subtitle">Transférez vos notes vers un autre téléphone, une tablette ou un ordinateur grâce à un lien sécurisé.</p>
+            </div>
+          </div>
+          <div class="migration-grid">
+            <section class="migration-card">
+              <div class="migration-card-icon">↑</div>
+              <h3 data-i18n="migration_export_title">Sur cet appareil</h3>
+              <p data-i18n="migration_export_text">Créez un lien contenant votre profil et vos notes enregistrées sur cet appareil.</p>
+              <button type="button" id="migration-create-btn" class="primary-button" data-i18n="migration_create_btn">Créer mon lien de migration</button>
+              <div id="migration-created" class="migration-result" hidden>
+                <label for="migration-url" data-i18n="migration_link_label">Votre lien de migration</label>
+                <div class="migration-url-row">
+                  <input id="migration-url" type="text" readonly />
+                  <button type="button" id="migration-copy-btn" class="ghost-button" data-i18n="migration_copy_btn">Copier</button>
+                </div>
+                <p id="migration-expiry" class="migration-help"></p>
+                <div id="migration-qr" class="migration-qr" aria-label="QR Code"></div>
+                <p class="migration-help" data-i18n="migration_qr_help">Scannez ce QR Code avec votre nouvel appareil.</p>
+              </div>
+            </section>
+
+            <section class="migration-card">
+              <div class="migration-card-icon">↓</div>
+              <h3 data-i18n="migration_import_title">Sur le nouvel appareil</h3>
+              <p data-i18n="migration_import_text">Collez le lien reçu, puis importez vos notes. Le lien devient inutilisable après l'importation.</p>
+              <label for="migration-input" data-i18n="migration_input_label">Lien de migration</label>
+              <input id="migration-input" class="migration-input" type="url" placeholder="https://…/migration/SM-…" autocomplete="off" />
+              <button type="button" id="migration-import-btn" class="primary-button" data-i18n="migration_import_btn">Importer mes notes</button>
+              <p id="migration-status" class="migration-status" aria-live="polite"></p>
+            </section>
+          </div>
+          <div class="migration-security">
+            <strong data-i18n="migration_security_title">🔐 Sécurité</strong>
+            <span data-i18n="migration_security_text">Le lien est temporaire, à usage unique et expire automatiquement après 24 heures.</span>
+          </div>
+        </section>
+      </div>
+
       <div class="app-screen" data-screen="professeur" id="prof-screen">
         <section id="prof-login-card" class="prof-card prof-login-card">
           <span class="prof-login-icon" aria-hidden="true">
@@ -1510,7 +1559,9 @@
     <div id="theme-reveal-overlay" aria-hidden="true"></div>
 
     <script src="./js/jspdf.umd.min.js"></script>
+    <script src="./js/qrcode-generator.js"></script>
     <script src="script.js"></script>
+    <script src="./migration.js"></script>
     <script src="dashboard.js"></script>
     <script src="prof.js"></script>
     <script src="ocr.js"></script>
