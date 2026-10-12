@@ -162,6 +162,13 @@ const translations = {
     msg_langue_requise_semestre: "Veuillez choisir votre langue pour cette classe avant de calculer la moyenne du semestre.",
     msg_classe_requise_annee: "Veuillez d'abord sélectionner une classe pour calculer votre moyenne annuelle.",
     msg_langue_requise_annee: "Veuillez choisir votre langue pour cette classe avant de calculer la moyenne annuelle.",
+    msg_franco_requis_semestre: "Veuillez indiquer si vous êtes en Franco-Arabe avant de calculer la moyenne du semestre.",
+    msg_franco_requis_annee: "Veuillez indiquer si vous êtes en Franco-Arabe avant de calculer la moyenne annuelle.",
+    legend_franco_arabe: "Êtes-vous en Franco-Arabe ?",
+    franco_change_title: "Quitter le Franco-Arabe",
+    franco_change_message: "Vous avez déjà enregistré des notes en Éducation Religieuse ou en Langue et Littérature Arabe. Si vous choisissez « Non », ces notes seront supprimées.",
+    franco_change_confirm: "Supprimer ces notes",
+    franco_change_done: "Les notes d'Éducation Religieuse et de Langue et Littérature Arabe ont été supprimées.",
     msg_matieres_manquantes: "Vous devez d'abord calculer toutes les matières de la classe. Matières manquantes : {list}.",
     msg_aucun_coefficient: "Aucun coefficient disponible pour calculer la moyenne du semestre.",
     msg_semestre_incomplet: "Il manque des notes au {semestre} pour toutes les matières de la classe. Complétez les deux semestres avant de calculer la moyenne annuelle.",
@@ -849,6 +856,13 @@ const translations = {
     msg_langue_requise_semestre: "Please choose your language for this grade level before calculating the semester average.",
     msg_classe_requise_annee: "Please select a grade level first to calculate your annual average.",
     msg_langue_requise_annee: "Please choose your language for this grade level before calculating the annual average.",
+    msg_franco_requis_semestre: "Please say whether you are in the Franco-Arabic track before calculating the semester average.",
+    msg_franco_requis_annee: "Please say whether you are in the Franco-Arabic track before calculating the annual average.",
+    legend_franco_arabe: "Are you in the Franco-Arabic track?",
+    franco_change_title: "Leave the Franco-Arabic track",
+    franco_change_message: "You already have grades saved in Religious Education or Arabic Language & Literature. If you choose \"No\", these grades will be deleted.",
+    franco_change_confirm: "Delete these grades",
+    franco_change_done: "The Religious Education and Arabic Language & Literature grades have been deleted.",
     msg_matieres_manquantes: "You must first calculate all subjects for the class. Missing subjects: {list}.",
     msg_aucun_coefficient: "No coefficient available to calculate the semester average.",
     msg_semestre_incomplet: "Grades are missing for {semestre} for all subjects in the class. Complete both semesters before calculating the annual average.",
@@ -1418,7 +1432,9 @@ const MATIERE_LABELS = {
   'Sciences Physiques': { fr: 'Sciences Physiques', en: 'Physical Sciences' },
   'Philosophie': { fr: 'Philosophie', en: 'Philosophy' },
   'Espagnol': { fr: 'Espagnol', en: 'Spanish' },
-  'Arabe': { fr: 'Arabe', en: 'Arabic' }
+  'Arabe': { fr: 'Arabe', en: 'Arabic' },
+  'Éducation Religieuse': { fr: 'Éducation Religieuse', en: 'Religious Education' },
+  'Langue et Littérature Arabe': { fr: 'Langue et Littérature Arabe', en: 'Arabic Language & Literature' }
 };
 
 function translateMatiere(nomMatiere) {
@@ -1584,6 +1600,8 @@ const langueGroup = document.getElementById('langue-group');
 const langueRadios = document.querySelectorAll('input[name="langue"]');
 const serieGroup = document.getElementById('serie-group');
 const serieRadios = document.querySelectorAll('input[name="serie"]');
+const francoArabeGroup = document.getElementById('franco-arabe-group');
+const francoArabeRadios = document.querySelectorAll('input[name="francoArabe"]');
 const coefficientInput = document.getElementById('coefficient');
 const coefficientBadge = document.getElementById('coefficient-badge');
 const boutonSemestre = document.getElementById('calculer-semestre');
@@ -2287,8 +2305,28 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, m
   playResultSound(value);
 }
 
-/* E2C n'est pas une matière des classes de 4e, 3e, 1er et Tle. */
-const CLASSES_SANS_E2C = ['4e', '3e', '1er', 'Tle'];
+/* Matières qui n'existent pas dans certaines classes :
+   - E2C : absente en 4e, 3e, 1er et Tle
+   - Informatique : absente en Tle */
+const MATIERES_EXCLUES_PAR_CLASSE = {
+  '4e': ['E2C'],
+  '3e': ['E2C'],
+  '1er': ['E2C'],
+  'Tle': ['E2C', 'Informatique']
+};
+
+function getMatieresExclues(classe) {
+  return MATIERES_EXCLUES_PAR_CLASSE[classe] || [];
+}
+
+/* Franco-Arabe (2nde, 1er, Tle) : si l'élève répond « Oui », ces deux
+   matières s'ajoutent à celles de sa classe. */
+const CLASSES_FRANCO_ARABE = ['2nde', '1er', 'Tle'];
+const MATIERES_FRANCO_ARABE = ['Éducation Religieuse', 'Langue et Littérature Arabe'];
+
+function isFrancoArabe() {
+  return document.querySelector('input[name="francoArabe"]:checked')?.value === 'oui';
+}
 
 const matieresCommunesBase = [
   'Mathématiques',
@@ -2458,6 +2496,10 @@ function restoreStudentProfile() {
     const serieRadio = document.querySelector(`input[name="serie"][value="${profile.serie}"]`);
     if (serieRadio) serieRadio.checked = true;
   }
+  if (profile.francoArabe) {
+    const francoRadio = document.querySelector(`input[name="francoArabe"][value="${profile.francoArabe}"]`);
+    if (francoRadio) francoRadio.checked = true;
+  }
 
   if (profile.classe && classeSelect) {
     classeSelect.value = profile.classe;
@@ -2485,10 +2527,12 @@ function getStoredNotesForClasse(classe, semestre = getSemestreActuel()) {
   try {
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return {};
-    // D'anciennes notes d'E2C éventuellement enregistrées dans ces classes sont ignorées
-    if (CLASSES_SANS_E2C.includes(classe) && Object.prototype.hasOwnProperty.call(parsed, 'E2C')) {
-      const { E2C, ...sansE2C } = parsed;
-      return sansE2C;
+    // D'anciennes notes de matières retirées d'une classe (E2C, Informatique en Tle…) sont ignorées
+    const exclues = getMatieresExclues(classe).filter((matiere) => Object.prototype.hasOwnProperty.call(parsed, matiere));
+    if (exclues.length) {
+      const copie = { ...parsed };
+      exclues.forEach((matiere) => delete copie[matiere]);
+      return copie;
     }
     return parsed;
   } catch {
@@ -2505,7 +2549,7 @@ function saveMatiereNote(classe, matiere, data) {
 
 function getMatieresPourClasse(classe) {
   const baseMatieres = [...matieresCommunesBase].filter(
-    matiere => !(matiere === 'E2C' && CLASSES_SANS_E2C.includes(classe))
+    matiere => !getMatieresExclues(classe).includes(matiere)
   );
   const matieresSansEconomie = baseMatieres.filter(
     matiere => matiere !== 'ECOFAM'
@@ -2573,6 +2617,10 @@ function getMatieresDisponiblesPourClasse(classe) {
   if (['4e', '3e', '2nde', '1er', 'Tle'].includes(classe)) {
     if (selectedLangue) matieres = [...matieres, selectedLangue];
     matieres = [...matieres, ...getStoredLanguesPourClasse(classe)];
+  }
+
+  if (CLASSES_FRANCO_ARABE.includes(classe) && isFrancoArabe()) {
+    matieres = [...matieres, ...MATIERES_FRANCO_ARABE];
   }
 
   return [...new Set(matieres)];
@@ -2889,6 +2937,7 @@ function updateMatieres() {
   if (!selectedClasse) {
     langueGroup.hidden = true;
     serieGroup.hidden = true;
+    if (francoArabeGroup) francoArabeGroup.hidden = true;
     hideCoefficientBadge();
     renderTableMatiere();
     return;
@@ -2899,6 +2948,8 @@ function updateMatieres() {
   } else {
     langueGroup.hidden = true;
   }
+
+  if (francoArabeGroup) francoArabeGroup.hidden = !CLASSES_FRANCO_ARABE.includes(selectedClasse);
 
   if (CLASSES_LYCEE.includes(selectedClasse)) {
     serieGroup.hidden = false;
@@ -2990,6 +3041,54 @@ function requestLangueChange(newLangue) {
 
 langueRadios.forEach((radio) => radio.addEventListener('change', () => {
   requestLangueChange(radio.value);
+}));
+
+/* Franco-Arabe : « Oui » ajoute Éducation Religieuse et Langue et Littérature
+   Arabe aux matières de la classe ; « Non » les retire. Si des notes existent
+   déjà dans ces matières, on demande confirmation avant de les supprimer. */
+function getStoredMatieresFrancoArabe(classe) {
+  if (!classe) return [];
+  return MATIERES_FRANCO_ARABE.filter((matiere) =>
+    Object.prototype.hasOwnProperty.call(getStoredNotesForClasse(classe, 'Semestre1'), matiere) ||
+    Object.prototype.hasOwnProperty.call(getStoredNotesForClasse(classe, 'Semestre2'), matiere)
+  );
+}
+
+function requestFrancoArabeChange(value) {
+  const classe = classeSelect.value;
+
+  const applyChange = () => {
+    saveStudentProfile({ francoArabe: value });
+    updateMatieres();
+    updateStepsTimeline();
+    hideResultActionButtons();
+  };
+
+  const hasNotes = value === 'non' && Boolean(classe) && getStoredMatieresFrancoArabe(classe).length > 0;
+  if (!hasNotes || typeof confirmModal === 'undefined' || !confirmModal.el) {
+    if (hasNotes) MATIERES_FRANCO_ARABE.forEach((matiere) => removeLangueNotes(classe, matiere));
+    applyChange();
+    return;
+  }
+
+  confirmModal.show({
+    title: t('franco_change_title'),
+    message: t('franco_change_message'),
+    okLabel: t('franco_change_confirm'),
+    onConfirm: () => {
+      MATIERES_FRANCO_ARABE.forEach((matiere) => removeLangueNotes(classe, matiere));
+      applyChange();
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('franco_change_done'));
+    },
+    onDismiss: () => {
+      const ouiRadio = document.querySelector('input[name="francoArabe"][value="oui"]');
+      if (ouiRadio) ouiRadio.checked = true;
+    }
+  });
+}
+
+francoArabeRadios.forEach((radio) => radio.addEventListener('change', () => {
+  requestFrancoArabeChange(radio.value);
 }));
 
 document.querySelectorAll('input[name="semestre"]').forEach((radio) => {
@@ -3686,6 +3785,11 @@ boutonSemestre.addEventListener('click', function () {
     }
   }
 
+  if (CLASSES_FRANCO_ARABE.includes(classe) && !document.querySelector('input[name="francoArabe"]:checked')) {
+    setResult(t('msg_franco_requis_semestre'), true);
+    return;
+  }
+
   const matieres = getMatieresDisponiblesPourClasse(classe);
   const notes = getStoredNotesForClasse(classe, semestre);
   const result = computeMoyennePonderee(matieres, notes);
@@ -3730,6 +3834,11 @@ document.getElementById('calculer-annee').addEventListener('click', function () 
       setResult(t('msg_langue_requise_annee'), true);
       return;
     }
+  }
+
+  if (CLASSES_FRANCO_ARABE.includes(classe) && !document.querySelector('input[name="francoArabe"]:checked')) {
+    setResult(t('msg_franco_requis_annee'), true);
+    return;
   }
 
   const matieres = getMatieresDisponiblesPourClasse(classe);
@@ -4264,6 +4373,7 @@ boutonReset.addEventListener('click', function () {
         matiereSelect.innerHTML = `<option value="">${t('option_matiere_default')}</option>`;
         classeSelect.value = '';
         langueGroup.hidden = true;
+        if (francoArabeGroup) francoArabeGroup.hidden = true;
       } else {
         // Reset limité à une classe : le profil élève (nom/prénom/classe)
         // reste valable, on le réaffiche après le form.reset().
