@@ -263,6 +263,9 @@ const translations = {
     pdf_moyenne_semestrielle: "Moyenne Semestrielle : {value} / 20",
     pdf_mention: "Mention : {label}",
     pdf_footer_doc: "Document numérique généré à titre informatif. Les résultats doivent être vérifiés auprès de l'établissement.",
+    pdf_watermark_line1: "Document non officiel,",
+    pdf_watermark_line2: "à vérifier auprès de l'administration",
+    bulletin_watermark: "Document non officiel, à vérifier auprès de l'administration",
     pdf_appreciation_insuffisant: "Insuffisant",
     pdf_appreciation_passable: "Passable",
     pdf_appreciation_assez_bien: "Assez Bien",
@@ -947,6 +950,9 @@ const translations = {
     pdf_moyenne_semestrielle: "Semester Average: {value} / 20",
     pdf_mention: "Grade: {label}",
     pdf_footer_doc: "Digital document generated for informational purposes only. Results should be verified with the school.",
+    pdf_watermark_line1: "Unofficial document,",
+    pdf_watermark_line2: "to be verified with the administration",
+    bulletin_watermark: "Unofficial document, to be verified with the administration",
     pdf_appreciation_insuffisant: "Insufficient",
     pdf_appreciation_passable: "Pass",
     pdf_appreciation_assez_bien: "Fairly Good",
@@ -2281,6 +2287,9 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, m
   playResultSound(value);
 }
 
+/* E2C n'est pas une matière des classes de 4e, 3e, 1er et Tle. */
+const CLASSES_SANS_E2C = ['4e', '3e', '1er', 'Tle'];
+
 const matieresCommunesBase = [
   'Mathématiques',
   'Français',
@@ -2475,7 +2484,13 @@ function getStoredNotesForClasse(classe, semestre = getSemestreActuel()) {
 
   try {
     const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    if (!parsed || typeof parsed !== 'object') return {};
+    // D'anciennes notes d'E2C éventuellement enregistrées dans ces classes sont ignorées
+    if (CLASSES_SANS_E2C.includes(classe) && Object.prototype.hasOwnProperty.call(parsed, 'E2C')) {
+      const { E2C, ...sansE2C } = parsed;
+      return sansE2C;
+    }
+    return parsed;
   } catch {
     return {};
   }
@@ -2489,7 +2504,9 @@ function saveMatiereNote(classe, matiere, data) {
 }
 
 function getMatieresPourClasse(classe) {
-  const baseMatieres = [...matieresCommunesBase];
+  const baseMatieres = [...matieresCommunesBase].filter(
+    matiere => !(matiere === 'E2C' && CLASSES_SANS_E2C.includes(classe))
+  );
   const matieresSansEconomie = baseMatieres.filter(
     matiere => matiere !== 'ECOFAM'
   );
@@ -3760,6 +3777,49 @@ function getAnneeScolaire() {
 const anneeScolaireEl = document.getElementById('annee-scolaire');
 if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
 
+/* Filigrane diagonal « Document non officiel » sur chaque page du PDF.
+   Dessiné en dernier, avec transparence, pour rester visible sur les fonds. */
+function drawPdfWatermark(doc) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const angle = 40; // degrés, sens anti-horaire
+  const rad = (angle * Math.PI) / 180;
+  const dirX = Math.cos(rad);
+  const dirY = -Math.sin(rad);   // sens de lecture du texte (l'axe y du PDF descend)
+  const downX = Math.sin(rad);   // perpendiculaire, vers le bas du texte
+  const downY = Math.cos(rad);
+  const lines = [
+    { text: t('pdf_watermark_line1'), size: 34, offset: -7 },
+    { text: t('pdf_watermark_line2'), size: 19, offset: 9 }
+  ];
+  const maxWidth = 235;
+  const centerX = pageWidth / 2;
+  const centerY = pageHeight / 2;
+
+  let transparent = false;
+  doc.saveGraphicsState();
+  try {
+    doc.setGState(new doc.GState({ opacity: 0.17 }));
+    transparent = true;
+  } catch (e) { /* ancienne version de jsPDF : couleur claire à la place */ }
+
+  doc.setFont('helvetica', 'bold');
+  if (transparent) doc.setTextColor(185, 45, 45);
+  else doc.setTextColor(236, 208, 208);
+
+  lines.forEach(({ text, size, offset }) => {
+    doc.setFontSize(size);
+    const width = doc.getTextWidth(text);
+    if (width > maxWidth) doc.setFontSize(size * (maxWidth / width));
+    const w = doc.getTextWidth(text);
+    const cx = centerX + downX * offset;
+    const cy = centerY + downY * offset;
+    doc.text(text, cx - dirX * (w / 2), cy - dirY * (w / 2), { angle });
+  });
+
+  doc.restoreGraphicsState();
+}
+
 // Génération du bulletin PDF
 function generatePDFBulletin() {
   const { jsPDF } = window.jspdf;
@@ -3791,7 +3851,7 @@ function generatePDFBulletin() {
   const pageWidth = doc.internal.pageSize.getWidth(); // 210
   const pageHeight = doc.internal.pageSize.getHeight(); // 297
 
-  // Cadre simple et discret (pas de double cadre ni de filigrane)
+  // Cadre simple et discret (pas de double cadre)
   doc.setDrawColor(210, 168, 74); // Doré (#D2A84A), fin liseré décoratif
   doc.setLineWidth(0.4);
   doc.rect(9, 9, pageWidth - 18, pageHeight - 18);
@@ -3974,6 +4034,13 @@ function generatePDFBulletin() {
   doc.setFontSize(7.5);
   doc.setTextColor(120, 120, 120);
   doc.text(t('pdf_footer_doc'), pageWidth / 2, pageHeight - 14, { align: "center", maxWidth: pageWidth - 28 });
+
+  // Filigrane « Document non officiel » sur toutes les pages
+  const totalPages = doc.getNumberOfPages();
+  for (let page = 1; page <= totalPages; page += 1) {
+    doc.setPage(page);
+    drawPdfWatermark(doc);
+  }
 
   const nomFichier = `Bulletin_${prenom}_${nom}_${classe}_${semestreVal}.pdf`;
 

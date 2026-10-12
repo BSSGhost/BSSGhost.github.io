@@ -4558,6 +4558,9 @@ html.dark-mode .radar-label {
 }
 
 .bulletin-preview {
+  position: relative;
+  overflow: hidden;
+  min-height: 110px;
   width: 100%;
   margin: 6px 0 4px;
   padding: 14px 16px;
@@ -4603,6 +4606,30 @@ html.dark-mode .radar-label {
   color: var(--muted);
   text-align: center;
   padding: 6px 0;
+}
+
+/* Filigrane « Document non officiel » de l'aperçu du bulletin */
+.bulletin-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12%;
+  text-align: center;
+  transform: rotate(-14deg);
+  font-size: clamp(0.95rem, 3.8vw, 1.2rem);
+  font-weight: 800;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: rgba(185, 45, 45, 0.17);
+  pointer-events: none;
+  user-select: none;
+}
+
+html.dark-mode .bulletin-watermark {
+  color: rgba(255, 130, 130, 0.2);
 }
 
 html.dark-mode .bulletin-preview {
