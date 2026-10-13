@@ -6838,7 +6838,55 @@ html.dark-mode .prof-subject-item-badge {
 
 /* Tableau des élèves (Vue 2) */
 .prof-students-table {
-  min-width: 520px;
+  min-width: 600px;
+}
+
+/* Genre des élèves */
+.prof-genre-filter {
+  margin-left: auto;
+  min-width: 150px;
+}
+
+.prof-genre-select {
+  min-width: 104px;
+  padding: 4px 8px;
+  border: 1px solid rgba(27, 42, 66, 0.18);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.prof-genre-select[data-genre="fille"] {
+  color: #b02a6b;
+  border-color: rgba(176, 42, 107, 0.4);
+}
+
+.prof-genre-select[data-genre="garçon"] {
+  color: #1f5fae;
+  border-color: rgba(31, 95, 174, 0.4);
+}
+
+.prof-genre-select[data-genre=""] {
+  color: var(--muted);
+}
+
+.prof-import-genre-info {
+  margin-top: -4px;
+}
+
+html.dark-mode .prof-genre-select {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+html.dark-mode .prof-genre-select[data-genre="fille"] {
+  color: #ff9ac6;
+}
+
+html.dark-mode .prof-genre-select[data-genre="garçon"] {
+  color: #8fc2ff;
 }
 
 .prof-col-actions {

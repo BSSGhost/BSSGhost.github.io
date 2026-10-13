@@ -1303,6 +1303,7 @@
                             <section class="prof-panel">
                               <div class="prof-panel-head">
                                 <h4 data-i18n="prof_class_students">Élèves</h4>
+                                <div class="select-wrap prof-genre-filter"><select id="prof-class-filter-genre" data-i18n-aria-label="prof_filter_genre_label" aria-label="Filtrer par genre"></select></div>
                                 <button type="button" id="prof-student-add" class="secondary-button prof-add-btn">
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                   <span data-i18n="prof_student_add">Ajouter un élève</span>
@@ -1313,10 +1314,10 @@
                                 <input type="text" id="prof-student-nom" maxlength="40" data-i18n-placeholder="label_nom" placeholder="Nom" required />
                                 <input type="text" id="prof-student-prenom" maxlength="40" data-i18n-placeholder="label_prenom" placeholder="Prénom" />
                                 <div class="field-group">
-                                  <label data-i18n="prof_th_eleve">Genre</label>
+                                  <label data-i18n="prof_genre_label">Genre</label>
                                   <div class="choice-group" role="radiogroup" aria-label="Genre de l'élève">
                                     <label class="choice-option">
-                                      <input type="radio" name="prof-student-genre" value="garçon" checked />
+                                      <input type="radio" name="prof-student-genre" value="garçon" required />
                                       <span data-i18n="prof_garcon">Garçon</span>
                                     </label>
                                     <label class="choice-option">
@@ -1336,6 +1337,7 @@
                                       <th class="prof-col-rank">#</th>
                                       <th data-i18n="label_nom">Nom</th>
                                       <th data-i18n="label_prenom">Prénom</th>
+                                      <th data-i18n="prof_th_genre">Genre</th>
                                       <th data-i18n="prof_th_moyenne">Moyenne</th>
                                       <th data-i18n="prof_th_rang">Rang</th>
                                       <th class="prof-col-actions">&nbsp;</th>

@@ -84,7 +84,7 @@
     studentForm: $('prof-student-form'),
     studentNom: $('prof-student-nom'),
     studentPrenom: $('prof-student-prenom'),
-    studentGenre: $('prof-student-genre'),
+    classFilterGenre: $('prof-class-filter-genre'),
     studentFormOk: $('prof-student-form-ok'),
     studentFormCancel: $('prof-student-form-cancel'),
     studentsTbody: $('prof-students-tbody'),
@@ -175,7 +175,91 @@
   let dashRankSubject = null; /* matière sélectionnée dans le classement (null = moyenne générale) */
   let dashStatsClass = null; /* classe sélectionnée dans les statistiques */
   let dashSelectedStudent = null; /* { classe, id } profil élève affiché */
-  let profGenreFilter = null; /* filtre genre: 'garçon' ou 'fille' */
+  let profGenreFilter = null; /* filtre genre: 'garçon', 'fille' ou '__none__' */
+
+  /* ----- Genre des élèves : 'garçon' | 'fille' | '' (non précisé) ----- */
+
+  /* Convertit une valeur libre (F, Fille, Féminin, M, Garçon, Mme…) en
+     'fille' / 'garçon'. Une valeur vide ou inconnue donne '' : on ne
+     devine jamais un genre. */
+  function normalizeGenre(raw) {
+    const v = String(raw || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z]+/g, ' ')
+      .trim();
+    if (!v) return '';
+    if (/^(f|fille|filles|feminin|feminine|female|girl|femme|mlle|mme|madame|mademoiselle)$/.test(v)) return 'fille';
+    if (/^(m|g|garcon|garcons|masculin|male|boy|homme|h|mr|monsieur)$/.test(v)) return 'garçon';
+    return '';
+  }
+
+  function cleanGenre(value) {
+    return value === 'fille' || value === 'garçon' ? value : '';
+  }
+
+  function getFormGenre() {
+    const checked = document.querySelector('input[name="prof-student-genre"]:checked');
+    return checked ? cleanGenre(checked.value) : '';
+  }
+
+  function setFormGenre(value) {
+    const genre = cleanGenre(value);
+    document.querySelectorAll('input[name="prof-student-genre"]').forEach((radio) => {
+      radio.checked = radio.value === genre;
+    });
+  }
+
+  function genreCounts(eleves) {
+    const counts = { boys: 0, girls: 0, unknown: 0 };
+    (eleves || []).forEach((e) => {
+      const g = cleanGenre(e && e.genre);
+      if (g === 'garçon') counts.boys += 1;
+      else if (g === 'fille') counts.girls += 1;
+      else counts.unknown += 1;
+    });
+    return counts;
+  }
+
+  /* Liste déroulante Genre réutilisée dans le tableau des élèves et dans l'aperçu d'import. */
+  function buildGenreSelect(value, onChange) {
+    const select = document.createElement('select');
+    select.className = 'prof-genre-select';
+    select.setAttribute('aria-label', t('prof_genre_label'));
+    [['', '—'], ['garçon', t('prof_garcon')], ['fille', t('prof_fille')]].forEach(([val, label]) => {
+      const option = document.createElement('option');
+      option.value = val;
+      option.textContent = label;
+      select.appendChild(option);
+    });
+    select.value = cleanGenre(value);
+    select.dataset.genre = select.value;
+    select.addEventListener('change', () => {
+      select.dataset.genre = select.value;
+      onChange(cleanGenre(select.value));
+    });
+    return select;
+  }
+
+  function classMetaText(classeData) {
+    const { boys, girls, unknown } = genreCounts(classeData.eleves);
+    const parts = [`${t('prof_stat_effectifs')} : ${classeData.eleves.length}`];
+    if (boys) parts.push(`${boys} ${t('prof_genre_boys')}`);
+    if (girls) parts.push(`${girls} ${t('prof_genre_girls')}`);
+    if (unknown) parts.push(`${unknown} ${t('prof_genre_none').toLowerCase()}`);
+    return parts.join(' · ');
+  }
+
+  function fillClassGenreFilter() {
+    if (!els.classFilterGenre) return;
+    els.classFilterGenre.innerHTML =
+      `<option value="">${escHtml(t('prof_dash_filter_all'))}</option>` +
+      `<option value="garçon">${escHtml(t('prof_garcon'))}</option>` +
+      `<option value="fille">${escHtml(t('prof_fille'))}</option>` +
+      `<option value="__none__">${escHtml(t('prof_genre_none'))}</option>`;
+    els.classFilterGenre.value = profGenreFilter || '';
+  }
 
   /* Authentification */
 
@@ -277,9 +361,9 @@
         entry.eleves = entry.eleves.filter(
           (e) => e && typeof e === 'object' && (e.nom || e.prenom)
         );
-        // Ajout du champ genre par défaut pour les anciens élèves
+        // Genre : on normalise, et on ne devine jamais (valeur vide = non précisé)
         entry.eleves.forEach((e) => {
-          if (!e.genre) e.genre = 'garçon';
+          e.genre = normalizeGenre(e.genre);
         });
       }
 
@@ -489,7 +573,7 @@
       type: 'student',
       label: getStudentName(student),
       classe,
-      eleve: { id: student.id, nom: student.nom || '', prenom: student.prenom || '' },
+      eleve: { id: student.id, nom: student.nom || '', prenom: student.prenom || '', genre: cleanGenre(student.genre) },
       notes: notesBySem,
       deletedAt: Date.now()
     };
@@ -572,7 +656,7 @@
         const classeData = store[item.classe];
         classeData.eleves = (classeData.eleves || []).filter((s) => s.id !== item.eleve?.id);
         if (item.eleve) {
-          classeData.eleves.push({ id: item.eleve.id, nom: item.eleve.nom || '', prenom: item.eleve.prenom || '' });
+          classeData.eleves.push({ id: item.eleve.id, nom: item.eleve.nom || '', prenom: item.eleve.prenom || '', genre: cleanGenre(item.eleve.genre) });
         }
         if (item.notes) {
           Object.keys(item.notes).forEach((sem) => {
@@ -1698,7 +1782,8 @@
       els.dashFilterGenre.innerHTML =
         `<option value="">${escHtml(t('prof_dash_filter_all'))}</option>` +
         `<option value="garçon">${escHtml(t('prof_garcon'))}</option>` +
-        `<option value="fille">${escHtml(t('prof_fille'))}</option>`;
+        `<option value="fille">${escHtml(t('prof_fille'))}</option>` +
+        `<option value="__none__">${escHtml(t('prof_genre_none'))}</option>`;
     }
   }
 
@@ -1754,11 +1839,10 @@
       if (rankf === 'top10' && rankById[x.id] > 10) return false;
       if (rankf === 'improve' && !(totalWithAvg > 0 && rankById[x.id] >= totalWithAvg - 4)) return false;
       if (genref) {
-      // Apply genre filter only to students with a genre field
-      if (x.genre && x.genre !== genref) return false;
-      // Students without a genre field are shown (they'll appear under both filters eventually)
-    }
-    return true;
+        const g = cleanGenre(x.genre);
+        if (genref === '__none__' ? g !== '' : g !== genref) return false;
+      }
+      return true;
     });
 
     const tbody = filtered.length
@@ -2232,12 +2316,15 @@
   function renderClassView() {
     const classeData = store[activeClass] || defaultClass();
     els.classTitle.textContent = activeClass;
-    els.classMeta.textContent = `${t('prof_stat_effectifs')} : ${classeData.eleves.length}`;
+    els.classMeta.textContent = classMetaText(classeData);
 
     els.studentForm.hidden = true;
     els.studentNom.value = '';
     els.studentPrenom.value = '';
+    setFormGenre('');
     editingStudentId = null;
+
+    fillClassGenreFilter();
     els.studentFormOk.textContent = t('prof_student_form_ok');
 
     renderSemesterTabs();
@@ -2253,7 +2340,9 @@
 
     // Filtrer par genre si spécifié
     if (genreFilter) {
-      students = students.filter((s) => s.genre === genreFilter);
+      students = students.filter((s) =>
+        genreFilter === '__none__' ? !cleanGenre(s.genre) : cleanGenre(s.genre) === genreFilter
+      );
     }
 
     els.studentsEmpty.hidden = students.length > 0;
@@ -2273,6 +2362,17 @@
 
       const prenomCell = document.createElement('td');
       prenomCell.textContent = student.prenom;
+
+      const genreCell = document.createElement('td');
+      genreCell.className = 'prof-genre-cell';
+      genreCell.appendChild(
+        buildGenreSelect(student.genre, (value) => {
+          student.genre = value;
+          saveStore();
+          els.classMeta.textContent = classMetaText(classeData);
+          if (profGenreFilter) renderStudentsTable(classeData, profGenreFilter);
+        })
+      );
 
       const avgCell = document.createElement('td');
       avgCell.className = 'prof-moyenne-cell';
@@ -2294,7 +2394,7 @@
       actionsCell.querySelector('[data-act="edit"]').addEventListener('click', () => startEditStudent(student));
       actionsCell.querySelector('[data-act="delete"]').addEventListener('click', () => deleteStudent(student));
 
-      tr.append(rankCell, nomCell, prenomCell, avgCell, rangCell, actionsCell);
+      tr.append(rankCell, nomCell, prenomCell, genreCell, avgCell, rangCell, actionsCell);
       els.studentsTbody.appendChild(tr);
     });
   }
@@ -2308,15 +2408,19 @@
   async function submitStudentForm() {
     const nom = els.studentNom.value.trim();
     const prenom = els.studentPrenom.value.trim();
-    const genre = els.studentGenre ? els.studentGenre.value : 'garçon';
+    const genre = getFormGenre();
     if (!nom && !prenom) return;
+    if (!genre) {
+      els.studentForm.reportValidity();
+      return;
+    }
     const classeData = store[activeClass] || defaultClass();
 
     const resetForm = () => {
       els.studentForm.hidden = true;
       els.studentNom.value = '';
       els.studentPrenom.value = '';
-      els.studentGenre && (els.studentGenre.value = 'garçon');
+      setFormGenre('');
       editingStudentId = null;
       renderClassView();
     };
@@ -2337,6 +2441,7 @@
           return;
         }
         if (choice === 'merge') {
+          if (!cleanGenre(dup.genre)) dup.genre = genre;
           saveStore();
           recordActivity('student', `${nom} ${prenom}`.trim());
           resetForm();
@@ -2354,6 +2459,7 @@
     els.studentForm.hidden = true;
     els.studentNom.value = '';
     els.studentPrenom.value = '';
+    setFormGenre('');
     editingStudentId = null;
     renderClassView();
   }
@@ -2362,9 +2468,7 @@
     editingStudentId = student.id;
     els.studentNom.value = student.nom;
     els.studentPrenom.value = student.prenom;
-    if (els.studentGenre) {
-      els.studentGenre.value = student.genre || 'garçon';
-    }
+    setFormGenre(student.genre);
     els.studentFormOk.textContent = t('prof_student_form_ok');
     showStudentForm();
   }
@@ -2957,7 +3061,7 @@
       let eleve = item.eleve;
 
       if (!eleve) {
-        eleve = { id: newId(), nom, prenom };
+        eleve = { id: newId(), nom, prenom, genre: '' };
         classeData.eleves.push(eleve);
         added = true;
       } else {
@@ -3457,7 +3561,7 @@
     let genreIdx = -1;
     if (isHeader) {
       header.forEach((h, i) => {
-        if (genreIdx < 0 && /^(genre|sexe|sex|gender)$/.test(h.trim())) genreIdx = i;
+        if (genreIdx < 0 && (/(genre|sexe|gender|civilit)/.test(h) || /^\s*(sex|g|m\/f|f\/m)\s*$/.test(h))) genreIdx = i;
       });
       let prenomFound = false;
       header.forEach((h, i) => {
@@ -3472,36 +3576,40 @@
       });
     }
 
+    /* Pas d'en-tête « Genre » : on cherche une colonne dont presque toutes
+       les valeurs sont des genres (F, M, Fille, Garçon…). */
+    if (genreIdx < 0) {
+      const width = data.reduce((max, cells) => Math.max(max, cells.length), 0);
+      for (let col = 0; col < width && genreIdx < 0; col += 1) {
+        if (col === nomIdx || col === prenomIdx) continue;
+        const filled = data.map((cells) => String(cells[col] || '').trim()).filter(Boolean);
+        if (!filled.length) continue;
+        const matches = filled.filter((v) => normalizeGenre(v)).length;
+        if (matches / filled.length >= 0.8) genreIdx = col;
+      }
+    }
+
     const list = [];
     data.forEach((cells) => {
       if (!cells.length) return;
       let nom = String(cells[nomIdx] || '').trim();
       let prenom = prenomIdx >= 0 && cells.length > prenomIdx ? String(cells[prenomIdx] || '').trim() : '';
+      let genre = genreIdx >= 0 && genreIdx < cells.length ? normalizeGenre(cells[genreIdx]) : '';
       if (prenomIdx < 0 || prenomIdx >= cells.length) {
         const parts = nom.split(/\s+/);
+        /* Ligne unique « DIOP Awa F » : le genre est le dernier mot. */
+        if (!genre && parts.length >= 3 && normalizeGenre(parts[parts.length - 1])) {
+          genre = normalizeGenre(parts.pop());
+        }
         if (parts.length > 1) {
           nom = parts[0];
           prenom = parts.slice(1).join(' ');
         }
       }
       if (!nom && !prenom) return;
-      /* Le genre brut du fichier est seulement mémorisé ici : il est converti
-         et enregistré dans applyClassImport, une fois l'import validé. */
-      const genreRaw = genreIdx >= 0 && genreIdx < cells.length ? String(cells[genreIdx] || '').trim() : '';
-      list.push({ nom, prenom, genreRaw });
+      list.push({ nom, prenom, genre });
     });
     return list;
-  }
-
-  /* Convertit une valeur de fichier (F, Fille, Féminin, M, Garçon…) en 'fille' / 'garçon'. */
-  function normalizeGenre(raw) {
-    const v = String(raw || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
-    if (/^(f|fille|filles|feminin|female|girl|femme)$/.test(v)) return 'fille';
-    return 'garçon';
   }
 
   let importClassRows = [];
@@ -3536,10 +3644,11 @@
         </div>
         <div class="prof-import-preview" id="prof-import-class-preview" hidden>
           <p class="prof-import-preview-info" id="prof-import-class-info"></p>
+          <p class="prof-import-preview-info prof-import-genre-info" id="prof-import-class-genre-info"></p>
           <div class="prof-import-table-wrap">
             <table class="prof-import-table">
               <thead>
-                <tr><th>#</th><th>${escHtml(t('label_nom'))}</th><th>${escHtml(t('label_prenom'))}</th><th class="prof-import-col-check">&nbsp;</th></tr>
+                <tr><th>#</th><th>${escHtml(t('label_nom'))}</th><th>${escHtml(t('label_prenom'))}</th><th>${escHtml(t('prof_th_genre'))}</th><th class="prof-import-col-check">&nbsp;</th></tr>
               </thead>
               <tbody id="prof-import-class-tbody"></tbody>
             </table>
@@ -3627,6 +3736,13 @@
       nomCell.textContent = row.nom;
       const prenomCell = document.createElement('td');
       prenomCell.textContent = row.prenom;
+      const genreCell = document.createElement('td');
+      genreCell.appendChild(
+        buildGenreSelect(row.genre, (value) => {
+          row.genre = value;
+          updateClassImportApply();
+        })
+      );
       const checkCell = document.createElement('td');
       checkCell.className = 'prof-import-col-check';
       const cb = document.createElement('input');
@@ -3638,7 +3754,7 @@
         updateClassImportApply();
       });
       checkCell.appendChild(cb);
-      tr.append(rankCell, nomCell, prenomCell, checkCell);
+      tr.append(rankCell, nomCell, prenomCell, genreCell, checkCell);
       tbody.appendChild(tr);
     });
 
@@ -3653,6 +3769,17 @@
     const count = importClassRows.filter((r) => r._keep !== false).length;
     const btn = modal.querySelector('#prof-import-class-apply');
     if (btn) btn.textContent = t('prof_import_apply', { count });
+
+    const genreInfo = modal.querySelector('#prof-import-class-genre-info');
+    if (genreInfo) {
+      const kept = importClassRows.filter((r) => r._keep !== false);
+      const counts = genreCounts(kept.map((r) => ({ genre: r.genre })));
+      genreInfo.textContent = t('prof_import_genre_detected', {
+        boys: counts.boys,
+        girls: counts.girls,
+        unknown: counts.unknown
+      });
+    }
   }
 
   async function applyClassImport() {
@@ -3694,15 +3821,20 @@
       const prenom = String(row.prenom || '').trim();
       if (!nom && !prenom) return;
       const info = duplicateInfo(store[target].eleves, nom, prenom, 'all');
-      if (info && info.strong) return; /* même élève déjà présent : on saute */
+      if (info && info.strong) {
+        /* même élève déjà présent : on saute, mais on complète son genre s'il manquait */
+        if (!cleanGenre(info.student.genre) && cleanGenre(row.genre)) info.student.genre = cleanGenre(row.genre);
+        return;
+      }
       if (info) {
         if (mergeAll) {
+          if (!cleanGenre(info.student.genre) && cleanGenre(row.genre)) info.student.genre = cleanGenre(row.genre);
           merged++;
           return;
         }
         /* « Conserver les deux » : on ajoute le doublon */
       }
-      store[target].eleves.push({ id: newId(), nom, prenom, genre: normalizeGenre(row.genreRaw) });
+      store[target].eleves.push({ id: newId(), nom, prenom, genre: cleanGenre(row.genre) });
       count++;
     });
     saveStore();
@@ -4003,6 +4135,7 @@
     if (els.dashFilterClass) els.dashFilterClass.addEventListener('change', renderDashStudents);
     if (els.dashFilterPerf) els.dashFilterPerf.addEventListener('change', renderDashStudents);
     if (els.dashFilterRank) els.dashFilterRank.addEventListener('change', renderDashStudents);
+    if (els.dashFilterGenre) els.dashFilterGenre.addEventListener('change', renderDashStudents);
 
     document.addEventListener('click', (e) => {
       if (e.target instanceof Element && e.target.closest('[data-act="create-class"]')) {
@@ -4073,6 +4206,7 @@
         editingStudentId = null;
         els.studentNom.value = '';
         els.studentPrenom.value = '';
+        setFormGenre('');
         els.studentFormOk.textContent = t('prof_student_form_ok');
         showStudentForm();
       }
@@ -4088,7 +4222,15 @@
       els.studentForm.hidden = true;
       els.studentNom.value = '';
       els.studentPrenom.value = '';
+      setFormGenre('');
       editingStudentId = null;
+    });
+  }
+
+  if (els.classFilterGenre) {
+    els.classFilterGenre.addEventListener('change', () => {
+      profGenreFilter = els.classFilterGenre.value || null;
+      renderStudentsTable(store[activeClass] || defaultClass(), profGenreFilter);
     });
   }
 
