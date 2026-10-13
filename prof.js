@@ -2540,7 +2540,7 @@
              ? `<span class="prof-bulletin-mention">${escHtml(getMention(semesterAvg).label)}</span>`
              : ''}
          </div>`
-      : `<p class="prof-empty">${t('prof_subjects_empty')}</p>`;
+      : `<p class="prof-empty professional-empty-center">${t('prof_subjects_empty')}</p>`;
 
     modal.innerHTML = `
       <div class="prof-ocr-overlay"></div>
@@ -2646,6 +2646,7 @@
     const names = Object.keys(semObj);
     els.subjectsEmpty.hidden = names.length > 0;
     els.subjectsEmpty.textContent = t('prof_subjects_empty');
+    els.subjectsEmpty.className = 'prof-empty professional-empty-center';
     els.subjectsList.innerHTML = '';
 
     names.forEach((matiere) => {

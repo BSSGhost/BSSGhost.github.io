@@ -433,7 +433,7 @@ const translations = {
     prof_subject_count: "{total} matières disponibles · {free} à ajouter",
     prof_subject_open: "Saisir les notes",
     prof_subject_delete: "Supprimer",
-    prof_subjects_empty: "Aucune matière renseignée pour ce semestre.",
+    prof_subjects_empty: "📚\nAucune matière\nAjoutez les matières de ce semestre\npour commencer à saisir les notes.\n\n[ + Ajouter une matière ]",
     prof_students_empty: "Aucun élève dans cette classe pour ce semestre.",
     prof_confirm_delete_class: "Supprimer la classe « {classe} » ? Elle sera déplacée dans la corbeille.",
     prof_confirm_delete_student: "Supprimer cet élève de la classe ? Il sera déplacé dans la corbeille avec ses notes.",

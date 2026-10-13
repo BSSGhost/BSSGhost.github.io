@@ -6889,79 +6889,273 @@ html.dark-mode .prof-subject-form-actions {
   }
 }
 
-/* Liste des matières */
-.prof-subjects-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+/* ----- Nouveau design : Panneau "Matières du semestre" ----- */
 
-.prof-subject-item {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+/* Grille des matières (empilement vertical) */
+.prof-subjects-grid {
+  display: grid;
   gap: 10px;
-  padding: 12px 14px;
-  border: 1px solid var(--soft-border);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
-  transition: border-color 0.16s ease, background 0.16s ease;
+  /* Espacement automatique selon la largeur disponible */
 }
 
-html.dark-mode .prof-subject-item {
-  background: rgba(23, 28, 35, 0.5);
+/* Ancienne classe du JS - éléments créés par renderSubjectsList */
+.prof-subject-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--soft-border);
+  border-radius: 10px;
+  background: var(--card);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.08s ease;
+  font-size: 0.84rem;
+  touch-action: manipulation;
 }
 
 .prof-subject-item:hover {
   border-color: rgba(78, 113, 170, 0.4);
+  box-shadow: 0 2px 8px rgba(28, 38, 55, 0.08);
+  transform: translateY(-1px);
 }
 
-.prof-subject-item-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+.prof-subject-item:focus-visible {
+  outline: 2px solid var(--blue-500);
+  outline-offset: 2px;
 }
 
-.prof-subject-item-name {
-  font-weight: 800;
-  color: var(--text);
-  flex: 1 1 140px;
-  min-width: 0;
-  word-break: normal;
-  overflow-wrap: break-word;
+.prof-subject-item:active {
+  transform: translateY(0) scale(0.99);
 }
 
-.prof-subject-item-badge {
-  flex: 0 0 auto;
-  padding: 3px 10px;
-  border-radius: 20px;
-  background: rgba(78, 113, 170, 0.12);
-  color: var(--blue-800);
-  font-size: 0.74rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-html.dark-mode .prof-subject-item-badge {
-  color: var(--yellow-400);
-  background: rgba(210, 168, 74, 0.14);
-}
-
-.prof-subject-item-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  flex: 0 0 auto;
-  width: 100%;
-}
-
-.prof-subject-item-actions .ghost-button,
-.prof-subject-item-actions .secondary-button {
-  padding: 7px 11px;
-  font-size: 0.8rem;
+/* Icône matière sur la carte */
+.prof-subject-item .prof-subject-card-icon {
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  color: var(--blue-700);
+}
+
+/* Nom de la matière */
+.prof-subject-item .prof-subject-card-name {
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+/* Coefficient */
+.prof-subject-item .prof-subject-card-coef {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Actions discrètes sur la carte */
+.prof-subject-item .prof-subject-card-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* État vide du panneau */
+.prof-empty.prof-empty-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.prof-empty.prof-empty-center 📚 {
+  font-size: 2.2rem;
+  color: var(--blue-400);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.prof-empty.prof-empty-center .empty-title {
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  font-size: 0.94rem;
+}
+
+.prof-empty.prof-empty-center .empty-desc {
+  font-size: 0.82rem;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.prof-empty.prof-empty-center .empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--soft-border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--dark);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.prof-empty.prof-empty-center .empty-btn:hover {
+  background: rgba(78, 113, 170, 0.1);
+  border-color: var(--blue-500);
+}
+
+.prof-empty.prof-empty-center .empty-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Carte Matière - style professionnel (nouvelle structure HTML) */
+.prof-subject-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--soft-border);
+  border-radius: 10px;
+  background: var(--card);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.08s ease;
+  font-size: 0.84rem;
+  touch-action: manipulation;
+}
+
+.prof-subject-card:hover {
+  border-color: rgba(78, 113, 170, 0.4);
+  box-shadow: 0 2px 8px rgba(28, 38, 55, 0.08);
+  transform: translateY(-1px);
+}
+
+.prof-subject-card:focus-visible {
+  outline: 2px solid var(--blue-500);
+  outline-offset: 2px;
+}
+
+.prof-subject-card:active {
+  transform: translateY(0) scale(0.99);
+}
+
+/* Icône matière sur la carte */
+.prof-subject-card-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  color: var(--blue-700);
+}
+
+/* Nom de la matière */
+.prof-subject-card-name {
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+/* Coefficient */
+.prof-subject-card-coef {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Actions discrètes sur la carte */
+.prof-subject-card-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Responsive : tablette - réduire la largeur du panneau */
+@media (max-width: 768px) {
+  .prof-panel {
+    flex: 1 1 280px;
+  }
+  
+  .prof-subject-item,
+  .prof-subject-card {
+    grid-template-columns: auto 1fr auto;
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+  
+  .prof-subject-item .prof-subject-card-name,
+  .prof-subject-card-name {
+    max-width: 140px;
+  }
+  
+  .prof-subject-item .prof-subject-card-coef,
+  .prof-subject-card-coef {
+    font-size: 0.68rem;
+  }
+}
+
+/* Responsive : mobile - empiler le panneau sous la liste */
+@media (max-width: 480px) {
+  .prof-panel {
+    flex: 0 0 100%;
+    max-width: 100%;
+    order: 2; /* Après la liste élèves */
+  }
+  
+  .prof-view-head .prof-class-grid {
+    flex-direction: column-reverse;
+  }
+  
+  .prof-panel:first-child {
+    order: 1;
+  }
+  
+  .prof-subject-item,
+  .prof-subject-card {
+    grid-template-columns: auto 1fr;
+    padding: 8px 10px;
+    font-size: 0.74rem;
+  }
+  
+  .prof-subject-item .prof-subject-card-actions,
+  .prof-subject-card-actions {
+    display: none; /* Cacher les actions sur mobile pour économiser de la place */
+  }
+  
+  .prof-empty.prof-empty-center {
+    padding: 30px 15px;
+  }
+  
+  .prof-empty.prof-empty-center 📚 {
+    font-size: 1.8rem;
+  }
 }
 
 /* Tableau des élèves (Vue 2) */
