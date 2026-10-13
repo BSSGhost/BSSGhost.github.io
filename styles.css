@@ -6900,23 +6900,23 @@ html.dark-mode .prof-subject-form-actions {
 
 /* Ancienne classe du JS - éléments créés par renderSubjectsList */
 .prof-subject-item {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 8px 12px;
-  align-items: center;
-  padding: 10px 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
   border: 1px solid var(--soft-border);
   border-radius: 10px;
   background: var(--card);
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.08s ease;
   font-size: 0.84rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 140px;
   touch-action: manipulation;
 }
 
 .prof-subject-item:hover {
   border-color: rgba(78, 113, 170, 0.4);
   box-shadow: 0 2px 8px rgba(28, 38, 55, 0.08);
-  transform: translateY(-1px);
 }
 
 .prof-subject-item:focus-visible {
@@ -6925,48 +6925,79 @@ html.dark-mode .prof-subject-form-actions {
 }
 
 .prof-subject-item:active {
-  transform: translateY(0) scale(0.99);
+  transform: none;
 }
 
-/* Icône matière sur la carte */
-.prof-subject-item .prof-subject-card-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+/* En-tête de la carte - nom et coefficient */
+.prof-subject-item .prof-subject-item-header {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 1.1rem;
-  color: var(--blue-700);
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  min-height: 36px;
 }
 
-/* Nom de la matière */
-.prof-subject-item .prof-subject-card-name {
+/* Nom de la matière - retour à la ligne autorisé */
+.prof-subject-item .prof-subject-item-name {
   font-weight: 700;
   color: var(--text);
-  white-space: nowrap;
+  font-size: 0.92rem;
+  white-space: normal;
+  word-break: break-word;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 180px;
+  min-width: 0;
   flex: 1 1 auto;
   margin: 0;
 }
 
-/* Coefficient */
-.prof-subject-item .prof-subject-card-coef {
-  font-size: 0.72rem;
-  color: var(--muted);
+/* Pilule de moyenne */
+.prof-subject-item .prof-subject-item-avg-pill {
+  align-self: flex-start;
+  margin: 0;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  flex-shrink: 0;
+  background: rgba(120, 130, 145, 0.14);
+  color: var(--muted);
 }
 
-/* Actions discrètes sur la carte */
-.prof-subject-item .prof-subject-card-actions {
-  display: flex;
-  gap: 4px;
-  align-items: center;
+/* Coefficient et composition */
+.prof-subject-item .prof-subject-item-meta {
+  color: var(--muted);
+  font-size: 0.76rem;
+  white-space: nowrap;
   flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* Actions en bas de la carte */
+.prof-subject-item .prof-subject-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--soft-border);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* Boutons dans les actions */
+.prof-subject-item .prof-subject-item-actions .secondary-button,
+.prof-subject-item .prof-subject-item-actions .ghost-button {
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* État hover sur les boutons */
+.prof-subject-item .prof-subject-item-actions .secondary-button:hover,
+.prof-subject-item .prof-subject-item-actions .ghost-button:hover {
+  border-color: rgba(78, 113, 170, 0.4);
 }
 
 /* État vide du panneau */
@@ -7024,6 +7055,79 @@ html.dark-mode .prof-subject-form-actions {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
+}
+
+/* Responsive : tablette */
+@media (max-width: 768px) {
+  .prof-subject-item {
+    padding: 12px;
+    font-size: 0.78rem;
+    min-height: auto;
+  }
+  
+  .prof-subject-item .prof-subject-item-name {
+    font-size: 0.84rem;
+    margin-bottom: 4px;
+  }
+  
+  .prof-subject-item .prof-subject-item-avg-pill {
+    font-size: 0.68rem;
+    padding: 2px 8px;
+  }
+  
+  .prof-subject-item .prof-subject-item-meta {
+    font-size: 0.70rem;
+    margin-top: 2px;
+  }
+  
+  .prof-subject-item .prof-subject-item-actions {
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 6px;
+  }
+  
+  .prof-subject-item .prof-subject-item-actions .secondary-button,
+  .prof-subject-item .prof-subject-item-actions .ghost-button {
+    padding: 5px 8px;
+    font-size: 0.70rem;
+  }
+}
+
+/* Responsive : mobile */
+@media (max-width: 480px) {
+  .prof-subject-item {
+    padding: 10px;
+    font-size: 0.74rem;
+    min-height: auto;
+    border-radius: 8px;
+  }
+  
+  .prof-subject-item .prof-subject-item-name {
+    font-size: 0.78rem;
+    margin-bottom: 4px;
+  }
+  
+  .prof-subject-item .prof-subject-item-avg-pill {
+    font-size: 0.62rem;
+    padding: 2px 6px;
+  }
+  
+  .prof-subject-item .prof-subject-item-meta {
+    font-size: 0.64rem;
+    margin-top: 2px;
+  }
+  
+  .prof-subject-item .prof-subject-item-actions {
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 6px;
+  }
+  
+  .prof-subject-item .prof-subject-item-actions .secondary-button,
+  .prof-subject-item .prof-subject-item-actions .ghost-button {
+    padding: 4px 6px;
+    font-size: 0.66rem;
+  }
 }
 
 /* Carte Matière - style professionnel (nouvelle structure HTML) */
