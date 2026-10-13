@@ -1358,15 +1358,36 @@
                                 </button>
                               </div>
 
-                              <div id="prof-subject-form" class="prof-inline-form prof-subject-form" hidden>
-                                <div class="select-wrap prof-subject-select">
-                                  <select id="prof-subject-select"></select>
+                              <div id="prof-subject-form" class="prof-subject-form" hidden>
+                                <div class="prof-subject-form-head">
+                                  <span class="prof-subject-form-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                  </span>
+                                  <div class="prof-subject-form-titles">
+                                    <h5 data-i18n="prof_subject_form_title">Nouvelle matière</h5>
+                                    <p data-i18n="prof_subject_form_hint">Choisissez la matière à ajouter à ce semestre, puis son coefficient.</p>
+                                  </div>
                                 </div>
-                                <div class="field-group prof-subject-coef">
-                                  <input type="number" id="prof-subject-coef" min="1" max="8" step="1" inputmode="numeric" data-i18n-placeholder="placeholder_coefficient" placeholder="Coef." />
+
+                                <div class="prof-subject-form-grid">
+                                  <div class="field-group prof-subject-field prof-subject-field-main">
+                                    <label for="prof-subject-select" data-i18n="prof_subject_label">Matière</label>
+                                    <div class="select-wrap">
+                                      <select id="prof-subject-select"></select>
+                                    </div>
+                                    <small id="prof-subject-count" class="prof-subject-count"></small>
+                                  </div>
+                                  <div class="field-group prof-subject-field prof-subject-field-coef">
+                                    <label for="prof-subject-coef" data-i18n="prof_subject_coef_label">Coefficient</label>
+                                    <input type="number" id="prof-subject-coef" min="1" max="8" step="1" inputmode="numeric" data-i18n-placeholder="placeholder_coefficient" placeholder="Ex : 4" />
+                                    <small class="prof-subject-count" data-i18n="prof_subject_coef_hint">Entre 1 et 8</small>
+                                  </div>
                                 </div>
-                                <button type="button" id="prof-subject-form-ok" class="primary-button prof-inline-ok" data-i18n="prof_subject_create">Créer</button>
-                                <button type="button" id="prof-subject-form-cancel" class="ghost-button prof-inline-cancel" data-i18n="prof_ocr_cancel">Annuler</button>
+
+                                <div class="prof-subject-form-actions">
+                                  <button type="button" id="prof-subject-form-cancel" class="ghost-button prof-inline-cancel" data-i18n="prof_ocr_cancel">Annuler</button>
+                                  <button type="button" id="prof-subject-form-ok" class="primary-button prof-inline-ok" data-i18n="prof_subject_create">Créer</button>
+                                </div>
                               </div>
 
                               <div id="prof-subjects-list" class="prof-subjects-list"></div>

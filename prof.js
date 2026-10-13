@@ -2573,19 +2573,71 @@
 
   /* Matières du semestre */
 
-  function fillSubjectSelect() {
-    els.subjectSelect.innerHTML = '';
-    getAvailableMatieres(activeClass).forEach((matiere) => {
-      const opt = document.createElement('option');
-      opt.value = matiere;
-      opt.textContent = showMatiere(matiere);
-      els.subjectSelect.appendChild(opt);
+  /* Catalogue complet des matières du site : toutes les matières connues
+     (libellés FR/EN, matières de chaque niveau, langues, franco-arabe) +
+     celles déjà créées par le prof dans n'importe quelle classe/semestre
+     (matières personnalisées). Rien ne doit manquer dans la liste. */
+  function getAllCatalogMatieres() {
+    const all = [];
+    if (typeof MATIERE_LABELS !== 'undefined') all.push(...Object.keys(MATIERE_LABELS));
+    if (typeof matieresCommunesBase !== 'undefined') all.push(...matieresCommunesBase);
+    if (typeof getMatieresPourClasse === 'function') {
+      ['6e', '5e', '4e', '3e', '2nde', '1er', 'Tle'].forEach((lvl) => all.push(...getMatieresPourClasse(lvl)));
+    }
+    if (typeof LANGUE_OPTIONS !== 'undefined') all.push(...LANGUE_OPTIONS);
+    if (typeof MATIERES_FRANCO_ARABE !== 'undefined') all.push(...MATIERES_FRANCO_ARABE);
+    Object.keys(store || {}).forEach((classe) => {
+      const sems = store[classe]?.semestres || {};
+      Object.keys(sems).forEach((sem) => Object.keys(sems[sem] || {}).forEach((m) => all.push(m)));
     });
-    if (!els.subjectSelect.options.length) {
+    const seen = new Set();
+    return all.filter((m) => m && !seen.has(m) && seen.add(m));
+  }
+
+  function fillSubjectSelect() {
+    const select = els.subjectSelect;
+    select.innerHTML = '';
+
+    const semObj = store[activeClass]?.semestres?.[activeSem] || {};
+    const forClass = getAvailableMatieres(activeClass);
+    const classSet = new Set(forClass);
+    const catalog = getAllCatalogMatieres();
+    const others = catalog
+      .filter((m) => !classSet.has(m))
+      .sort((a, b) => showMatiere(a).localeCompare(showMatiere(b), typeof getLang === 'function' ? getLang() : 'fr'));
+
+    const makeOption = (matiere) => {
       const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = t('option_matiere_default');
-      els.subjectSelect.appendChild(opt);
+      const already = Object.prototype.hasOwnProperty.call(semObj, matiere);
+      opt.value = matiere;
+      opt.textContent = already ? `${showMatiere(matiere)} — ${t('prof_subject_already_added')}` : showMatiere(matiere);
+      if (already) opt.disabled = true;
+      return opt;
+    };
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = t('option_matiere_default');
+    select.appendChild(placeholder);
+
+    const addGroup = (label, list) => {
+      if (!list.length) return;
+      const group = document.createElement('optgroup');
+      group.label = label;
+      list.forEach((m) => group.appendChild(makeOption(m)));
+      select.appendChild(group);
+    };
+
+    addGroup(t('prof_subject_group_class'), forClass);
+    addGroup(t('prof_subject_group_other'), others);
+
+    select.value = '';
+
+    const countEl = $('prof-subject-count');
+    if (countEl) {
+      const total = forClass.length + others.length;
+      const free = [...forClass, ...others].filter((m) => !Object.prototype.hasOwnProperty.call(semObj, m)).length;
+      countEl.textContent = t('prof_subject_count', { total, free });
     }
   }
 
