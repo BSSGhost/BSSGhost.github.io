@@ -43,7 +43,8 @@ async function getDb() {
       waitForConnections: true,
       connectionLimit: Number(process.env.DB_CONNECTION_LIMIT || 5),
       queueLimit: 0,
-      charset: 'utf8mb4'
+      charset: 'utf8mb4',
+      timezone: 'Z' // dates écrites/lues en UTC : plus de décalage avec l'heure de MySQL
     });
   }
   if (!dbInitPromise) {
@@ -60,9 +61,22 @@ async function getDb() {
         KEY idx_migration_expires_at (expires_at)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `).then(() => true);
+    // Si MySQL était éteint ou mal configuré, on réessaiera à la requête suivante
+    // au lieu de garder l'échec en mémoire jusqu'au redémarrage du serveur.
+    dbInitPromise.catch(() => { dbInitPromise = null; });
   }
   await dbInitPromise;
   return pool;
+}
+
+const DB_UNAVAILABLE_CODES = new Set([
+  'ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'ECONNRESET', 'EAI_AGAIN', 'EHOSTUNREACH',
+  'PROTOCOL_CONNECTION_LOST', 'ER_ACCESS_DENIED_ERROR', 'ER_DBACCESS_DENIED_ERROR',
+  'ER_BAD_DB_ERROR', 'ER_NOT_SUPPORTED_AUTH_MODE', 'ER_NO_SUCH_TABLE'
+]);
+
+function isDbUnavailable(error) {
+  return error?.message === 'mysql_not_configured' || DB_UNAVAILABLE_CODES.has(error?.code);
 }
 
 function json(res, status, payload) {
@@ -97,7 +111,7 @@ function createMigrationCode() {
 }
 
 async function cleanupExpiredMigrations(db) {
-  await db.execute('DELETE FROM migrations WHERE expires_at < NOW() OR imported_at IS NOT NULL');
+  await db.execute('DELETE FROM migrations WHERE expires_at < ? OR imported_at IS NOT NULL', [new Date()]);
 }
 
 async function createMigration(req, res) {
@@ -134,7 +148,10 @@ async function createMigration(req, res) {
     const firstValue = (value) => String(value || '').split(',')[0].trim();
     const proto = firstValue(req.headers['x-forwarded-proto']) || 'http';
     const host = firstValue(req.headers['x-forwarded-host']) || req.headers.host;
-    const origin = `${proto}://${host}`;
+    // PUBLIC_URL (ex. https://sunumoyenne.lynaqesedhiou.com) : indispensable en local,
+    // sinon le lien contient « localhost » et ne s'ouvre pas sur un autre appareil.
+    const publicUrl = String(process.env.PUBLIC_URL || '').trim().replace(/\/+$/, '');
+    const origin = /^https?:\/\//i.test(publicUrl) ? publicUrl : `${proto}://${host}`;
     const migrationUrl = `${origin}/migration/${encodeURIComponent(code)}`;
     return json(res, 201, {
       ok: true,
@@ -143,7 +160,10 @@ async function createMigration(req, res) {
       expiresAt: new Date(Date.now() + MIGRATION_TTL_HOURS * 60 * 60 * 1000).toISOString()
     });
   } catch (error) {
-    console.error('Migration create:', error);
+    console.error('Migration create:', error?.code || '', error?.message || error);
+    if (isDbUnavailable(error)) {
+      return json(res, 503, { error: error.message === 'mysql_not_configured' ? 'mysql_not_configured' : 'mysql_unavailable' });
+    }
     const known = ['mysql_not_configured', 'payload_too_large', 'invalid_json', 'donnees_trop_volumineuses'];
     if (known.includes(error?.message)) {
       const status = error.message === 'mysql_not_configured' ? 503 : error.message === 'payload_too_large' || error.message === 'donnees_trop_volumineuses' ? 413 : 400;
@@ -175,7 +195,6 @@ async function importMigration(req, res, code) {
         await connection.commit();
         return json(res, 410, { error: 'migration_expiree' });
       }
-      await connection.execute('UPDATE migrations SET imported_at = NOW() WHERE id = ?', [row.id]);
       await connection.execute('DELETE FROM migrations WHERE id = ?', [row.id]);
       await connection.commit();
       let data;
@@ -188,8 +207,11 @@ async function importMigration(req, res, code) {
       connection.release();
     }
   } catch (error) {
-    console.error('Migration import:', error);
-    return json(res, error?.message === 'mysql_not_configured' ? 503 : 500, { error: error?.message === 'mysql_not_configured' ? 'mysql_not_configured' : 'serveur_indisponible' });
+    console.error('Migration import:', error?.code || '', error?.message || error);
+    if (isDbUnavailable(error)) {
+      return json(res, 503, { error: error.message === 'mysql_not_configured' ? 'mysql_not_configured' : 'mysql_unavailable' });
+    }
+    return json(res, 500, { error: 'serveur_indisponible' });
   }
 }
 
@@ -248,7 +270,10 @@ const server = createServer(async (req, res) => {
   }
   if (url.pathname === '/api/migration/health' && req.method === 'GET') {
     try { await getDb(); return json(res, 200, { ok: true, database: true }); }
-    catch { return json(res, 503, { ok: false, database: false }); }
+    catch (error) {
+      console.error('Migration health:', error?.code || '', error?.message || error);
+      return json(res, 503, { ok: false, database: false, reason: error?.message === 'mysql_not_configured' ? 'mysql_not_configured' : 'mysql_unavailable' });
+    }
   }
   // Lien de migration : on redirige vers la racine pour que les chemins relatifs
   // (styles.css, script.js, polices, images…) restent valides sur l'appareil cible.

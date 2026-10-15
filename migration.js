@@ -119,11 +119,15 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data })
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || 'server');
+      // 503 = MySQL absent/mal configuré ; 404/405 ou réponse non JSON = le serveur Node
+      // (npm start) ne tourne pas derrière ce site (ex. hébergement statique, Live Server).
+      if (!response.ok) throw new Error(response.status === 503 || response.status === 404 || response.status === 405 ? 'mysql' : (result.error || 'server'));
       showCreated(result);
       setStatus(tLocal('migration_created'), 'success');
     } catch (error) {
-      setStatus(error.message === 'mysql_not_configured' ? tLocal('migration_server') : tLocal('migration_error'), 'error');
+      // TypeError = fetch impossible (serveur éteint / réseau coupé)
+      const serverDown = error instanceof TypeError || error.message === 'mysql';
+      setStatus(serverDown ? tLocal('migration_server') : tLocal('migration_error'), 'error');
     } finally { createBtn.disabled = false; }
   });
 
@@ -147,15 +151,15 @@
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
+        if (response.status === 503 || response.status === 405 || (response.status === 404 && !result.error)) throw new Error('mysql');
         if (response.status === 404 || response.status === 410) throw new Error('expired');
-        if (response.status === 503) throw new Error('mysql');
         throw new Error('server');
       }
       restoreData(result.data);
       setStatus(tLocal('migration_success'), 'success');
       setTimeout(() => window.location.reload(), 900);
     } catch (error) {
-      setStatus(error.message === 'expired' ? tLocal('migration_expired') : error.message === 'mysql' ? tLocal('migration_server') : tLocal('migration_error'), 'error');
+      setStatus(error.message === 'expired' ? tLocal('migration_expired') : (error.message === 'mysql' || error instanceof TypeError) ? tLocal('migration_server') : tLocal('migration_error'), 'error');
     } finally { importBtn.disabled = false; }
   });
 
