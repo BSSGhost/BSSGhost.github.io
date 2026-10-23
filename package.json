@@ -1,8 +1,9 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "sunu-moyenne",
   "version": "1.0.0",
   "private": true,
-  "description": "SUNU MOYENNE — Calculateur de moyenne scolaire au Sénégal (LYNAQE Sédhiou)",
+  "description": "SUNU MOYENNE — Calculateur de moyenne scolaire au Sénégal (LYNAQE de Sédhiou)",
   "type": "module",
   "main": "server.js",
   "scripts": {
