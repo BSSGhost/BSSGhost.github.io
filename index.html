@@ -726,6 +726,20 @@
           Téléchargez un récapitulatif de vos notes en PDF, dès que toutes les matières de la classe sont renseignées.
         </p>
 
+        <fieldset class="bulletin-semestre-picker">
+          <legend data-i18n="bulletin_semestre_legend">Bulletin à télécharger</legend>
+          <div class="choice-group" role="radiogroup" data-i18n-aria-label="bulletin_semestre_aria" aria-label="Choix du bulletin à télécharger">
+            <label class="choice-option">
+              <input type="radio" name="bulletin-semestre" value="Semestre1" checked />
+              <span data-i18n="radio_semestre1">Semestre 1</span>
+            </label>
+            <label class="choice-option">
+              <input type="radio" name="bulletin-semestre" value="Semestre2" />
+              <span data-i18n="radio_semestre2">Semestre 2</span>
+            </label>
+          </div>
+        </fieldset>
+
         <div class="bulletin-preview" id="bulletin-preview">
           <div class="bulletin-preview-header">
             <span data-i18n="pdf_etablissement">LYNAQE Sédhiou</span>
@@ -1618,13 +1632,19 @@
 
         const tFn = typeof t === 'function' ? t : (key) => key;
         const classe = classeSelect.value.trim();
-        const semestreVal = typeof getSemestreActuel === 'function' ? getSemestreActuel() : 'Semestre1';
+        const semestreVal = typeof getBulletinSemestre === 'function'
+          ? getBulletinSemestre()
+          : (typeof getSemestreActuel === 'function' ? getSemestreActuel() : 'Semestre1');
         semestreEl.textContent = semestreVal === 'Semestre1' ? tFn('table_semestre1_full') : tFn('table_semestre2_full');
 
         const notes = classe && typeof getStoredNotesForClasse === 'function'
           ? getStoredNotesForClasse(classe, semestreVal)
           : {};
         const entries = Object.entries(notes || {});
+
+        if (typeof updateDownloadButtonAvailability === 'function') {
+          updateDownloadButtonAvailability(classe, notes);
+        }
 
         if (!entries.length) {
           rowsEl.innerHTML = `<p class="bulletin-preview-empty">${tFn('bulletin_preview_empty')}</p>`;

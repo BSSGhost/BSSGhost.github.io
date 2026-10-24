@@ -9852,3 +9852,27 @@ html.dark-mode .migration-card { background:#101a2b; border-color:#26344a; box-s
 html.dark-mode .migration-url-row input, html.dark-mode .migration-input { background:#0b1422; border-color:#304057; color:#fff; }
 html.dark-mode .migration-security { background:rgba(255,255,255,.06); }
 @media (max-width: 820px) { .migration-grid { grid-template-columns:1fr; } .migration-url-row { flex-direction:column; } .migration-url-row .ghost-button { width:100%; } }
+
+
+/* Écran Bulletin : choix du semestre à télécharger */
+.bulletin-semestre-picker {
+  border: 0;
+  margin: 8px 0 4px;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.bulletin-semestre-picker legend {
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted, inherit);
+}
+
+.bulletin-semestre-picker .choice-group {
+  justify-content: center;
+}
