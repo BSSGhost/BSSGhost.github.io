@@ -3007,6 +3007,18 @@ th {
   background: var(--gauge-green-600);
 }
 
+.compare-bar-low {
+  background: #a7afba;
+}
+
+.compare-bar-high {
+  background: var(--gauge-green-600);
+}
+
+html.dark-mode .compare-bar-low {
+  background: #6f7a89;
+}
+
 .compare-bar-value {
   font-size: 0.76rem;
   font-weight: 700;

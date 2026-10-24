@@ -2825,6 +2825,12 @@ function renderComparaisonSemestres() {
 
       const widthS1 = moyS1 !== null ? Math.min(100, (moyS1 / 20) * 100) : 0;
       const widthS2 = moyS2 !== null ? Math.min(100, (moyS2 / 20) * 100) : 0;
+      /* Le semestre à la moyenne la plus basse est en gris, le plus haut en vert
+         (égalité ou un seul semestre renseigné : vert). */
+      const s1IsLower = moyS1 !== null && moyS2 !== null && moyS1 < moyS2;
+      const s2IsLower = moyS1 !== null && moyS2 !== null && moyS2 < moyS1;
+      const clsS1 = s1IsLower ? 'compare-bar-low' : 'compare-bar-high';
+      const clsS2 = s2IsLower ? 'compare-bar-low' : 'compare-bar-high';
       const delay = prefersReducedMotion ? '0s' : `${index * 40}ms`;
 
       return `
@@ -2836,12 +2842,12 @@ function renderComparaisonSemestres() {
           <div class="compare-bars">
             <div class="compare-bar-line">
               <span class="compare-bar-label">Sem1</span>
-              <div class="compare-bar-track"><div class="compare-bar-fill compare-bar-s1" style="width:${widthS1}%"></div></div>
+              <div class="compare-bar-track"><div class="compare-bar-fill ${clsS1}" style="width:${widthS1}%"></div></div>
               <span class="compare-bar-value">${moyS1 !== null ? moyS1.toFixed(2) : '—'}</span>
             </div>
             <div class="compare-bar-line">
               <span class="compare-bar-label">Sem2</span>
-              <div class="compare-bar-track"><div class="compare-bar-fill compare-bar-s2" style="width:${widthS2}%"></div></div>
+              <div class="compare-bar-track"><div class="compare-bar-fill ${clsS2}" style="width:${widthS2}%"></div></div>
               <span class="compare-bar-value">${moyS2 !== null ? moyS2.toFixed(2) : '—'}</span>
             </div>
           </div>
