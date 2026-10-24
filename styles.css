@@ -6669,18 +6669,12 @@ html.dark-mode .prof-semester-tab.is-active {
   background: var(--blue-500);
 }
 
-/* Grille à 2 panneaux (Vue 2) */
+/* Vue classe : panneaux empilés en pleine largeur (Élèves, puis Matières du semestre) */
 .prof-class-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: start;
-}
-
-@media (max-width: 900px) {
-  .prof-class-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 .prof-panel {
@@ -6744,15 +6738,16 @@ html.dark-mode .prof-semester-tab.is-active {
 
 /* Formulaire « Nouvelle matière » : carte aérée, champs avec libellés */
 .prof-subject-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  margin-top: 14px;
-  padding: 20px 22px;
-  background: linear-gradient(180deg, rgba(78, 113, 170, 0.08), rgba(78, 113, 170, 0.03));
-  border: 1px solid rgba(78, 113, 170, 0.2);
-  border-radius: 16px;
-  box-shadow: 0 10px 28px rgba(28, 38, 55, 0.06);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px 18px;
+  margin-top: 0;
+  padding: 16px 18px;
+  background: rgba(78, 113, 170, 0.05);
+  border: 1px solid rgba(78, 113, 170, 0.18);
+  border-radius: 12px;
+  box-shadow: none;
   animation: profSubjectFormIn 0.22s ease;
 }
 
@@ -6771,54 +6766,32 @@ html.dark-mode .prof-semester-tab.is-active {
   }
 }
 
+/* Le titre du formulaire est masqué : le bouton « Ajouter une matière » et les libellés des champs suffisent */
 .prof-subject-form-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  display: none;
 }
 
-.prof-subject-form-icon {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: rgba(41, 74, 128, 0.12);
-  color: var(--blue-600);
-}
-
-.prof-subject-form-titles h5 {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: 1.05rem;
-  color: var(--dark);
-}
-
-.prof-subject-form-titles p {
-  margin: 3px 0 0;
-  font-size: 0.83rem;
-  line-height: 1.4;
-  color: var(--muted);
-}
-
-/* Le panneau « Matières du semestre » est étroit : les champs sont toujours
-   empilés (pleine largeur) pour que la liste ne soit jamais écrasée. */
 .prof-subject-form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 14px;
+  min-width: 0;
 }
 
 .prof-subject-field {
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
+}
+
+.prof-subject-field label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 .prof-subject-field select,
 .prof-subject-field input {
-  min-height: 48px;
+  min-height: 42px;
 }
 
 .prof-subject-field select {
@@ -6828,11 +6801,11 @@ html.dark-mode .prof-semester-tab.is-active {
 
 .prof-subject-field-coef input {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .prof-subject-count {
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   line-height: 1.35;
   color: var(--muted);
 }
@@ -6841,22 +6814,24 @@ html.dark-mode .prof-semester-tab.is-active {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 10px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(78, 113, 170, 0.16);
+  gap: 8px;
+  margin-top: 23px;
 }
 
 .prof-subject-form-actions .prof-inline-ok,
 .prof-subject-form-actions .prof-inline-cancel {
-  min-width: 110px;
-  padding: 11px 20px;
-  font-size: 0.9rem;
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 0 18px;
+  font-size: 0.84rem;
+  white-space: nowrap;
+  animation: none;
 }
 
 html.dark-mode .prof-subject-form {
-  background: linear-gradient(180deg, rgba(134, 159, 200, 0.12), rgba(134, 159, 200, 0.05));
-  border-color: rgba(134, 159, 200, 0.28);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+  background: rgba(134, 159, 200, 0.07);
+  border-color: rgba(134, 159, 200, 0.24);
+  box-shadow: none;
 }
 
 html.dark-mode .prof-subject-form-icon {
@@ -6868,19 +6843,20 @@ html.dark-mode .prof-subject-form-titles h5 {
   color: #f1f3f6;
 }
 
-html.dark-mode .prof-subject-form-actions {
-  border-top-color: rgba(134, 159, 200, 0.22);
-}
-
 @media (max-width: 640px) {
   .prof-subject-form {
-    padding: 16px;
-    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  .prof-subject-form-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .prof-subject-form-actions {
     flex-direction: column-reverse;
     align-items: stretch;
+    margin-top: 0;
   }
 
   .prof-subject-form-actions .prof-inline-ok,
@@ -6889,376 +6865,453 @@ html.dark-mode .prof-subject-form-actions {
   }
 }
 
-/* ----- Nouveau design : Panneau "Matières du semestre" ----- */
+/* ----- Panneau « Matières du semestre » (pleine largeur sous le tableau des élèves) ----- */
 
-/* Grille des matières (empilement vertical) */
-.prof-subjects-grid {
-  display: grid;
-  gap: 10px;
-  /* Espacement automatique selon la largeur disponible */
+.prof-subjects-panel {
+  gap: 16px;
 }
 
-/* Ancienne classe du JS - éléments créés par renderSubjectsList */
-.prof-subject-item {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 16px;
-  border: 1px solid var(--soft-border);
-  border-radius: 10px;
-  background: var(--card);
-  font-size: 0.84rem;
+.prof-subjects-head {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: space-between;
-  min-height: 140px;
-  touch-action: manipulation;
+  gap: 12px;
 }
 
-.prof-subject-item:hover {
-  border-color: rgba(78, 113, 170, 0.4);
-  box-shadow: 0 2px 8px rgba(28, 38, 55, 0.08);
-}
-
-.prof-subject-item:focus-visible {
-  outline: 2px solid var(--blue-500);
-  outline-offset: 2px;
-}
-
-.prof-subject-item:active {
-  transform: none;
-}
-
-/* En-tête de la carte - nom et coefficient */
-.prof-subject-item .prof-subject-item-header {
+.prof-subjects-title {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-  min-height: 36px;
-}
-
-/* Nom de la matière - retour à la ligne autorisé */
-.prof-subject-item .prof-subject-item-name {
-  font-weight: 700;
-  color: var(--text);
-  font-size: 0.92rem;
-  white-space: normal;
-  word-break: break-word;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
-  flex: 1 1 auto;
+}
+
+.prof-subjects-title h4 {
   margin: 0;
-}
-
-/* Pilule de moyenne */
-.prof-subject-item .prof-subject-item-avg-pill {
-  align-self: flex-start;
-  margin: 0;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 0.74rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  background: rgba(120, 130, 145, 0.14);
-  color: var(--muted);
-}
-
-/* Coefficient et composition */
-.prof-subject-item .prof-subject-item-meta {
-  color: var(--muted);
-  font-size: 0.76rem;
-  white-space: nowrap;
-  flex-shrink: 0;
-  margin-top: 4px;
-}
-
-/* Actions en bas de la carte */
-.prof-subject-item .prof-subject-item-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 8px;
-  border-top: 1px solid var(--soft-border);
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
-/* Boutons dans les actions */
-.prof-subject-item .prof-subject-item-actions .secondary-button,
-.prof-subject-item .prof-subject-item-actions .ghost-button {
-  padding: 6px 10px;
-  font-size: 0.74rem;
-  border-radius: 6px;
+  font-size: 1.02rem;
   white-space: nowrap;
 }
 
-/* État hover sur les boutons */
-.prof-subject-item .prof-subject-item-actions .secondary-button:hover,
-.prof-subject-item .prof-subject-item-actions .ghost-button:hover {
-  border-color: rgba(78, 113, 170, 0.4);
-}
-
-/* État vide du panneau */
-.prof-empty.prof-empty-center {
-  display: flex;
-  flex-direction: column;
+.prof-subjects-title-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(78, 113, 170, 0.12);
+  color: var(--blue-600);
+}
+
+.prof-subjects-counter {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(120, 130, 145, 0.14);
   color: var(--muted);
-}
-
-.prof-empty.prof-empty-center 📚 {
-  font-size: 2.2rem;
-  color: var(--blue-400);
-  margin-bottom: 8px;
-  display: block;
-}
-
-.prof-empty.prof-empty-center .empty-title {
+  font-size: 0.76rem;
   font-weight: 700;
-  color: var(--text);
-  margin-bottom: 4px;
-  font-size: 0.94rem;
+  white-space: nowrap;
 }
 
-.prof-empty.prof-empty-center .empty-desc {
-  font-size: 0.82rem;
-  margin-bottom: 12px;
-  line-height: 1.5;
-}
-
-.prof-empty.prof-empty-center .empty-btn {
+/* Bouton compact doré, sur une seule ligne (réinitialise le style générique des boutons) */
+.prof-add-subject-btn {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--card);
-  border: 1px solid var(--soft-border);
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--dark);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.prof-empty.prof-empty-center .empty-btn:hover {
-  background: rgba(78, 113, 170, 0.1);
-  border-color: var(--blue-500);
-}
-
-.prof-empty.prof-empty-center .empty-btn svg {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
-
-/* Responsive : tablette */
-@media (max-width: 768px) {
-  .prof-subject-item {
-    padding: 12px;
-    font-size: 0.78rem;
-    min-height: auto;
-  }
-  
-  .prof-subject-item .prof-subject-item-name {
-    font-size: 0.84rem;
-    margin-bottom: 4px;
-  }
-  
-  .prof-subject-item .prof-subject-item-avg-pill {
-    font-size: 0.68rem;
-    padding: 2px 8px;
-  }
-  
-  .prof-subject-item .prof-subject-item-meta {
-    font-size: 0.70rem;
-    margin-top: 2px;
-  }
-  
-  .prof-subject-item .prof-subject-item-actions {
-    gap: 6px;
-    margin-top: 8px;
-    padding-top: 6px;
-  }
-  
-  .prof-subject-item .prof-subject-item-actions .secondary-button,
-  .prof-subject-item .prof-subject-item-actions .ghost-button {
-    padding: 5px 8px;
-    font-size: 0.70rem;
-  }
-}
-
-/* Responsive : mobile */
-@media (max-width: 480px) {
-  .prof-subject-item {
-    padding: 10px;
-    font-size: 0.74rem;
-    min-height: auto;
-    border-radius: 8px;
-  }
-  
-  .prof-subject-item .prof-subject-item-name {
-    font-size: 0.78rem;
-    margin-bottom: 4px;
-  }
-  
-  .prof-subject-item .prof-subject-item-avg-pill {
-    font-size: 0.62rem;
-    padding: 2px 6px;
-  }
-  
-  .prof-subject-item .prof-subject-item-meta {
-    font-size: 0.64rem;
-    margin-top: 2px;
-  }
-  
-  .prof-subject-item .prof-subject-item-actions {
-    gap: 4px;
-    margin-top: 8px;
-    padding-top: 6px;
-  }
-  
-  .prof-subject-item .prof-subject-item-actions .secondary-button,
-  .prof-subject-item .prof-subject-item-actions .ghost-button {
-    padding: 4px 6px;
-    font-size: 0.66rem;
-  }
-}
-
-/* Carte Matière - style professionnel (nouvelle structure HTML) */
-.prof-subject-card {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 8px 12px;
-  align-items: center;
-  padding: 10px 12px;
-  border: 1px solid var(--soft-border);
+  padding: 8px 14px;
+  border: 1px solid rgba(43, 34, 12, 0.12);
   border-radius: 10px;
-  background: var(--card);
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.08s ease;
-  font-size: 0.84rem;
-  touch-action: manipulation;
+  background: var(--yellow-500);
+  color: #2b220c;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: visible;
+  box-shadow: none;
 }
 
-.prof-subject-card:hover {
-  border-color: rgba(78, 113, 170, 0.4);
-  box-shadow: 0 2px 8px rgba(28, 38, 55, 0.08);
-  transform: translateY(-1px);
+.prof-add-subject-btn::after {
+  content: none;
 }
 
-.prof-subject-card:focus-visible {
-  outline: 2px solid var(--blue-500);
-  outline-offset: 2px;
+.prof-add-subject-btn:hover {
+  background: var(--yellow-400);
+  transform: none;
+  filter: none;
+  box-shadow: none;
 }
 
-.prof-subject-card:active {
-  transform: translateY(0) scale(0.99);
+.prof-add-subject-btn:active {
+  transform: none;
 }
 
-/* Icône matière sur la carte */
-.prof-subject-card-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+/* Grille de cartes : 1 colonne (téléphone), 2 (tablette), 3 à 4 (ordinateur) */
+.prof-subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 235px), 1fr));
+  gap: 14px;
+}
+
+.prof-subjects-grid[hidden] {
+  display: none;
+}
+
+/* Tablette : 2 cartes par ligne ; téléphone : 1 carte par ligne */
+@media (max-width: 900px) {
+  .prof-subjects-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .prof-subjects-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.prof-subject-item {
+  position: relative;
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid var(--soft-border);
+  border-radius: 12px;
+  background: var(--card);
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.prof-subject-item:hover {
+  border-color: rgba(78, 113, 170, 0.45);
+  background: var(--card-strong);
+}
+
+.prof-subject-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.prof-subject-item-icon {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  font-size: 1.1rem;
-  color: var(--blue-700);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(78, 113, 170, 0.1);
+  color: var(--blue-600);
 }
 
-/* Nom de la matière */
-.prof-subject-card-name {
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 180px;
+.prof-subject-item .prof-subject-item-main {
+  gap: 2px;
   flex: 1 1 auto;
-  margin: 0;
 }
 
-/* Coefficient */
-.prof-subject-card-coef {
+.prof-subject-item .prof-subject-item-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: var(--text);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.prof-subject-item .prof-subject-item-coef {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--blue-600);
+}
+
+.prof-subject-item .prof-subject-item-meta {
   font-size: 0.72rem;
   color: var(--muted);
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
-/* Actions discrètes sur la carte */
-.prof-subject-card-actions {
+.prof-subject-item .prof-subject-item-avg-pill {
+  margin: 0;
+  padding: 2px 9px;
+  font-size: 0.72rem;
+}
+
+.prof-subject-item-actions {
   display: flex;
-  gap: 4px;
   align-items: center;
-  flex-shrink: 0;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--soft-border);
 }
 
-/* Responsive : tablette - réduire la largeur du panneau */
+.prof-subject-edit-btn {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border: 1px solid var(--soft-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+  overflow: visible;
+  box-shadow: none;
+}
+
+.prof-subject-edit-btn::after {
+  content: none;
+}
+
+.prof-subject-edit-btn:hover {
+  background: rgba(29, 59, 106, 0.06);
+  border-color: rgba(29, 59, 106, 0.3);
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+.prof-subject-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.prof-subject-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  overflow: visible;
+  box-shadow: none;
+}
+
+.prof-subject-menu-btn::after {
+  content: none;
+}
+
+.prof-subject-menu-btn:hover,
+.prof-subject-menu.is-open .prof-subject-menu-btn {
+  background: rgba(120, 130, 145, 0.16);
+  color: var(--dark);
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+.prof-subject-menu-list {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  min-width: 140px;
+  padding: 4px;
+  border: 1px solid var(--soft-border);
+  border-radius: 10px;
+  background: var(--card-strong);
+  box-shadow: 0 8px 24px rgba(28, 38, 55, 0.14);
+}
+
+.prof-subject-menu-list[hidden] {
+  display: none;
+}
+
+.prof-subject-menu-item {
+  display: block;
+  width: 100%;
+  flex: none;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 600;
+  overflow: visible;
+  box-shadow: none;
+}
+
+.prof-subject-menu-item::after {
+  content: none;
+}
+
+.prof-subject-menu-item:hover {
+  background: rgba(214, 68, 68, 0.1);
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+html.dark-mode .prof-subjects-title-icon,
+html.dark-mode .prof-subject-item-icon {
+  background: rgba(134, 159, 200, 0.16);
+  color: var(--blue-400);
+}
+
+html.dark-mode .prof-subject-item .prof-subject-item-coef {
+  color: var(--blue-400);
+}
+
+html.dark-mode .prof-subject-edit-btn:hover {
+  background: rgba(134, 159, 200, 0.12);
+  border-color: rgba(134, 159, 200, 0.35);
+}
+
+html.dark-mode .prof-subject-menu-list {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Le thème sombre du site assombrit tous les boutons : on garde les boutons discrets transparents
+   et un liseré doré sur le bouton d'ajout pour rester repérable. */
+html.dark-mode .prof-subject-edit-btn,
+html.dark-mode .prof-subject-menu-btn,
+html.dark-mode .prof-subject-menu-item,
+html.dark-mode .prof-subjects-empty-btn {
+  background: transparent;
+}
+
+html.dark-mode .prof-subject-menu-btn {
+  border-color: transparent;
+}
+
+html.dark-mode .prof-subject-menu-btn:hover,
+html.dark-mode .prof-subject-menu.is-open .prof-subject-menu-btn {
+  background: rgba(160, 174, 196, 0.14);
+}
+
+html.dark-mode .prof-subject-menu-item:hover {
+  background: rgba(220, 68, 68, 0.16);
+}
+
+html.dark-mode .prof-add-subject-btn {
+  border-color: rgba(232, 200, 117, 0.55);
+  color: var(--yellow-400);
+}
+
+html.dark-mode .prof-add-subject-btn:hover {
+  background: rgba(210, 168, 74, 0.16);
+  color: var(--yellow-400);
+}
+
+/* État vide : compact et centré */
+.prof-subjects-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 24px 16px;
+  border: 1px dashed var(--soft-border);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.prof-subjects-empty[hidden] {
+  display: none;
+}
+
+.prof-subjects-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 4px;
+  border-radius: 10px;
+  background: rgba(78, 113, 170, 0.1);
+  color: var(--blue-500);
+}
+
+.prof-subjects-empty-title {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.prof-subjects-empty-desc {
+  margin: 0 0 10px;
+  max-width: 420px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.prof-subjects-empty-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--soft-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: visible;
+  box-shadow: none;
+}
+
+.prof-subjects-empty-btn::after {
+  content: none;
+}
+
+.prof-subjects-empty-btn:hover {
+  background: rgba(210, 168, 74, 0.14);
+  border-color: var(--yellow-500);
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+html.dark-mode .prof-subjects-empty-icon {
+  background: rgba(134, 159, 200, 0.16);
+  color: var(--blue-400);
+}
+
+/* Téléphone : bouton d'ajout et en-tête adaptés à l'écran */
+@media (max-width: 560px) {
+  .prof-subjects-head {
+    flex-wrap: wrap;
+  }
+
+  .prof-subjects-title {
+    flex: 1 1 100%;
+  }
+
+  .prof-add-subject-btn {
+    flex: 1 1 100%;
+    justify-content: center;
+    padding: 10px 14px;
+  }
+}
+
+/* Règles historiques des panneaux (autres vues) conservées telles quelles */
 @media (max-width: 768px) {
   .prof-panel {
     flex: 1 1 280px;
   }
-  
-  .prof-subject-item,
-  .prof-subject-card {
-    grid-template-columns: auto 1fr auto;
-    padding: 8px 10px;
-    font-size: 0.78rem;
-  }
-  
-  .prof-subject-item .prof-subject-card-name,
-  .prof-subject-card-name {
-    max-width: 140px;
-  }
-  
-  .prof-subject-item .prof-subject-card-coef,
-  .prof-subject-card-coef {
-    font-size: 0.68rem;
-  }
 }
 
-/* Responsive : mobile - empiler le panneau sous la liste */
 @media (max-width: 480px) {
   .prof-panel {
     flex: 0 0 100%;
     max-width: 100%;
-    order: 2; /* Après la liste élèves */
+    order: 2;
   }
-  
-  .prof-view-head .prof-class-grid {
-    flex-direction: column-reverse;
-  }
-  
+
   .prof-panel:first-child {
     order: 1;
-  }
-  
-  .prof-subject-item,
-  .prof-subject-card {
-    grid-template-columns: auto 1fr;
-    padding: 8px 10px;
-    font-size: 0.74rem;
-  }
-  
-  .prof-subject-item .prof-subject-card-actions,
-  .prof-subject-card-actions {
-    display: none; /* Cacher les actions sur mobile pour économiser de la place */
-  }
-  
-  .prof-empty.prof-empty-center {
-    padding: 30px 15px;
-  }
-  
-  .prof-empty.prof-empty-center 📚 {
-    font-size: 1.8rem;
   }
 }
 

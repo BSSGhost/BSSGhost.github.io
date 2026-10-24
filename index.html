@@ -1363,15 +1363,18 @@
                               <p id="prof-students-empty" class="prof-empty" data-i18n="prof_students_empty"></p>
                             </section>
 
-                            <section class="prof-panel">
-                              <div class="prof-panel-head">
-                                <div class="prof-panel-header-content">
-                                  <h2>📚 Matières du semestre</h2>
-                                  <p>Gérez les matières de cette classe</p>
+                            <section class="prof-panel prof-subjects-panel" id="prof-subjects-panel">
+                              <div class="prof-subjects-head">
+                                <div class="prof-subjects-title">
+                                  <span class="prof-subjects-title-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                  </span>
+                                  <h4 data-i18n="prof_class_subjects">Matières du semestre</h4>
+                                  <span id="prof-subjects-counter" class="prof-subjects-counter" aria-live="polite"></span>
                                 </div>
-                                <button type="button" id="prof-subject-add" class="prof-add-subject-btn secondary-button">
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                  <span>+ Ajouter une matière</span>
+                                <button type="button" id="prof-subject-add" class="prof-add-subject-btn">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                  <span data-i18n="prof_add_subject">Ajouter une matière</span>
                                 </button>
                               </div>
 
@@ -1403,12 +1406,12 @@
 
                                 <div class="prof-subject-form-actions">
                                   <button type="button" id="prof-subject-form-cancel" class="ghost-button prof-inline-cancel" data-i18n="prof_ocr_cancel">Annuler</button>
-                                  <button type="button" id="prof-subject-form-ok" class="primary-button prof-inline-ok" data-i18n="prof_subject_create">Créer</button>
+                                  <button type="button" id="prof-subject-form-ok" class="primary-button prof-inline-ok" data-i18n="prof_subject_create">Ajouter la matière</button>
                                 </div>
                               </div>
 
                               <div id="prof-subjects-list" class="prof-subjects-grid"></div>
-                              <p id="prof-subjects-empty" class="prof-empty professional-empty-center"></p>
+                              <div id="prof-subjects-empty" class="prof-subjects-empty" hidden></div>
                             </section>
                           </div>
                         </div>

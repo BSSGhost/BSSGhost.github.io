@@ -2641,12 +2641,65 @@
     }
   }
 
+  const SUBJECT_ICON_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>';
+  const SUBJECT_PLUS_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+  const SUBJECT_MENU_SVG =
+    '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><circle cx="12" cy="5" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="19" r="1.8"></circle></svg>';
+
+  function closeSubjectMenus(except) {
+    document.querySelectorAll('.prof-subject-menu.is-open').forEach((menu) => {
+      if (menu === except) return;
+      menu.classList.remove('is-open');
+      const list = menu.querySelector('.prof-subject-menu-list');
+      const trigger = menu.querySelector('[data-act="menu"]');
+      if (list) list.hidden = true;
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  let subjectMenuGlobalsBound = false;
+  function bindSubjectMenuGlobals() {
+    if (subjectMenuGlobalsBound) return;
+    subjectMenuGlobalsBound = true;
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.prof-subject-menu')) closeSubjectMenus();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeSubjectMenus();
+    });
+  }
+
+  function renderSubjectsEmpty() {
+    els.subjectsEmpty.innerHTML = `
+      <span class="prof-subjects-empty-icon">${SUBJECT_ICON_SVG}</span>
+      <p class="prof-subjects-empty-title">${escHtml(t('prof_subjects_empty_title'))}</p>
+      <p class="prof-subjects-empty-desc">${escHtml(t('prof_subjects_empty_desc'))}</p>
+      <button type="button" class="prof-subjects-empty-btn" data-act="empty-add">${SUBJECT_PLUS_SVG}<span>${escHtml(t('prof_add_subject'))}</span></button>
+    `;
+    const emptyAdd = els.subjectsEmpty.querySelector('[data-act="empty-add"]');
+    if (emptyAdd) emptyAdd.addEventListener('click', () => els.subjectAdd && els.subjectAdd.click());
+  }
+
   function renderSubjectsList(classeData) {
+    bindSubjectMenuGlobals();
     const semObj = classeData.semestres[activeSem] || {};
     const names = Object.keys(semObj);
+
+    const counterEl = $('prof-subjects-counter');
+    if (counterEl) {
+      const isFrench = typeof getLang !== 'function' || getLang() === 'fr';
+      const singular = isFrench ? names.length < 2 : names.length === 1;
+      counterEl.textContent = t(singular ? 'prof_subjects_counter_one' : 'prof_subjects_counter_other', {
+        n: names.length
+      });
+    }
+
     els.subjectsEmpty.hidden = names.length > 0;
-    els.subjectsEmpty.textContent = t('prof_subjects_empty');
-    els.subjectsEmpty.className = 'prof-empty professional-empty-center';
+    if (!names.length) renderSubjectsEmpty();
+    else els.subjectsEmpty.innerHTML = '';
+    els.subjectsList.hidden = names.length === 0;
     els.subjectsList.innerHTML = '';
 
     names.forEach((matiere) => {
@@ -2654,25 +2707,44 @@
       const avg = classeAverageForSubject(record);
       const avgClass = avg === null ? 'is-empty' : avg >= 10 ? 'is-good' : 'is-low';
       const avgLabel = avg === null ? '—' : `${avg.toFixed(2)}/20`;
-      const item = document.createElement('div');
+      const item = document.createElement('article');
       item.className = 'prof-subject-item';
       item.innerHTML = `
+        <div class="prof-subject-item-head">
+          <span class="prof-subject-item-icon">${SUBJECT_ICON_SVG}</span>
+          <span class="prof-subject-item-avg-pill ${avgClass}" title="${escHtml(t('th_moyenne'))}">${avgLabel}</span>
+        </div>
         <div class="prof-subject-item-main">
-          <div class="prof-subject-item-top">
-            <span class="prof-subject-item-name">${escHtml(showMatiere(matiere))}</span>
-            <span class="prof-subject-item-avg-pill ${avgClass}" title="${escHtml(t('th_moyenne'))}">${avgLabel}</span>
-          </div>
-          <span class="prof-subject-item-meta">${t('label_coefficient')} : ${record.coefficient || 1} • ${t(
-        'stat_composition_label'
-      )} : ${record.composition ? t('radio_oui') : t('radio_non')}</span>
+          <span class="prof-subject-item-name">${escHtml(showMatiere(matiere))}</span>
+          <span class="prof-subject-item-coef">${t('label_coefficient')} ${record.coefficient || 1}</span>
+          <span class="prof-subject-item-meta">${t('stat_composition_label')} : ${record.composition ? t('radio_oui') : t('radio_non')}</span>
         </div>
         <div class="prof-subject-item-actions">
-          <button type="button" class="secondary-button prof-add-btn" data-act="open">${t('prof_subject_open')}</button>
-          <button type="button" class="ghost-button prof-danger-text" data-act="delete">${t('prof_subject_delete')}</button>
+          <button type="button" class="prof-subject-edit-btn" data-act="open" title="${escHtml(t('prof_subject_open'))}">${t('prof_subject_edit')}</button>
+          <div class="prof-subject-menu">
+            <button type="button" class="prof-subject-menu-btn" data-act="menu" aria-haspopup="true" aria-expanded="false" aria-label="${escHtml(t('prof_subject_menu'))}">${SUBJECT_MENU_SVG}</button>
+            <div class="prof-subject-menu-list" hidden>
+              <button type="button" class="prof-subject-menu-item prof-danger-text" data-act="delete">${t('prof_subject_delete')}</button>
+            </div>
+          </div>
         </div>
       `;
+      const menu = item.querySelector('.prof-subject-menu');
+      const menuList = item.querySelector('.prof-subject-menu-list');
+      const menuBtn = item.querySelector('[data-act="menu"]');
       item.querySelector('[data-act="open"]').addEventListener('click', () => openSubject(matiere));
-      item.querySelector('[data-act="delete"]').addEventListener('click', () => deleteSubject(matiere));
+      menuBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const willOpen = menuList.hidden;
+        closeSubjectMenus(menu);
+        menuList.hidden = !willOpen;
+        menu.classList.toggle('is-open', willOpen);
+        menuBtn.setAttribute('aria-expanded', String(willOpen));
+      });
+      item.querySelector('[data-act="delete"]').addEventListener('click', () => {
+        closeSubjectMenus();
+        deleteSubject(matiere);
+      });
       els.subjectsList.appendChild(item);
     });
   }
