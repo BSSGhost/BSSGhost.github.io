@@ -2501,74 +2501,332 @@
 
   /* Bulletin d'un élève (modale) */
 
-  function showBulletin(student) {
-    const modal = document.createElement('div');
-    modal.className = 'prof-ocr-modal prof-bulletin-modal';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
+  /* Formate un nombre à 2 décimales selon la langue du site (virgule en FR). */
+  function formatBulletinNumber(value) {
+    const lang = typeof getLang === 'function' ? getLang() : 'fr';
+    return Number(value).toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  /* Couleur d'appréciation, déduite de la mention déjà définie par getMention()
+     (les seuils restent ceux du site : < 10, < 14, < 16, < 18, ≥ 18). */
+  function bulletinTone(mentionCls) {
+    if (mentionCls === 'mention-insuffisant') return 'low';
+    if (mentionCls === 'mention-peux-mieux-faire') return 'mid';
+    if (mentionCls === 'mention-bon-travail') return 'good';
+    return 'top';
+  }
+
+  /* Données du bulletin : mêmes règles de calcul qu'avant (moyenne des
+     devoirs/composition par matière, puis moyenne pondérée par coefficient). */
+  function computeBulletin(student) {
     const semObj = store[activeClass]?.semestres?.[activeSem] || {};
     const rows = Object.keys(semObj).map((matiere) => {
       const record = semObj[matiere];
-      const moy = moyenneFromNotes(record.notes ? record.notes[student.id] : null, record.composition);
       return {
         matiere,
         coef: record.coefficient || 1,
-        moy
+        moy: moyenneFromNotes(record.notes ? record.notes[student.id] : null, record.composition)
       };
     });
     const withMoy = rows.filter((r) => r.moy !== null);
-    const semesterAvg =
-      withMoy.length && withMoy.reduce((s, r) => s + r.moy * r.coef, 0) / withMoy.reduce((s, r) => s + r.coef, 0);
+    const totalCoef = withMoy.reduce((s, r) => s + r.coef, 0);
+    const semesterAvg = withMoy.length && totalCoef
+      ? withMoy.reduce((s, r) => s + r.moy * r.coef, 0) / totalCoef
+      : null;
+    return { rows, semesterAvg };
+  }
 
-    const body = rows.length
-      ? `<div class="prof-bulletin-table-wrap"><table class="prof-bulletin-table">
-           <thead><tr><th>${t('prof_pdf_eleve_col')}</th><th>${t('label_coefficient')}</th><th>${t('th_moyenne')}</th></tr></thead>
-           <tbody>${rows
-             .map(
-               (r) =>
-                 `<tr><td>${escHtml(showMatiere(r.matiere))}</td><td class="prof-ocr-col-rank">${r.coef}</td><td class="prof-moyenne-cell">${
-                   r.moy === null ? '—' : r.moy.toFixed(2)
-                 }</td></tr>`
-             )
-             .join('')}
-           </tbody>
-         </table></div>
-         <div class="prof-bulletin-avg">
-           <span>${t('prof_bulletin_semester_avg')}</span>
-           <strong>${semesterAvg === null || semesterAvg === undefined ? '—' : semesterAvg.toFixed(2)}</strong>
-           ${semesterAvg !== null && semesterAvg !== undefined && typeof getMention === 'function'
-             ? `<span class="prof-bulletin-mention">${escHtml(getMention(semesterAvg).label)}</span>`
-             : ''}
+  function showBulletin(student) {
+    if (document.querySelector('.bltn-modal')) return;
+    const opener = document.activeElement;
+    const { rows, semesterAvg } = computeBulletin(student);
+    const hasAvg = semesterAvg !== null;
+    const mention = hasAvg && typeof getMention === 'function' ? getMention(semesterAvg) : null;
+    const tone = mention ? bulletinTone(mention.cls) : 'none';
+    const studentName = getStudentName(student);
+    const meta = `${t('pdf_classe', { classe: activeClass })} · ${semLabel(activeSem)}`;
+
+    const RING_R = 44;
+    const RING_C = 2 * Math.PI * RING_R;
+    const ringTarget = hasAvg ? RING_C * (1 - Math.min(Math.max(semesterAvg, 0), 20) / 20) : RING_C;
+
+    const starIcon =
+      '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.06 6.6.79-4.9 4.5 1.28 6.6L12 17.3l-5.88 3.15 1.28-6.6-4.9-4.5 6.6-.79L12 2.5Z"/></svg>';
+    const printIcon =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg>';
+    const pdfIcon =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>';
+    const closeIcon =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+    const summary = `
+      <section class="bltn-summary bltn-tone-${tone}" aria-label="${escHtml(t('prof_bulletin_general_avg'))}">
+        <div class="bltn-ring" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle class="bltn-ring-track" cx="50" cy="50" r="${RING_R}"></circle>
+            <circle class="bltn-ring-value" cx="50" cy="50" r="${RING_R}"
+              stroke-dasharray="${RING_C.toFixed(2)}" stroke-dashoffset="${RING_C.toFixed(2)}"></circle>
+          </svg>
+        </div>
+        <div class="bltn-summary-main">
+          <p class="bltn-summary-label">${escHtml(t('prof_bulletin_general_avg'))}</p>
+          ${hasAvg
+            ? `<p class="bltn-summary-value"><strong>${formatBulletinNumber(semesterAvg)}</strong><span>/20</span></p>`
+            : `<p class="bltn-summary-value bltn-summary-empty"><strong>—</strong></p>
+               <p class="bltn-summary-hint">${escHtml(t('prof_bulletin_avg_pending'))}</p>`}
+        </div>
+        ${mention
+          ? `<div class="bltn-appreciation">
+               <span class="bltn-appreciation-label">${escHtml(t('prof_bulletin_mention'))}</span>
+               <span class="bltn-appreciation-chip">${tone === 'top' ? starIcon : ''}${escHtml(mention.label)}</span>
+             </div>`
+          : ''}
+      </section>`;
+
+    const table = rows.length
+      ? `<div class="bltn-table-wrap" tabindex="0" role="region" aria-label="${escHtml(t('prof_bulletin_table_label'))}">
+           <table class="bltn-table">
+             <thead><tr>
+               <th scope="col" class="bltn-col-subject">${escHtml(t('th_matiere'))}</th>
+               <th scope="col" class="bltn-col-num">${escHtml(t('label_coefficient'))}</th>
+               <th scope="col" class="bltn-col-num">${escHtml(t('th_moyenne'))}</th>
+             </tr></thead>
+             <tbody>${rows
+               .map((r) => {
+                 const g = r.moy === null || typeof gradeClass !== 'function' ? '' : ` bltn-${gradeClass(r.moy)}`;
+                 return `<tr>
+                   <th scope="row" class="bltn-col-subject">${escHtml(showMatiere(r.matiere))}</th>
+                   <td class="bltn-col-num">${r.coef}</td>
+                   <td class="bltn-col-num bltn-avg${g}">${r.moy === null ? '—' : formatBulletinNumber(r.moy)}</td>
+                 </tr>`;
+               })
+               .join('')}</tbody>
+           </table>
          </div>`
-      : `<p class="prof-empty professional-empty-center">${t('prof_subjects_empty')}</p>`;
+      : `<p class="bltn-empty">${escHtml(t('prof_subjects_empty'))}</p>`;
 
+    const modal = document.createElement('div');
+    modal.className = 'bltn-modal';
     modal.innerHTML = `
-      <div class="prof-ocr-overlay"></div>
-      <div class="prof-ocr-modal-card">
-        <div class="prof-ocr-header">
-          <h3>${escHtml(t('prof_bulletin_title', { eleve: getStudentName(student) }))}</h3>
-          <p class="prof-ocr-subtitle">${escHtml(activeClass)} • ${escHtml(semLabel(activeSem))}</p>
-        </div>
-        <div class="prof-ocr-table-wrap">${body}</div>
-        <div class="prof-ocr-actions">
-          <div class="prof-ocr-actions-right">
-            <button type="button" class="primary-button" data-close>${t('prof_bulletin_close')}</button>
+      <div class="bltn-overlay" data-close></div>
+      <section class="bltn-card" role="dialog" aria-modal="true" aria-labelledby="bltn-title" tabindex="-1">
+        <header class="bltn-head">
+          <img class="bltn-logo" src="./LYNAQE.png" alt="" height="44" />
+          <div class="bltn-head-text">
+            <p class="bltn-eyebrow">${escHtml(t('prof_bulletin_eyebrow'))}</p>
+            <h3 id="bltn-title">${escHtml(studentName)}</h3>
+            <p class="bltn-meta">${escHtml(meta)}</p>
           </div>
+          <button type="button" class="bltn-x" data-close aria-label="${escHtml(t('prof_bulletin_close_aria'))}">${closeIcon}</button>
+        </header>
+        <div class="bltn-body">
+          ${summary}
+          ${table}
         </div>
-      </div>
+        <footer class="bltn-foot">
+          <button type="button" class="bltn-btn bltn-btn-text" data-close>${escHtml(t('prof_bulletin_close'))}</button>
+          <div class="bltn-foot-main">
+            <button type="button" class="bltn-btn bltn-btn-secondary" data-pdf ${rows.length ? '' : 'disabled'}>${pdfIcon}<span>${escHtml(t('prof_bulletin_pdf'))}</span></button>
+            <button type="button" class="bltn-btn bltn-btn-primary" data-print ${rows.length ? '' : 'disabled'}>${printIcon}<span>${escHtml(t('prof_bulletin_print'))}</span></button>
+          </div>
+        </footer>
+      </section>
     `;
     document.body.appendChild(modal);
-    recordActivity('bulletin', getStudentName(student));
-    const close = () => {
-      modal.remove();
-      document.body.style.overflow = '';
-    };
-    modal.querySelector('[data-close]').addEventListener('click', close);
-    modal.querySelector('.prof-ocr-overlay').addEventListener('click', close);
-    modal.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') close();
-    });
+    recordActivity('bulletin', studentName);
+
+    const card = modal.querySelector('.bltn-card');
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+
+    const logo = modal.querySelector('.bltn-logo');
+    logo.addEventListener('error', () => logo.remove());
+
+    /* Anneau de progression : animé à l'ouverture (désactivé si mouvement réduit via CSS) */
+    const ring = modal.querySelector('.bltn-ring-value');
+    requestAnimationFrame(() => requestAnimationFrame(() => ring.setAttribute('stroke-dashoffset', ringTarget.toFixed(2))));
+
+    function onKeydown(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusables = Array.from(
+        card.querySelectorAll('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')
+      );
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === card)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function close() {
+      document.removeEventListener('keydown', onKeydown, true);
+      modal.remove();
+      document.body.style.overflow = previousOverflow;
+      if (opener && typeof opener.focus === 'function' && document.contains(opener)) opener.focus();
+    }
+
+    function printBulletin() {
+      document.body.classList.add('bltn-printing');
+      const cleanup = () => {
+        document.body.classList.remove('bltn-printing');
+        window.removeEventListener('afterprint', cleanup);
+      };
+      window.addEventListener('afterprint', cleanup);
+      window.print();
+    }
+
+    modal.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', close));
+    modal.querySelector('[data-print]').addEventListener('click', printBulletin);
+    modal.querySelector('[data-pdf]').addEventListener('click', () =>
+      exportBulletinPdf(studentName, { rows, semesterAvg, mention })
+    );
+    document.addEventListener('keydown', onKeydown, true);
+    card.focus({ preventScroll: true });
+  }
+
+  /* Export PDF du bulletin : réutilise jsPDF (déjà chargé pour le relevé de notes)
+     et le même bandeau d'en-tête que exportPdf(). */
+  function exportBulletinPdf(studentName, data) {
+    if (!window.jspdf) {
+      if (typeof showInfoDialog === 'function') showInfoDialog(t('msg_jspdf_manquant'));
+      return;
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 44;
+    const contentRight = pageWidth - margin;
+    const tableWidth = contentRight - margin;
+    const BAND_HEIGHT = 70;
+    const colCoefRight = margin + tableWidth - 110;
+    const colAvgRight = contentRight - 10;
+    const subjectWidth = colCoefRight - margin - 70;
+
+    const drawBand = () => {
+      doc.setFillColor(23, 43, 75);
+      doc.rect(0, 0, pageWidth, BAND_HEIGHT, 'F');
+      doc.setTextColor(255, 250, 240);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.text(t('pdf_etablissement'), margin, 31);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(t('pdf_app_name'), margin, 49);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(t('prof_bulletin_eyebrow'), contentRight, 40, { align: 'right' });
+    };
+
+    const drawTableHeader = (y) => {
+      doc.setFillColor(231, 234, 239);
+      doc.rect(margin, y, tableWidth, 22, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(23, 43, 75);
+      doc.text(t('th_matiere'), margin + 10, y + 14);
+      doc.text(t('label_coefficient'), colCoefRight, y + 14, { align: 'right' });
+      doc.text(t('th_moyenne'), colAvgRight, y + 14, { align: 'right' });
+      return y + 22;
+    };
+
+    drawBand();
+    let y = BAND_HEIGHT + 34;
+    doc.setTextColor(23, 43, 75);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text(String(studentName).substring(0, 48), margin, y);
+    y += 18;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(113, 128, 120);
+    doc.text(`${t('pdf_classe', { classe: activeClass })} · ${semLabel(activeSem)}`, margin, y);
+    y += 22;
+
+    /* Moyenne générale */
+    doc.setDrawColor(214, 220, 228);
+    doc.setFillColor(248, 249, 251);
+    doc.roundedRect(margin, y, tableWidth, 62, 5, 5, 'FD');
+    doc.setFillColor(23, 43, 75);
+    doc.rect(margin, y, 4, 62, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(113, 128, 120);
+    doc.text(t('prof_bulletin_general_avg'), margin + 20, y + 22);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.setTextColor(23, 43, 75);
+    const avgText = data.semesterAvg === null ? '—' : formatBulletinNumber(data.semesterAvg);
+    doc.text(avgText, margin + 20, y + 49);
+    if (data.semesterAvg !== null) {
+      const w = doc.getTextWidth(avgText);
+      doc.setFontSize(11);
+      doc.setTextColor(113, 128, 120);
+      doc.text('/20', margin + 24 + w, y + 49);
+    }
+    if (data.mention) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(113, 128, 120);
+      doc.text(t('prof_bulletin_mention'), contentRight - 16, y + 22, { align: 'right' });
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(29, 106, 82);
+      doc.text(data.mention.label, contentRight - 16, y + 46, { align: 'right' });
+    }
+    y += 62 + 24;
+
+    y = drawTableHeader(y);
+    doc.setFontSize(10);
+    data.rows.forEach((row, index) => {
+      const lines = doc.splitTextToSize(showMatiere(row.matiere), subjectWidth);
+      const rowHeight = Math.max(24, lines.length * 12 + 12);
+      if (y + rowHeight > pageHeight - 56) {
+        doc.addPage();
+        drawBand();
+        y = drawTableHeader(BAND_HEIGHT + 24);
+        doc.setFontSize(10);
+      }
+      if (index % 2 === 1) {
+        doc.setFillColor(246, 247, 250);
+        doc.rect(margin, y, tableWidth, rowHeight, 'F');
+      }
+      doc.setDrawColor(226, 230, 236);
+      doc.line(margin, y + rowHeight, contentRight, y + rowHeight);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(51, 58, 68);
+      doc.text(lines, margin + 10, y + 16);
+      doc.text(String(row.coef), colCoefRight, y + 16, { align: 'right' });
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(23, 43, 75);
+      doc.text(row.moy === null ? '—' : formatBulletinNumber(row.moy), colAvgRight, y + 16, { align: 'right' });
+      y += rowHeight;
+    });
+
+    const pages = doc.getNumberOfPages();
+    for (let p = 1; p <= pages; p += 1) {
+      doc.setPage(p);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(113, 128, 120);
+      doc.text(t('pdf_footer_doc'), margin, pageHeight - 28, { maxWidth: tableWidth - 90 });
+      doc.text(`${p} / ${pages}`, contentRight, pageHeight - 28, { align: 'right' });
+    }
+
+    doc.save(`bulletin_${slugify(studentName)}_${slugify(activeClass)}_${activeSem}.pdf`);
   }
 
   /* Matières du semestre */
