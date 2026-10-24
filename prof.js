@@ -1,6 +1,6 @@
 /*
    MODE PROFESSEUR — SUNU MOYENNE / LYNAQE Sédhiou
-   Accès réservé : mot de passe (LYNAQE2026), vérification locale.
+   Accès réservé : authentification vérifiée côté serveur.
    Gestion complète par classe :
    - "Mes classes" : créer, renommer, supprimer une classe.
    - Élèves de la classe (liste réutilisée pour toutes les matières) :
@@ -14,25 +14,9 @@
 (function () {
   'use strict';
 
-  // Le mot de passe n'est jamais stocké en clair dans le code source : on ne
-  // garde que son empreinte SHA-256, comparée à l'empreinte de la saisie.
-  // ATTENTION : ceci reste une simple barrière visuelle côté client, PAS une
-  // vraie authentification — le site étant hébergé en statique (GitHub Pages),
-  // aucune vérification serveur n'est possible tant qu'un backend n'est pas en place.
-  const PROF_PASSWORD_HASH = '28a0e7d27e35ae88ecdcfb46972a5d5979db3d3ab53b8e12a2bcd01b57bbe696';
-
-  async function hashPassword(value) {
-    try {
-      const data = new TextEncoder().encode(value);
-      const digest = await crypto.subtle.digest('SHA-256', data);
-      return Array.from(new Uint8Array(digest))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
-    } catch {
-      return null;
-    }
-  }
-  const PROF_AUTH_KEY = 'lynaqe_prof_token';
+  // La vérification du mot de passe est exclusivement réalisée par le serveur.
+  // L'état local ne sert qu'à afficher/masquer l'interface ; la session réelle est un cookie HttpOnly.
+  let serverAuthenticated = false;
   const PROF_STORE_KEY = 'lynaqe_prof_classes';
   const PROF_ROWS_PREFIX = 'lynaqe_prof_rows';
   const PROF_ACTIVITY_KEY = 'lynaqe_prof_activity';
@@ -261,23 +245,25 @@
     els.classFilterGenre.value = profGenreFilter || '';
   }
 
-  /* Authentification */
-
-  const PROF_AUTH_VALUE = 'ok';
-
+  /* Authentification côté serveur */
   function isAuthenticated() {
-    try {
-      return sessionStorage.getItem(PROF_AUTH_KEY) === PROF_AUTH_VALUE;
-    } catch {
-      return false;
-    }
+    return serverAuthenticated;
   }
 
   function setAuthenticated(val) {
+    serverAuthenticated = Boolean(val);
+  }
+
+  async function checkServerSession() {
     try {
-      if (val) sessionStorage.setItem(PROF_AUTH_KEY, val);
-      else sessionStorage.removeItem(PROF_AUTH_KEY);
-    } catch {}
+      const response = await fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store' });
+      const data = await response.json();
+      setAuthenticated(response.ok && data.authenticated === true);
+    } catch {
+      setAuthenticated(false);
+    }
+    if (isAuthenticated()) showConsole();
+    else showLogin();
   }
 
   function showLoginError(el, message) {
@@ -293,9 +279,9 @@
     if (!els.loginCard || !els.console) return;
     els.loginCard.hidden = false;
     els.console.hidden = true;
-    els.password.value = '';
-    els.loginError.hidden = true;
-    window.setTimeout(() => els.password.focus(), prefersReducedMotion ? 0 : 200);
+    if (els.password) els.password.value = '';
+    if (els.loginError) els.loginError.hidden = true;
+    window.setTimeout(() => els.password && els.password.focus(), prefersReducedMotion ? 0 : 200);
   }
 
   function showConsole() {
@@ -4419,21 +4405,49 @@
         return;
       }
       els.loginError.hidden = true;
-      const hash = await hashPassword(password);
-      if (hash && hash === PROF_PASSWORD_HASH) {
-        setAuthenticated(PROF_AUTH_VALUE);
-        showConsole();
-        return;
+      if (els.loginBtn) els.loginBtn.disabled = true;
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store',
+          body: JSON.stringify({ password })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.ok === true) {
+          setAuthenticated(true);
+          showConsole();
+          return;
+        }
+        const message = response.status === 429
+          ? 'Trop de tentatives. Attendez quelques minutes avant de réessayer.'
+          : response.status === 503
+            ? 'Connexion sécurisée non configurée sur le serveur.'
+            : t('prof_login_error');
+        showLoginError(els.loginError, message);
+      } catch {
+        showLoginError(els.loginError, 'Serveur inaccessible. Vérifiez votre connexion.');
+      } finally {
+        if (els.loginBtn) els.loginBtn.disabled = false;
+        els.password.value = '';
+        if (!isAuthenticated()) els.password.focus();
       }
-      showLoginError(els.loginError, t('prof_login_error'));
-      els.password.value = '';
-      els.password.focus();
     });
   }
 
   if (els.logoutBtn) {
-    els.logoutBtn.addEventListener('click', () => {
-      setAuthenticated(null);
+    els.logoutBtn.addEventListener('click', async () => {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}',
+          cache: 'no-store'
+        });
+      } catch {}
+      setAuthenticated(false);
       showLogin();
     });
   }
@@ -4737,14 +4751,13 @@
     if (!els.screen || !els.loginCard || !els.console) return;
     loadStore();
     const isActiveScreen = els.screen.classList.contains('is-active');
-    if (isAuthenticated()) {
-      els.loginCard.hidden = true;
-      els.console.hidden = false;
-      if (isActiveScreen) showDash();
-    } else {
-      els.loginCard.hidden = false;
-      els.console.hidden = true;
-    }
+    // Ne jamais réutiliser une authentification stockée dans sessionStorage.
+    // Le serveur décide si une session valide existe.
+    els.loginCard.hidden = false;
+    els.console.hidden = true;
+    checkServerSession().then(() => {
+      if (isActiveScreen && isAuthenticated()) showDash();
+    });
 
     if ('MutationObserver' in window) {
       const observer = new MutationObserver(() => {

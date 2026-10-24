@@ -5,7 +5,7 @@ import 'dotenv/config';
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { join, normalize, extname } from 'node:path';
-import { randomBytes, createHash } from 'node:crypto';
+import { randomBytes, createHash, scryptSync, timingSafeEqual } from 'node:crypto';
 let mysql = null;
 
 const ROOT = process.cwd();
@@ -252,6 +252,115 @@ async function serveStatic(res, pathname) {
   res.end(content);
 }
 
+
+// Authentification professeur côté serveur.
+// Le hash du mot de passe est fourni exclusivement via l'environnement Render.
+// Format : PROF_PASSWORD_HASH=<salt hex>:<scrypt hash hex>.
+const AUTH_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+const AUTH_COOKIE = process.env.NODE_ENV === 'production' ? '__Host-sunu_session' : 'sunu_session';
+const authSessions = new Map();
+const loginAttempts = new Map();
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 8;
+
+function parseCookies(header = '') {
+  const out = {};
+  for (const part of header.split(';')) {
+    const idx = part.indexOf('=');
+    if (idx < 0) continue;
+    const key = part.slice(0, idx).trim();
+    try { out[key] = decodeURIComponent(part.slice(idx + 1).trim()); } catch {}
+  }
+  return out;
+}
+
+function passwordMatches(password) {
+  const encoded = String(process.env.PROF_PASSWORD_HASH || '');
+  const match = encoded.match(/^([a-f0-9]{32}):([a-f0-9]{128})$/i);
+  if (!match || typeof password !== 'string' || password.length < 1 || password.length > 1024) return false;
+  const salt = Buffer.from(match[1], 'hex');
+  const expected = Buffer.from(match[2], 'hex');
+  const actual = scryptSync(password, salt, 64);
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
+function sessionCookie(value, maxAgeSeconds) {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  return `${AUTH_COOKIE}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}${secure}`;
+}
+
+function getAuthenticatedSession(req) {
+  const token = parseCookies(req.headers.cookie)[AUTH_COOKIE];
+  if (!token) return null;
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+  const session = authSessions.get(tokenHash);
+  if (!session || session.expiresAt <= Date.now()) {
+    if (session) authSessions.delete(tokenHash);
+    return null;
+  }
+  session.expiresAt = Math.min(Date.now() + AUTH_SESSION_TTL_MS, session.absoluteExpiresAt);
+  return { role: 'teacher', expiresAt: session.expiresAt };
+}
+
+function loginRateLimited(req) {
+  const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
+  const now = Date.now();
+  const prior = loginAttempts.get(ip);
+  if (!prior || prior.windowStart + LOGIN_WINDOW_MS <= now) {
+    loginAttempts.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  prior.count += 1;
+  return prior.count > LOGIN_MAX_ATTEMPTS;
+}
+
+function validSameOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return true; // clients non-navigateurs; aucun CORS n'est activé
+  try {
+    const parsed = new URL(origin);
+    const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+    return parsed.host === host;
+  } catch { return false; }
+}
+
+async function authRoute(req, res, url) {
+  if (url.pathname === '/api/auth/login' && req.method === 'POST') {
+    if (!validSameOrigin(req)) return json(res, 403, { error: 'origine_refusee' });
+    if (loginRateLimited(req)) return json(res, 429, { error: 'trop_de_tentatives' });
+    let body;
+    try { body = await readJsonBody(req); } catch { return json(res, 400, { error: 'requete_invalide' }); }
+    if (!process.env.PROF_PASSWORD_HASH) {
+      return json(res, 503, { error: 'auth_non_configuree' });
+    }
+    if (!passwordMatches(body.password)) {
+      return json(res, 401, { error: 'identifiants_invalides' });
+    }
+    const token = randomBytes(32).toString('base64url');
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const now = Date.now();
+    authSessions.set(tokenHash, { expiresAt: now + AUTH_SESSION_TTL_MS, absoluteExpiresAt: now + 12 * 60 * 60 * 1000 });
+    // Limiter l'accumulation de sessions expirées en mémoire.
+    for (const [key, value] of authSessions) if (value.expiresAt <= now) authSessions.delete(key);
+    res.setHeader('Set-Cookie', sessionCookie(token, AUTH_SESSION_TTL_MS / 1000));
+    return json(res, 200, { ok: true, user: { role: 'teacher' } });
+  }
+  if (url.pathname === '/api/auth/me' && req.method === 'GET') {
+    const session = getAuthenticatedSession(req);
+    if (!session) return json(res, 401, { authenticated: false });
+    res.setHeader('Cache-Control', 'no-store');
+    return json(res, 200, { authenticated: true, user: { role: session.role }, expiresAt: session.expiresAt });
+  }
+  if (url.pathname === '/api/auth/logout' && req.method === 'POST') {
+    if (!validSameOrigin(req)) return json(res, 403, { error: 'origine_refusee' });
+    const token = parseCookies(req.headers.cookie)[AUTH_COOKIE];
+    if (token) authSessions.delete(createHash('sha256').update(token).digest('hex'));
+    res.setHeader('Set-Cookie', sessionCookie('', 0));
+    return json(res, 200, { ok: true });
+  }
+  return false;
+}
+
 const server = createServer(async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -261,6 +370,9 @@ const server = createServer(async (req, res) => {
   let url;
   try { url = new URL(req.url, `http://${req.headers.host || 'localhost'}`); }
   catch { return json(res, 400, { error: 'url_invalide' }); }
+
+  const authHandled = await authRoute(req, res, url);
+  if (authHandled !== false) return authHandled;
 
   if (url.pathname === '/api/migration/create' && req.method === 'POST') return createMigration(req, res);
   if (url.pathname === '/api/migration/import' && req.method === 'POST') {
