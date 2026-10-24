@@ -226,18 +226,35 @@ function resolveStaticPath(pathname) {
   return resolved;
 }
 
+
 function isForbiddenStaticFile(filePath) {
   const normalized = normalize(filePath);
   const root = normalize(ROOT);
   const sep = process.platform === 'win32' ? '\\' : '/';
   const relative = normalized.slice(root.length).split(/[\\/]/).filter(Boolean);
-  // Fichiers cachés (.env, .git, .gitignore…) : jamais publics, sauf .well-known
-  if (relative.some((part) => part.startsWith('.') && part !== '.well-known')) return true;
+
+  // Les fichiers cachés ne sont jamais publics, sauf .well-known.
+  if (relative.some((part) => part.startsWith('.') && part !== '.well-known')) {
+    return true;
+  }
+
   const forbidden = [
-    'node_modules', 'data', 'server.js', 'package.json', 'package-lock.json',
-    'migration.sql', 'MIGRATION-README.md'
+    'node_modules',
+    'data',
+    'cli',
+    'extensions',
+    'scripts',
+    'server.js',
+    'package.json',
+    'package-lock.json',
+    'migration.sql',
+    'MIGRATION-README.md',
+    'PRIORITE-1-SECURITE.md'
   ].map((entry) => normalize(join(ROOT, entry)));
-  return forbidden.some((entry) => normalized === entry || normalized.startsWith(entry + sep));
+
+  return forbidden.some(
+    (entry) => normalized === entry || normalized.startsWith(entry + sep)
+  );
 }
 
 async function serveStatic(res, pathname) {
@@ -374,8 +391,22 @@ const server = createServer(async (req, res) => {
   const authHandled = await authRoute(req, res, url);
   if (authHandled !== false) return authHandled;
 
-  if (url.pathname === '/api/migration/create' && req.method === 'POST') return createMigration(req, res);
+    if (url.pathname === '/api/migration/create' && req.method === 'POST') {
+    if (!validSameOrigin(req)) {
+      return json(res, 403, { error: 'origine_refusee' });
+    }
+
+    if (!getAuthenticatedSession(req)) {
+      return json(res, 401, { error: 'authentification_requise' });
+    }
+
+    return createMigration(req, res);
+  }
   if (url.pathname === '/api/migration/import' && req.method === 'POST') {
+    if (!validSameOrigin(req)) {
+      return json(res, 403, { error: 'origine_refusee' });
+    }
+
     let body;
     try { body = await readJsonBody(req); } catch (error) { return json(res, 400, { error: error.message }); }
     return importMigration(req, res, String(body.code || ''));
@@ -406,6 +437,9 @@ const server = createServer(async (req, res) => {
       return res.end();
     }
   }
+  if (url.pathname.startsWith('/api/')) {
+  return json(res, 404, { error: 'route_introuvable' });
+}
   return serveStatic(res, url.pathname);
 });
 
