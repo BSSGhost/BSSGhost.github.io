@@ -355,8 +355,14 @@
       return Array.from(toutes);
     }
     const langues = typeof LANGUE_OPTIONS !== 'undefined' ? LANGUE_OPTIONS : [];
+    const francoArabe = typeof MATIERES_FRANCO_ARABE !== 'undefined' ? MATIERES_FRANCO_ARABE : [];
+    const classesFranco = typeof CLASSES_FRANCO_ARABE !== 'undefined' ? CLASSES_FRANCO_ARABE : [];
     const liste = getMatieresPourClasse(classe);
-    return Array.from(new Set(CLASSES_AVEC_LANGUE.includes(classe) ? [...liste, ...langues] : liste));
+    return Array.from(new Set([
+      ...liste,
+      ...(CLASSES_AVEC_LANGUE.includes(classe) ? langues : []),
+      ...(classesFranco.includes(classe) ? francoArabe : [])
+    ]));
   }
 
   function populateMatiereOptions(classe, selected) {

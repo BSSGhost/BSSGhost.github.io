@@ -1,4 +1,4 @@
-/*
+﻿/*
    SYSTEME DE TRADUCTION FR / EN
 */
 const LANG_KEY = 'sunu_moyenne_lang';
@@ -211,7 +211,7 @@ const translations = {
     historique_h3: "Mon parcours scolaire",
     historique_subtitle: "Votre progression, de la 6e à la Terminale",
     historique_back_btn: "Revenir à l'écran évolution",
-    historique_empty: "Aucune donnée enregistrée pour le moment sur cet appareil. Renseignez vos matières pour voir apparaître votre parcours ici.",
+    historique_empty: "Aucune moyenne de semestre disponible pour le moment. Renseignez toutes les matières d'un semestre pour voir apparaître votre parcours ici.",
 
     advisor_points_forts_prefix: "Tes points forts : {list}",
     advisor_points_forts_empty: "Continue tes efforts, aucune matière ne se démarque encore nettement.",
@@ -921,7 +921,7 @@ const translations = {
     historique_h3: "My school journey",
     historique_subtitle: "Your progress, from 6th grade to Terminale",
     historique_back_btn: "Back to the progress screen",
-    historique_empty: "No data saved yet on this device. Enter your subjects to see your journey appear here.",
+    historique_empty: "No semester average available yet. Enter all the subjects of a semester to see your journey appear here.",
 
     advisor_points_forts_prefix: "Your strengths: {list}",
     advisor_points_forts_empty: "Keep up your efforts, no subject stands out clearly yet.",
@@ -2837,11 +2837,10 @@ compareToggleBtn?.addEventListener('click', () => {
 
 /*
    HISTORIQUE MULTI-ANNÉES ("Mon parcours scolaire")
-   Contrairement au flux principal (qui exige que toutes les matières
-   officielles d'une classe soient renseignées), cet écran affiche une
-   moyenne pondérée "brute" à partir de ce qui a été rempli pour chaque
-   classe/semestre — pour donner une vue d'ensemble même sur des
-   données partielles ou une classe qu'on ne consulte plus au quotidien.
+   Une moyenne de semestre n'est affichée que lorsque toutes les matières
+   de la classe sont renseignées pour ce semestre : la moyenne d'une seule
+   matière ne doit jamais passer pour la moyenne du semestre. La moyenne
+   annuelle exige les deux semestres complets.
 */
 const CLASSES_ORDRE = ['6e', '5e', '4e', '3e', '2nde', '1er', 'Tle'];
 
@@ -2855,6 +2854,43 @@ function computeMoyenneBrute(notes) {
     0
   );
   return totalCoeff > 0 ? totalPoints / totalCoeff : null;
+}
+
+/* Matières attendues pour une classe donnée dans le parcours, indépendamment
+   de ce qui est sélectionné à l'écran Calculer : matières de la classe +
+   langue(s) enregistrée(s) + Éducation Religieuse / Langue et Littérature
+   Arabe si l'élève les a renseignées (Franco-Arabe). */
+function getMatieresAttenduesParcours(classe) {
+  let matieres = getMatieresPourClasse(classe);
+
+  if (['4e', '3e', '2nde', '1er', 'Tle'].includes(classe)) {
+    const langues = getStoredLanguesPourClasse(classe);
+    if (!langues.length) return null; // aucune langue vivante enregistrée : semestre incomplet
+    matieres = [...matieres, ...langues];
+  }
+
+  if (CLASSES_FRANCO_ARABE.includes(classe)) {
+    const hasFranco = MATIERES_FRANCO_ARABE.some((matiere) =>
+      Object.prototype.hasOwnProperty.call(getStoredNotesForClasse(classe, 'Semestre1'), matiere) ||
+      Object.prototype.hasOwnProperty.call(getStoredNotesForClasse(classe, 'Semestre2'), matiere)
+    );
+    if (hasFranco) matieres = [...matieres, ...MATIERES_FRANCO_ARABE];
+  }
+
+  return [...new Set(matieres)];
+}
+
+/* Vraie moyenne de semestre (pondérée par les coefficients), ou null si
+   toutes les matières attendues ne sont pas encore renseignées. */
+function computeMoyenneSemestreParcours(classe, semestre) {
+  const notes = getStoredNotesForClasse(classe, semestre);
+  if (!Object.keys(notes).length) return null;
+
+  const matieres = getMatieresAttenduesParcours(classe);
+  if (!matieres) return null;
+
+  const result = computeMoyennePonderee(matieres, notes);
+  return result.complete ? result.value : null;
 }
 
 function renderHistoriqueChart(points) {
@@ -2915,8 +2951,8 @@ function refreshHistoriqueScreen() {
   if (!listEl) return;
 
   const rows = CLASSES_ORDRE.map((classe) => {
-    const moyS1 = computeMoyenneBrute(getStoredNotesForClasse(classe, 'Semestre1'));
-    const moyS2 = computeMoyenneBrute(getStoredNotesForClasse(classe, 'Semestre2'));
+    const moyS1 = computeMoyenneSemestreParcours(classe, 'Semestre1');
+    const moyS2 = computeMoyenneSemestreParcours(classe, 'Semestre2');
     const moyAnnee = moyS1 !== null && moyS2 !== null ? (moyS1 + moyS2) / 2 : null;
     return { classe, moyS1, moyS2, moyAnnee, hasData: moyS1 !== null || moyS2 !== null };
   });
