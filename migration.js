@@ -156,6 +156,7 @@
         throw new Error('server');
       }
       restoreData(result.data);
+      if (typeof window.notifyDataChanged === 'function') window.notifyDataChanged({ imported: noteCount(result.data) });
       setStatus(tLocal('migration_success'), 'success');
       setTimeout(() => window.location.reload(), 900);
     } catch (error) {

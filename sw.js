@@ -4,7 +4,7 @@
    fonctionnement hors-ligne complet (calcul, PDF, OCR).
    Incrémenter CACHE_VERSION à chaque déploiement.
 */
-const CACHE_VERSION = 'v57';
+const CACHE_VERSION = 'v58';
 const CACHE_NAME = `sunu-moyenne-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -13,6 +13,8 @@ const PRECACHE_URLS = [
   './styles.css',
   './script.js',
   './dashboard.js',
+  './student-logic.js',
+  './student-tools.js',
   './prof.js',
   './ocr.js',
   './migration.js',

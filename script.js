@@ -1780,6 +1780,7 @@ if (objectifInput) {
       setObjectifPersonnel(value);
     }
     renderTableMatiere();
+    if (typeof window.notifyDataChanged === 'function') window.notifyDataChanged();
 
     if (dernierConseilContext && advisorSection && !advisorSection.hidden) {
       afficherConseillerScolaire(dernierConseilContext.matieresCalculees, dernierConseilContext.moyenneGenerale);
@@ -2607,6 +2608,7 @@ function saveMatiereNote(classe, matiere, data) {
   notes[matiere] = data;
   localStorage.setItem(getClassStorageKey(classe), JSON.stringify(notes));
   renderTableMatiere();
+  if (typeof window.notifyDataChanged === 'function') window.notifyDataChanged();
 }
 
 function getMatieresPourClasse(classe) {
@@ -2670,6 +2672,7 @@ function removeLangueNotes(classe, langue) {
       localStorage.removeItem(getClassStorageKey(classe, semestre));
     }
   });
+  if (typeof window.notifyDataChanged === 'function') window.notifyDataChanged();
 }
 
 function getMatieresDisponiblesPourClasse(classe) {
@@ -4436,6 +4439,7 @@ tableBody.addEventListener('click', function (event) {
         delete notes[matiere];
         localStorage.setItem(getClassStorageKey(classe), JSON.stringify(notes));
         renderTableMatiere();
+        if (typeof window.notifyDataChanged === 'function') window.notifyDataChanged();
         setResult(t('msg_matiere_supprimee', { matiere: translateMatiere(matiere) }));
       },
     });
@@ -4498,6 +4502,7 @@ boutonReset.addEventListener('click', function () {
           .forEach((key) => localStorage.removeItem(key));
 
         if (typeof window.resetProfesseurData === 'function') window.resetProfesseurData();
+        if (typeof window.resetStudentToolsData === 'function') window.resetStudentToolsData();
       }
 
       /* Quel que soit le mode de réinitialisation (une classe ou tout),
@@ -4515,6 +4520,7 @@ boutonReset.addEventListener('click', function () {
       toggleCompositionField();
 
       renderTableMatiere();
+      if (typeof window.notifyDataChanged === 'function') window.notifyDataChanged();
       setResult(t('msg_donnees_reinitialisees'), false);
       if (!classe) {
         matiereSelect.innerHTML = `<option value="">${t('option_matiere_default')}</option>`;
@@ -4989,6 +4995,12 @@ function showInfoDialog(message) {
     }
     if (screenName === 'accueil' && typeof window.refreshDashboardScreen === 'function') {
       window.refreshDashboardScreen();
+    }
+    if (screenName === 'simulateur' && typeof window.refreshSimulatorScreen === 'function') {
+      window.refreshSimulatorScreen();
+    }
+    if (screenName === 'evolution' && typeof window.refreshAnalysisCard === 'function') {
+      window.refreshAnalysisCard();
     }
     if (screenName === 'profil' && typeof window.refreshProfilScreen === 'function') {
       window.refreshProfilScreen();
