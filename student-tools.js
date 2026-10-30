@@ -429,7 +429,7 @@
   }
 
   function semShort(sem) {
-    return sem === 'Semestre1' ? 'S1' : 'S2';
+    return sem === 'Semestre1' ? 'Sem1' : 'Sem2';
   }
 
   function formatDate(ts) {
