@@ -54,7 +54,7 @@
     sim_result_title: 'Résultat estimé',
     sim_estimate_tag: 'Estimation',
     sim_enter_note: 'Saisis une note pour voir le résultat.',
-    sim_result_sentence: 'Si tu obtiens {note}/20 à {eval} en {matiere}, ta moyenne en {matiere} deviendra {apres}/20 ({delta}).',
+    sim_result_sentence: 'Si tu obtiens {note}/20 {prep} {eval} en {matiere}, ta moyenne en {matiere} deviendra {apres}/20 ({delta}).',
     sim_result_coef: 'Avec un coefficient de {coef} au lieu de {ancien}.',
     sim_result_general: 'Moyenne générale du semestre : {avant} → {apres} ({delta}).',
     sim_result_provisional: 'Calcul provisoire : seules les matières déjà saisies comptent ({n} sur {total}).',
@@ -631,8 +631,16 @@
 
     if (draft.state === 'ok') {
       const subject = result.subjects.find((s) => s.matiere === draft.change.matiere);
+      const key = draft.change.key;
+      let prep;
+      if (key === 'composition') {
+        prep = 'à la';
+      } else {
+        prep = 'au';
+      }
       const sentence = tr('sim_result_sentence', {
         note: fr(draft.change.value),
+        prep: prep,
         eval: evalLabel(draft.change.key),
         matiere: matiereName(draft.change.matiere),
         apres: fr(subject.after),
