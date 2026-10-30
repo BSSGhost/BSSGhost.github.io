@@ -9808,22 +9808,28 @@ html.dark-mode .migration-security { background:rgba(255,255,255,.06); }
 }
 
 html.dark-mode .bltn-modal {
-  --b-surface: #1c222d;
-  --b-bg: #151a23;
-  --b-ink: #eef1f6;
-  --b-ink-soft: #9db4de;
-  --b-text: #d5dbe5;
-  --b-muted: #9aa6b6;
-  --b-line: #2c3443;
-  --b-zebra: #19202a;
-  --b-green: #7fd0ae;
-  --b-green-bg: rgba(78, 170, 126, 0.16);
-  --b-gold: #e8c875;
-  --b-amber: #e8c875;
-  --b-amber-bg: rgba(232, 200, 117, 0.13);
-  --b-low: #f2a3a3;
-  --b-low-bg: rgba(242, 163, 163, 0.12);
-  --b-blue-bg: rgba(134, 159, 200, 0.14);
+  --blu-primary: #16213e;      /* Bleu nuit marine — couleur principale */
+  --blu-royal: #2a6fb2;          /* Bleu royal — éléments secondaires */
+  --blu-light: #e9eef7;         /* Bleu clair très léger — fonds */
+  --blu-very-light: #f8f9fa;    /* Gris très clair — fonds alternatifs */
+  --blu-accent-gold: #c9a635;   /* Doré très discret — accents premium */
+  --blu-white: #ffffff;          /* Blanc */
+  --blu-ink: #0d1320;           /* Encre principale (texte) */
+  --blu-ink-soft: #3d5a80;      /* Encre douce */
+  --blu-text: #1e2535;          /* Texte principal */
+  --blu-muted: #4a5a70;         /* Texte secondaire /-muted */
+  --b-line: #c8d0e0;            /* Lignes séparatrices */
+  --b-zebra: #f0f2f5;           /* Alternance lignes */
+  --b-radius: 10px;             /* Coins arrondis */
+  --b-radius-sm: 6px;           /* Coins arrondis petits */
+  --b-spacing-xs: 4px;          /* Espace très petit */
+  --b-spacing-sm: 8px;          /* Espace petit */
+  --b-spacing-md: 12px;         /* Espace moyen */
+  --b-spacing-lg: 16px;         /* Espace grand */
+  --b-spacing-xl: 20px;         /* Espace très grand */
+  --b-shadow-subtle: 0 2px 8px rgba(10, 20, 40, 0.08);  /* Ombre subtile */
+  --b-shadow-card: 0 24px 60px rgba(10, 18, 32, 0.15);  /* Ombre carte */
+  --b-gold-subtle: rgba(201, 166, 53, 0.08);            /* Doré très subtil */
 }
 
 .bltn-overlay {
@@ -9864,11 +9870,11 @@ html.dark-mode .bltn-modal {
   max-width: 660px;
   max-height: 88vh;
   max-height: 88dvh;
-  background: var(--b-bg);
-  color: var(--b-text);
+  background: var(--blu-white);
+  color: var(--blu-text);
   border: 1px solid var(--b-line);
-  border-radius: 14px;
-  box-shadow: 0 24px 60px rgba(10, 18, 32, 0.28), 0 2px 6px rgba(10, 18, 32, 0.08);
+  border-radius: var(--b-radius);
+  box-shadow: var(--b-shadow-card);
   overflow: hidden;
   outline: none;
   animation: bltn-in 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -9883,18 +9889,20 @@ html.dark-mode .bltn-modal {
 .bltn-head {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px 18px 16px 22px;
-  background: var(--b-surface);
+  gap: var(--b-spacing-md);
+  padding: var(--b-spacing-lg) var(--b-spacing-lg) var(--b-spacing-md);
+  background: var(--blu-very-light);
   border-bottom: 1px solid var(--b-line);
+  border-radius: var(--b-radius) var(--b-radius) 0 0;
   flex-shrink: 0;
 }
 
 .bltn-logo {
-  height: 44px;
+  height: 40px;
   width: auto;
   flex-shrink: 0;
   object-fit: contain;
+  filter: opacity(0.9);
 }
 
 .bltn-head-text {
@@ -9903,28 +9911,27 @@ html.dark-mode .bltn-modal {
 }
 
 .bltn-eyebrow {
-  margin: 0 0 3px;
-  font-size: 0.68rem;
+  margin: 0 0 var(--b-spacing-xs);
+  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--b-gold);
+  color: var(--blu-accent-gold);
 }
 
 .bltn-head h3 {
   margin: 0;
-  font-family: var(--font-heading, Georgia, serif);
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--b-ink);
+  color: var(--blu-ink);
   overflow-wrap: anywhere;
 }
 
 .bltn-meta {
-  margin: 4px 0 0;
-  font-size: 0.84rem;
-  color: var(--b-muted);
+  margin: var(--b-spacing-xs) 0 0;
+  font-size: 0.82rem;
+  color: var(--blu-muted);
 }
 
 .bltn-x {
@@ -10043,6 +10050,8 @@ html.dark-mode .bltn-ring-value { stroke: var(--b-ink-soft); }
 }
 
 .bltn-summary-value strong {
+  font-weight: 700;
+  color: var(--blu-royal);
   font-family: var(--font-heading, Georgia, serif);
   font-size: 2.5rem;
   font-weight: 600;
@@ -10146,7 +10155,7 @@ html.dark-mode .bltn-ring-value { stroke: var(--b-ink-soft); }
 .bltn-table tbody tr:last-child td { border-bottom: 0; }
 
 .bltn-table,
-.bltn-table tbody tr:nth-child(odd) { background: var(--b-surface); }
+.bltn-table tbody tr:nth-child(odd) { background: var(--blu-very-light); }
 .bltn-table tbody tr:nth-child(even) { background: var(--b-zebra); }
 
 .bltn-table tbody tr { transition: background 0.15s ease; }
@@ -10309,7 +10318,9 @@ html.dark-mode .bltn-btn-primary {
   }
 
   .bltn-ring { width: 68px; height: 68px; }
-  .bltn-summary-value strong { font-size: 2rem; }
+  .bltn-summary-value strong {
+  font-weight: 700;
+  color: var(--blu-royal); font-size: 2rem; }
 
   .bltn-appreciation {
     flex-direction: row;

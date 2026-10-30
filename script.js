@@ -4037,35 +4037,33 @@ function getAnneeScolaire() {
 const anneeScolaireEl = document.getElementById('annee-scolaire');
 if (anneeScolaireEl) anneeScolaireEl.textContent = getAnneeScolaire();
 
-/* Filigrane diagonal « Document non officiel » sur chaque page du PDF.
-   Dessiné en dernier, avec transparence, pour rester visible sur les fonds. */
+/* Filigrane diagonal « Document numérique généré à titre informatif » sur chaque page du PDF.
+   Dessiné en dernier, avec transparence subtile, dans les tons du bulletin pour une intégration élégante. */
 function drawPdfWatermark(doc) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const angle = 40; // degrés, sens anti-horaire
+  const angle = 35; // degrés, sens anti-horaire, légèrement plus raide pour plus d'élégance
   const rad = (angle * Math.PI) / 180;
   const dirX = Math.cos(rad);
   const dirY = -Math.sin(rad);   // sens de lecture du texte (l'axe y du PDF descend)
   const downX = Math.sin(rad);   // perpendiculaire, vers le bas du texte
   const downY = Math.cos(rad);
   const lines = [
-    { text: t('pdf_watermark_line1'), size: 34, offset: -7 },
-    { text: t('pdf_watermark_line2'), size: 19, offset: 9 }
+    { text: t('pdf_watermark_line1'), size: 28, offset: -5 },
+    { text: t('pdf_watermark_line2'), size: 16, offset: 5 }
   ];
-  const maxWidth = 235;
+  const maxWidth = 280;
   const centerX = pageWidth / 2;
   const centerY = pageHeight / 2;
 
-  let transparent = false;
   doc.saveGraphicsState();
   try {
-    doc.setGState(new doc.GState({ opacity: 0.17 }));
-    transparent = true;
+    // Utiliser une opacité très subtile dans la couleur primaire du bulletin
+    doc.setGState(new doc.GState({ opacity: 0.1 }));
   } catch (e) { /* ancienne version de jsPDF : couleur claire à la place */ }
 
   doc.setFont('helvetica', 'bold');
-  if (transparent) doc.setTextColor(185, 45, 45);
-  else doc.setTextColor(236, 208, 208);
+  doc.setTextColor(60, 75, 98, 0.15);
 
   lines.forEach(({ text, size, offset }) => {
     doc.setFontSize(size);
