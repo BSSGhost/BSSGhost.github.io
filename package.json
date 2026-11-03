@@ -8,13 +8,26 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "init-admins": "node scripts/init-admins.mjs",
+    "check-admin-schema": "node scripts/check-admin-schema.mjs",
+    "check-school-schema": "node scripts/check-school-schema.mjs",
+    "install-test-schema": "node scripts/install-test-schema.mjs",
+    "restore-test-backup": "node scripts/restore-test-backup.mjs",
+    "validate-pdfs": "node scripts/generate-pdf-validation.mjs"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.14.5"
+  },
+  "devDependencies": {
+    "pdfjs-dist": "^6.4.299",
+    "playwright-core": "^1.64.1"
   }
 }

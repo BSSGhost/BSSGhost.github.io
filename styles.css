@@ -10701,3 +10701,7 @@ html.dark-mode .dash2-error { color: #ff8f8f; }
 @media (prefers-reduced-motion: reduce) {
   .dash-progress-fill { transition: none; }
 }
+
+/* Accès discret à l'administration */
+.footer-admin-link{color:inherit;text-decoration:underline;text-underline-offset:3px;opacity:.72;font-size:.92em}.footer-admin-link:hover{opacity:1}
+.prof-sync-status{margin:0 0 14px;padding:9px 12px;border-radius:9px;background:#eaf4ff;color:#174a7e;font-size:.88rem}.prof-sync-status.is-error{background:#fff0ee;color:#9f2418}

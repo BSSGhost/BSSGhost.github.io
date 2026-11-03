@@ -1045,6 +1045,10 @@
 
           <form id="prof-login-form" class="prof-login-form">
             <div class="field-group">
+              <label for="prof-email">Adresse e-mail professionnelle</label>
+              <input type="email" id="prof-email" name="email" autocomplete="username" placeholder="professeur@lynaqesedhiou.com" required />
+            </div>
+            <div class="field-group">
               <label for="prof-password" data-i18n="prof_password_label">Mot de passe</label>
               <div class="prof-password-wrap">
                 <input
@@ -1074,7 +1078,21 @@
           <p class="prof-login-hint" data-i18n="prof_login_hint">Réservé au corps enseignant du LYNAQE Sédhiou.</p>
         </section>
 
+        <section id="prof-change-password-card" class="prof-card prof-login-card" hidden>
+          <p class="eyebrow">Sécurité du compte</p>
+          <h2>Créer votre mot de passe personnel</h2>
+          <p class="prof-login-subtitle">Votre mot de passe temporaire doit être remplacé avant d'accéder à l'espace professeur.</p>
+          <form id="prof-change-password-form" class="prof-login-form">
+            <div class="field-group"><label for="prof-old-password">Mot de passe temporaire / actuel</label><input type="password" id="prof-old-password" autocomplete="current-password" required /></div>
+            <div class="field-group"><label for="prof-new-password">Nouveau mot de passe (12 caractères minimum)</label><input type="password" id="prof-new-password" autocomplete="new-password" minlength="12" required /></div>
+            <div class="field-group"><label for="prof-confirm-password">Confirmer le nouveau mot de passe</label><input type="password" id="prof-confirm-password" autocomplete="new-password" minlength="12" required /></div>
+            <p class="prof-error" id="prof-change-password-error" role="alert" hidden></p>
+            <div class="button-row"><button type="submit" class="primary-button">Enregistrer le nouveau mot de passe</button></div>
+          </form>
+        </section>
+
                 <section id="prof-console" class="prof-console" hidden>
+                  <p id="prof-sync-status" class="prof-sync-status" role="status" aria-live="polite">Connexion sécurisée.</p>
                   <div class="prof-layout">
                     <!-- SIDEBAR -->
                     <aside class="prof-sidebar" id="prof-sidebar">
@@ -1624,6 +1642,8 @@
           © 2026 LYNAQE Sédhiou — <span data-i18n="footer_rights">Tous droits réservés</span>
           <span class="footer-separator" aria-hidden="true">·</span>
           <span data-i18n="footer_credit_label">Fait par</span> <span class="footer-credit">Ahmadou Bamba Bousso SANKHARE</span>
+          <span class="footer-separator" aria-hidden="true">·</span>
+          <a href="/admin/" class="footer-admin-link">Administration</a>
         </p>
       </footer>
         </div>

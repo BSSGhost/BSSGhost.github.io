@@ -1,9 +1,19 @@
-extensions/
-argv.json
-.vscode/
-
-# Backend — données locales (comptes + sessions) et dépendances
-data/
-node_modules/
+# Secrets et configuration locale
 .env
-*.env
+.env.*
+!.env.example
+*.pem
+*.key
+/certs/
+
+# Dépendances et fichiers locaux
+node_modules/
+/data/
+/backup/
+*.bak
+*.log
+
+# IDE
+.vscode/
+argv.json
+extensions/

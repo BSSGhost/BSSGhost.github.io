@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#172b4b">
+  <title>SUNU MOYENNE — Administration</title>
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    :root{color-scheme:light;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#172b4b;background:#f3f6fb}
+    *{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#172b4b}.wrap{max-width:1440px;margin:auto;padding:28px}
+    .card{background:#fff;border:1px solid #e1e7f0;border-radius:16px;padding:22px;box-shadow:0 8px 30px #172b4b0a;margin-bottom:18px}
+    .login{max-width:440px;margin:8vh auto}.hidden{display:none!important}.muted{color:#64748b}.error{color:#b42318}.success{color:#067647}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}.top h1{margin:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+    .field{display:grid;gap:7px;margin:12px 0;font-size:.92rem;font-weight:600}.field input,.field select{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;background:#fff}
+    .btn{border:0;border-radius:9px;padding:11px 16px;background:#2456a6;color:white;font-weight:700;cursor:pointer}.btn.secondary{background:#e7edf7;color:#172b4b}.btn:disabled{opacity:.6;cursor:wait}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end}.form-grid .field{margin:4px 0}.form-grid button{margin:4px 0 0;height:43px}
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.section-head h2{margin:0}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;margin-top:14px;min-width:540px}th,td{text-align:left;padding:11px;border-bottom:1px solid #e5eaf1;font-size:.9rem}th{color:#475569;background:#f8fafc}
+    .stat{font-size:1.8rem;font-weight:800;margin:.25rem 0}.status{font-size:.85rem}.inline-check{display:flex;gap:8px;align-items:center;padding:10px 0}.notice{padding:12px;border-radius:10px;background:#fff8e6;color:#854d0e;margin:12px 0;overflow-wrap:anywhere}
+    @media(max-width:640px){.wrap{padding:12px}.card{padding:16px}.top{align-items:flex-start;flex-direction:column}.section-head{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <section id="login" class="card login">
+    <h1>Administration</h1><p class="muted">SUNU MOYENNE · Accès réservé</p>
+    <form id="login-form">
+      <label class="field">Adresse e-mail<input id="email" type="email" autocomplete="username" required></label>
+      <label class="field">Mot de passe<input id="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn" type="submit">Se connecter</button><p id="login-error" class="error" role="alert"></p>
+    </form>
+  </section>
+  <section id="change" class="card login hidden">
+    <h1>Changer le mot de passe</h1><p>Choisissez un mot de passe personnel d'au moins 12 caractères.</p>
+    <form id="change-form">
+      <label class="field">Mot de passe actuel<input id="old-password" type="password" autocomplete="current-password" required></label>
+      <label class="field">Nouveau mot de passe<input id="new-password" type="password" autocomplete="new-password" minlength="12" required></label>
+      <label class="field">Confirmer le nouveau mot de passe<input id="confirm-password" type="password" autocomplete="new-password" minlength="12" required></label>
+      <button class="btn" type="submit">Enregistrer</button><p id="change-error" class="error" role="alert"></p>
+    </form>
+  </section>
+  <section id="dashboard" class="hidden">
+    <header class="top"><div><h1>SUNU MOYENNE</h1><p id="welcome" class="muted"></p></div><button id="logout" class="btn secondary">Déconnexion</button></header>
+    <div class="grid">
+      <article class="card"><h2>Années scolaires</h2><p id="stat-years" class="stat">—</p></article>
+      <article class="card"><h2>Classes</h2><p id="stat-classes" class="stat">—</p></article>
+      <article class="card"><h2>Élèves</h2><p id="stat-students" class="stat">—</p></article>
+      <article class="card"><h2>Professeurs</h2><p id="stat-teachers" class="stat">—</p></article>
+    </div>
+    <article class="card"><div class="section-head"><h2>Mon compte</h2><div><button id="download-backup" class="btn secondary hidden">Télécharger une sauvegarde complète</button> <button id="show-change" class="btn secondary">Changer mon mot de passe</button></div></div><p id="account"></p><p id="role" class="muted"></p><p id="permissions" class="muted"></p><p class="muted">La sauvegarde inclut les données scolaires et les comptes (hashs de mots de passe), mais exclut les sessions actives.</p></article>
+
+    <article id="years-card" class="card hidden"><h2>Années scolaires</h2><form id="year-form" class="form-grid"><label class="field">Année (ex. 2026-2027)<input id="year-label" pattern="[0-9]{4}[-/][0-9]{4}" required></label><label class="field">Début<input id="year-start" type="date"></label><label class="field">Fin<input id="year-end" type="date"></label><label class="inline-check"><input id="year-current" type="checkbox"> Année en cours</label><button class="btn" type="submit">Créer l'année</button></form><div id="years-list" class="table-wrap"></div></article>
+
+    <article id="classes-card" class="card hidden"><h2>Classes</h2><form id="class-form" class="form-grid"><label class="field">Nom de la classe<input id="class-name" maxlength="80" required placeholder="Ex. Terminale S2"></label><label class="field">Niveau<input id="class-level" maxlength="40" placeholder="Ex. Terminale"></label><label class="field">Année scolaire<select id="class-year" required></select></label><button class="btn" type="submit">Créer la classe</button></form><div id="classes-list" class="table-wrap"></div></article>
+
+    <article id="students-card" class="card hidden"><h2>Élèves</h2><form id="student-form" class="form-grid"><label class="field">Matricule<input id="student-matricule" maxlength="40" required></label><label class="field">Prénom<input id="student-first" maxlength="80" required></label><label class="field">Nom<input id="student-last" maxlength="80" required></label><label class="field">Genre<select id="student-gender"><option value="UNSPECIFIED">Non précisé</option><option value="M">Garçon</option><option value="F">Fille</option><option value="OTHER">Autre</option></select></label><label class="field">Classe<select id="student-class" required></select></label><button class="btn" type="submit">Ajouter l'élève</button></form><div id="students-list" class="table-wrap"></div></article>
+
+    <article id="teachers-card" class="card hidden"><h2>Professeurs</h2><form id="teacher-form" class="form-grid"><label class="field">Nom complet<input id="teacher-name" maxlength="140" required></label><label class="field">Adresse e-mail<input id="teacher-email" type="email" maxlength="150" required></label><label class="field">Téléphone<input id="teacher-phone" maxlength="40"></label><button class="btn" type="submit">Créer le compte professeur</button></form><p id="teacher-created" class="notice hidden" role="status"></p><div id="teachers-list" class="table-wrap"></div></article>
+
+    <article id="subjects-card" class="card hidden"><h2>Matières</h2><form id="subject-form" class="form-grid"><label class="field">Nom de la matière<input id="subject-name" maxlength="100" required></label><label class="field">Code (facultatif)<input id="subject-code" maxlength="30"></label><button class="btn" type="submit">Créer la matière</button></form><div id="subjects-list" class="table-wrap"></div></article>
+
+    <article id="assignments-card" class="card hidden"><h2>Affectations pédagogiques</h2><p class="muted">Associer une matière à une classe, un professeur et un coefficient.</p><form id="assignment-form" class="form-grid"><label class="field">Classe<select id="assignment-class" required></select></label><label class="field">Matière<select id="assignment-subject" required></select></label><label class="field">Semestre<select id="assignment-term" required></select></label><label class="field">Professeur<select id="assignment-teacher"><option value="">Non attribué</option></select></label><label class="field">Coefficient<input id="assignment-coef" type="number" min="1" max="8" step="1" value="1" required></label><label class="inline-check"><input id="assignment-composition" type="checkbox" checked> Composition prévue</label><button class="btn" type="submit">Enregistrer l'affectation</button></form><div id="assignments-list" class="table-wrap"></div></article>
+
+    <article id="results-card" class="card hidden"><h2>Résultats et moyennes</h2><form id="results-form" class="form-grid"><label class="field">Classe<select id="results-class" required></select></label><label class="field">Semestre<select id="results-term" required></select></label><button class="btn" type="submit">Consulter les résultats</button></form><div id="results-list" class="table-wrap"></div></article>
+    <article id="users-card" class="card hidden"><h2>Administrateurs</h2><div id="users" class="table-wrap"></div></article>
+    <article id="audit-card" class="card hidden"><h2>Journal d'activité récent</h2><div id="audit" class="table-wrap"></div></article>
+    <p id="global-message" role="status" class="status"></p>
+  </section>
+</main>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+let current = null;
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const has = (permission) => current?.permissions?.includes(permission) || false;
+function show(id) { ['login','change','dashboard'].forEach((key) => $(key).classList.toggle('hidden', key !== id)); }
+async function api(path, options = {}) {
+  const response = await fetch(path, { credentials: 'same-origin', ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+  let data = {}; try { data = await response.json(); } catch {}
+  if (!response.ok) { const error = new Error(data.message || data.error || `Erreur ${response.status}`); error.code = data.error; throw error; }
+  return data;
+}
+function table(headers, rows) {
+  if (!rows.length) return '<p class="muted">Aucune donnée pour le moment.</p>';
+  return `<table><thead><tr>${headers.map((header) => `<th>${esc(header)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function row(values) { return `<tr>${values.map((value) => `<td>${value}</td>`).join('')}</tr>`; }
+function message(text, isError = false) { $('global-message').textContent = text; $('global-message').className = isError ? 'status error' : 'status success'; }
+function renderAccount() {
+  $('welcome').textContent = `Bienvenue, ${current.full_name}`;
+  $('account').textContent = current.email;
+  $('role').textContent = current.role_name === 'principal' ? 'Administrateur principal' : 'Administrateur pédagogique';
+  $('permissions').textContent = `${current.permissions.length} permissions : ${current.permissions.join(' · ')}`;
+  $('download-backup').classList.toggle('hidden', current.role_name !== 'principal');
+  const cards = {
+    'years-card': has('settings.edit') || has('classes.view'),
+    'classes-card': has('classes.view'),
+    'students-card': has('students.view'),
+    'teachers-card': has('teachers.view'),
+    'subjects-card': has('subjects.view'),
+    'assignments-card': has('subjects.view'),
+    'results-card': has('reports.view') || has('grades.view'),
+    'users-card': current.role_name === 'principal',
+    'audit-card': current.role_name === 'principal'
+  };
+  for (const [id, visible] of Object.entries(cards)) $(id).classList.toggle('hidden', !visible);
+  $('year-form').classList.toggle('hidden', !has('settings.edit'));
+  $('class-form').classList.toggle('hidden', !has('classes.create'));
+  $('student-form').classList.toggle('hidden', !has('students.create'));
+  $('teacher-form').classList.toggle('hidden', !has('teachers.create'));
+  $('subject-form').classList.toggle('hidden', !has('subjects.create'));
+  $('assignment-form').classList.toggle('hidden', !has('subjects.edit'));
+}
+async function loadOverview() {
+  try { const d = await api('/api/admin/overview'); $('stat-years').textContent = d.stats.school_years; $('stat-classes').textContent = d.stats.classes; $('stat-students').textContent = d.stats.students; $('stat-teachers').textContent = d.stats.teachers; }
+  catch { for (const id of ['stat-years','stat-classes','stat-students','stat-teachers']) $(id).textContent = '—'; }
+}
+async function loadYears() {
+  if (!has('classes.view')) return;
+  const d = await api('/api/admin/school-years');
+  $('years-list').innerHTML = table(['Année','Début','Fin','Statut'], d.school_years.map((y) => row([esc(y.label),esc(y.starts_on || '—'),esc(y.ends_on || '—'),y.is_current ? 'En cours' : (y.is_active ? 'Active' : 'Inactive')])));
+  $('class-year').innerHTML = d.school_years.filter((y) => y.is_active).map((y) => `<option value="${y.id}">${esc(y.label)}</option>`).join('');
+}
+async function loadClasses() {
+  if (!has('classes.view')) return;
+  const d = await api('/api/admin/classes');
+  $('classes-list').innerHTML = table(['Classe','Niveau','Année','Élèves','État','Action'],d.classes.map((c) => row([esc(c.name),esc(c.level || '—'),esc(c.school_year),esc(c.student_count),c.is_active ? 'Active' : 'Inactive',`<button class=\"btn secondary\" data-toggle-entity=\"classes\" data-id=\"${c.id}\" data-next=\"${!c.is_active}\">${c.is_active?'Désactiver':'Réactiver'}</button>`])));
+  $('student-class').innerHTML = d.classes.filter((c) => c.is_active).map((c) => `<option value="${c.id}">${esc(c.name)} — ${esc(c.school_year)}</option>`).join('');
+  $('assignment-class').innerHTML = d.classes.filter((c) => c.is_active).map((c) => `<option value="${c.id}">${esc(c.name)} — ${esc(c.school_year)}</option>`).join('');
+  $('results-class').innerHTML = d.classes.filter((c) => c.is_active).map((c) => `<option value="${c.id}">${esc(c.name)} — ${esc(c.school_year)}</option>`).join('');
+}
+async function loadStudents() {
+  if (!has('students.view')) return;
+  const d = await api('/api/admin/students');
+  $('students-list').innerHTML = table(['Matricule','Prénom','Nom','Classe','Année','État','Action'],d.students.map((s) => row([esc(s.matricule),esc(s.first_name),esc(s.last_name),esc(s.class_name || '—'),esc(s.school_year || '—'),s.is_active ? 'Actif' : 'Inactif',`<button class=\"btn secondary\" data-toggle-entity=\"students\" data-id=\"${s.id}\" data-next=\"${!s.is_active}\">${s.is_active?'Désactiver':'Réactiver'}</button>`])));
+}
+async function loadTeachers() {
+  if (!has('teachers.view')) return;
+  const d = await api('/api/admin/teachers');
+  $('teachers-list').innerHTML = table(['Nom','E-mail','Téléphone','État','Première connexion','Action'],d.teachers.map((t) => row([esc(t.full_name),esc(t.email),esc(t.phone || '—'),t.is_active ? 'Actif' : 'Inactif',t.must_change_password ? 'Mot de passe à changer' : 'Configuré',`<button class=\"btn secondary\" data-toggle-entity=\"teachers\" data-id=\"${t.id}\" data-next=\"${!t.is_active}\">${t.is_active?'Désactiver':'Réactiver'}</button>`])));
+  $('assignment-teacher').innerHTML = '<option value="">Non attribué</option>' + d.teachers.filter((t) => t.is_active).map((t) => `<option value="${t.id}">${esc(t.full_name)} — ${esc(t.email)}</option>`).join('');
+}
+async function loadSubjects() {
+  if (!has('subjects.view')) return;
+  const d = await api('/api/admin/subjects');
+  $('subjects-list').innerHTML = table(['Code','Matière','État','Action'],d.subjects.map((s) => row([esc(s.code || '—'),esc(s.name),s.is_active ? 'Active' : 'Inactive',`<button class=\"btn secondary\" data-toggle-entity=\"subjects\" data-id=\"${s.id}\" data-next=\"${!s.is_active}\">${s.is_active?'Désactiver':'Réactiver'}</button>`])));
+  $('assignment-subject').innerHTML = d.subjects.filter((s) => s.is_active).map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+}
+async function loadTerms() {
+  if (!has('subjects.view')) return;
+  const d = await api('/api/admin/terms');
+  $('assignment-term').innerHTML = d.terms.filter((term) => !term.is_closed).map((term) => `<option value="${term.id}">${esc(term.school_year)} · ${esc(term.name)}</option>`).join('');
+  $('results-term').innerHTML = d.terms.map((term) => `<option value="${term.id}">${esc(term.school_year)} · ${esc(term.name)}</option>`).join('');
+}
+async function loadAssignments() {
+  if (!has('subjects.view')) return;
+  const d = await api('/api/admin/class-subjects');
+  $('assignments-list').innerHTML = table(['Classe','Matière','Semestre','Professeur','Coefficient','Composition'],d.assignments.map((a) => row([esc(a.class_name),esc(a.subject_name),esc(a.term_name),esc(a.teacher_name || 'Non attribué'),esc(a.coefficient),a.has_composition ? 'Oui' : 'Non'])));
+}
+async function loadUsersAndAudit() {
+  if (current.role_name !== 'principal') return;
+  const [users,audit] = await Promise.all([api('/api/admin/users'),api('/api/admin/audit/logs')]);
+  $('users').innerHTML = table(['Nom','E-mail','Rôle','État','Dernière connexion'],users.users.map((u) => row([esc(u.full_name),esc(u.email),esc(u.role_name),u.is_active ? 'Actif' : 'Désactivé',esc(u.last_login || 'Jamais')])));
+  $('audit').innerHTML = table(['Date','Acteur','Type','Action','Ressource','IP'],audit.logs.map((l) => row([esc(l.created_at),esc(l.admin_name || 'Compte supprimé'),esc(l.actor_type || 'administrateur'),esc(l.action),esc(l.resource),esc(l.ip_address || '—')])));
+}
+async function refresh() {
+  renderAccount();
+  const tasks = [loadOverview(),loadYears(),loadClasses(),loadStudents(),loadTeachers(),loadSubjects(),loadTerms(),loadAssignments(),loadUsersAndAudit()];
+  const results = await Promise.allSettled(tasks);
+  const failed = results.filter((result) => result.status === 'rejected');
+  if (failed.length) message('Certaines listes n’ont pas pu être chargées. Vérifie les permissions et le schéma MySQL.', true);
+}
+async function load() {
+  try { const d = await api('/api/admin/me'); current = d.user; if (current.must_change_password) { show('change'); return; } show('dashboard'); await refresh(); }
+  catch (error) { if (error.code === 'changement_mot_de_passe_requis') show('change'); else show('login'); }
+}
+$('login-form').addEventListener('submit', async (event) => {
+  event.preventDefault(); $('login-error').textContent = '';
+  try { const d = await api('/api/admin/login',{method:'POST',body:JSON.stringify({email:$('email').value,password:$('password').value})}); current = d.user; if (d.must_change_password) show('change'); else await load(); }
+  catch (error) { $('login-error').textContent = error.message; }
+});
+$('change-form').addEventListener('submit', async (event) => {
+  event.preventDefault(); $('change-error').textContent = '';
+  if ($('new-password').value !== $('confirm-password').value) { $('change-error').textContent = 'Les mots de passe ne correspondent pas.'; return; }
+  try { await api('/api/admin/change-password',{method:'POST',body:JSON.stringify({oldPassword:$('old-password').value,newPassword:$('new-password').value})}); $('change-form').reset(); await load(); }
+  catch (error) { $('change-error').textContent = error.message; }
+});
+$('logout').addEventListener('click', async () => { try { await api('/api/admin/logout',{method:'POST',body:'{}'}); } finally { current=null; show('login'); } });
+$('show-change').addEventListener('click', () => show('change'));
+$('year-form').addEventListener('submit', async (event) => { event.preventDefault(); try { await api('/api/admin/school-years',{method:'POST',body:JSON.stringify({label:$('year-label').value,starts_on:$('year-start').value||null,ends_on:$('year-end').value||null,is_current:$('year-current').checked})}); $('year-form').reset(); await refresh(); message('Année scolaire créée.'); } catch(e) { message(e.message,true); } });
+$('class-form').addEventListener('submit', async (event) => { event.preventDefault(); try { await api('/api/admin/classes',{method:'POST',body:JSON.stringify({name:$('class-name').value,level:$('class-level').value,school_year_id:$('class-year').value})}); $('class-form').reset(); await refresh(); message('Classe créée.'); } catch(e) { message(e.message,true); } });
+$('student-form').addEventListener('submit', async (event) => { event.preventDefault(); try { await api('/api/admin/students',{method:'POST',body:JSON.stringify({matricule:$('student-matricule').value,first_name:$('student-first').value,last_name:$('student-last').value,gender:$('student-gender').value,class_id:$('student-class').value})}); $('student-form').reset(); await refresh(); message('Élève inscrit dans la classe.'); } catch(e) { message(e.message,true); } });
+$('teacher-form').addEventListener('submit', async (event) => { event.preventDefault(); $('teacher-created').classList.add('hidden'); try { const d=await api('/api/admin/teachers',{method:'POST',body:JSON.stringify({full_name:$('teacher-name').value,email:$('teacher-email').value,phone:$('teacher-phone').value})}); $('teacher-created').textContent=`Compte créé pour ${d.teacher.full_name}. Mot de passe temporaire à transmettre une seule fois : ${d.temporary_password}. Le professeur devra le changer à sa première connexion.`; $('teacher-created').classList.remove('hidden'); $('teacher-form').reset(); await refresh(); } catch(e) { message(e.message,true); } });
+$('subject-form').addEventListener('submit', async (event) => { event.preventDefault(); try { await api('/api/admin/subjects',{method:'POST',body:JSON.stringify({name:$('subject-name').value,code:$('subject-code').value})}); $('subject-form').reset(); await refresh(); message('Matière créée.'); } catch(e) { message(e.message,true); } });
+$('assignment-form').addEventListener('submit', async (event) => { event.preventDefault(); try { await api('/api/admin/class-subjects',{method:'POST',body:JSON.stringify({class_id:$('assignment-class').value,subject_id:$('assignment-subject').value,term_id:$('assignment-term').value,teacher_id:$('assignment-teacher').value||null,coefficient:$('assignment-coef').value,has_composition:$('assignment-composition').checked})}); await refresh(); message('Affectation enregistrée.'); } catch(e) { message(e.message,true); } });
+$('dashboard').addEventListener('click', async (event) => { const button=event.target.closest('[data-toggle-entity]'); if(!button)return; const entity=button.dataset.toggleEntity; const id=button.dataset.id; const next=button.dataset.next==='true'; try { await api(`/api/admin/${entity}/${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify({is_active:next})}); await refresh(); message(`${entity} : statut mis à jour.`); } catch(e) { message(e.message,true); } });
+$('results-form').addEventListener('submit', async (event) => { event.preventDefault(); try { const d=await api(`/api/admin/results?class_id=${encodeURIComponent($('results-class').value)}&term_id=${encodeURIComponent($('results-term').value)}`); const headers=['Matricule','Prénom','Nom',...d.subjects.map((subject)=>subject.name),'Moyenne générale']; const rows=d.results.map((student)=>row([esc(student.matricule),esc(student.first_name),esc(student.last_name),...student.subjects.map((subject)=>subject.average===null?'—':Number(subject.average).toFixed(2)),student.general_average===null?'Incomplet':Number(student.general_average).toFixed(2)])); $('results-list').innerHTML=`<p class=\"muted\">${esc(d.class)} · ${esc(d.term)} — une moyenne générale n’est affichée que si toutes les matières affectées ont leurs notes complètes.</p>`+table(headers,rows); } catch(e) { message(e.message,true); } });
+$('download-backup').addEventListener('click', async () => { try { const response=await fetch('/api/admin/backup',{credentials:'same-origin'}); if(!response.ok){const d=await response.json().catch(()=>({}));throw new Error(d.error||`Erreur ${response.status}`);} const blob=await response.blob(); const url=URL.createObjectURL(blob); const link=document.createElement('a'); link.href=url; link.download=`sunu-moyenne-backup-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url); message('Sauvegarde téléchargée. Conserve-la dans un emplacement sécurisé.'); } catch(e) { message(e.message,true); } });
+load();
+</script>
+</body>
+</html>

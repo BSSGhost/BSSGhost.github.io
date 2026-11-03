@@ -1,6 +1,6 @@
 /*
    MODE PROFESSEUR — SUNU MOYENNE / LYNAQE Sédhiou
-   Accès réservé : mot de passe (LYNAQE2026), vérification locale.
+   Authentification individuelle vérifiée côté serveur, cookie HttpOnly.
    Gestion complète par classe :
    - "Mes classes" : créer, renommer, supprimer une classe.
    - Élèves de la classe (liste réutilisée pour toutes les matières) :
@@ -14,24 +14,7 @@
 (function () {
   'use strict';
 
-  // Le mot de passe n'est jamais stocké en clair dans le code source : on ne
-  // garde que son empreinte SHA-256, comparée à l'empreinte de la saisie.
-  // ATTENTION : ceci reste une simple barrière visuelle côté client, PAS une
-  // vraie authentification — le site étant hébergé en statique (GitHub Pages),
-  // aucune vérification serveur n'est possible tant qu'un backend n'est pas en place.
-  const PROF_PASSWORD_HASH = '28a0e7d27e35ae88ecdcfb46972a5d5979db3d3ab53b8e12a2bcd01b57bbe696';
-
-  async function hashPassword(value) {
-    try {
-      const data = new TextEncoder().encode(value);
-      const digest = await crypto.subtle.digest('SHA-256', data);
-      return Array.from(new Uint8Array(digest))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
-    } catch {
-      return null;
-    }
-  }
+  // L'authentification est vérifiée par le serveur via un cookie HttpOnly.
   const PROF_AUTH_KEY = 'lynaqe_prof_token';
   const PROF_STORE_KEY = 'lynaqe_prof_classes';
   const PROF_ROWS_PREFIX = 'lynaqe_prof_rows';
@@ -49,10 +32,18 @@
     loginCard: $('prof-login-card'),
     loginForm: $('prof-login-form'),
     password: $('prof-password'),
+    email: $('prof-email'),
+    changeCard: $('prof-change-password-card'),
+    changeForm: $('prof-change-password-form'),
+    oldPassword: $('prof-old-password'),
+    newPassword: $('prof-new-password'),
+    confirmPassword: $('prof-confirm-password'),
+    changePasswordError: $('prof-change-password-error'),
     togglePassword: $('prof-toggle-password'),
     loginBtn: $('prof-login-btn'),
     loginError: $('prof-login-error'),
     console: $('prof-console'),
+    syncStatus: $('prof-sync-status'),
     logoutBtn: $('prof-logout-btn'),
     resetDataBtn: $('prof-reset-data-btn'),
 
@@ -263,21 +254,32 @@
 
   /* Authentification */
 
-  const PROF_AUTH_VALUE = 'ok';
+  let profAuthenticated = false;
+  let profNeedsPasswordChange = false;
 
   function isAuthenticated() {
-    try {
-      return sessionStorage.getItem(PROF_AUTH_KEY) === PROF_AUTH_VALUE;
-    } catch {
-      return false;
-    }
+    return profAuthenticated;
   }
 
   function setAuthenticated(val) {
-    try {
-      if (val) sessionStorage.setItem(PROF_AUTH_KEY, val);
-      else sessionStorage.removeItem(PROF_AUTH_KEY);
-    } catch {}
+    profAuthenticated = Boolean(val);
+    try { sessionStorage.removeItem(PROF_AUTH_KEY); } catch {}
+  }
+
+  async function profApi(path, options = {}) {
+    const response = await fetch(path, {
+      credentials: 'same-origin',
+      ...options,
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+    });
+    let data = {};
+    try { data = await response.json(); } catch {}
+    if (!response.ok) {
+      const error = new Error(data.message || data.error || `Erreur ${response.status}`);
+      error.code = data.error;
+      throw error;
+    }
+    return data;
   }
 
   function showLoginError(el, message) {
@@ -292,16 +294,26 @@
   function showLogin() {
     if (!els.loginCard || !els.console) return;
     els.loginCard.hidden = false;
+    if (els.changeCard) els.changeCard.hidden = true;
     els.console.hidden = true;
     els.password.value = '';
     els.loginError.hidden = true;
     window.setTimeout(() => els.password.focus(), prefersReducedMotion ? 0 : 200);
   }
 
+  function showChangePassword() {
+    if (els.loginCard) els.loginCard.hidden = true;
+    if (els.console) els.console.hidden = true;
+    if (els.changeCard) els.changeCard.hidden = false;
+    if (els.oldPassword) els.oldPassword.focus();
+  }
+
   function showConsole() {
     if (!els.loginCard || !els.console) return;
     els.loginCard.hidden = true;
+    if (els.changeCard) els.changeCard.hidden = true;
     els.console.hidden = false;
+    profNeedsPasswordChange = false;
     showDash();
   }
 
@@ -382,10 +394,43 @@
     return changed;
   }
 
+  let workspaceSyncTimer = null;
+  let workspaceSyncQueue = Promise.resolve();
+
+  function setSyncStatus(message, isError = false) {
+    if (!els.syncStatus) return;
+    els.syncStatus.textContent = message;
+    els.syncStatus.classList.toggle('is-error', isError);
+  }
+
+  function queueWorkspaceSync() {
+    if (!profAuthenticated) return;
+    if (workspaceSyncTimer) window.clearTimeout(workspaceSyncTimer);
+    workspaceSyncTimer = window.setTimeout(() => {
+      const snapshot = JSON.parse(JSON.stringify(store || {}));
+      workspaceSyncQueue = workspaceSyncQueue.catch(() => {}).then(async () => {
+        setSyncStatus('Synchronisation des données avec le serveur…');
+        await profApi('/api/teacher/workspace', { method: 'PUT', body: JSON.stringify({ store: snapshot }) });
+        setSyncStatus('Données enregistrées sur le serveur.');
+      }).catch((error) => {
+        setSyncStatus(`Échec de synchronisation : ${error.message}. Gardez cette page ouverte et réessayez.`, true);
+      });
+    }, 500);
+  }
+
+  async function loadRemoteStore() {
+    const data = await profApi('/api/teacher/workspace');
+    store = data.store && typeof data.store === 'object' ? data.store : {};
+    normalizeStore();
+    try { localStorage.setItem(PROF_STORE_KEY, JSON.stringify(store)); } catch {}
+    setSyncStatus('Données chargées depuis le serveur.');
+  }
+
   function saveStore() {
     try {
       localStorage.setItem(PROF_STORE_KEY, JSON.stringify(store));
     } catch {}
+    queueWorkspaceSync();
   }
 
   /* Migration des anciennes clés plates (lynaqe_prof_rows_*) vers le
@@ -2816,9 +2861,26 @@
       y += rowHeight;
     });
 
+    doc.setDrawColor(214, 220, 228);
+    const signatureY = Math.min(pageHeight - 78, y + 28);
+    doc.setPage(doc.getNumberOfPages());
+    doc.line(margin, signatureY, margin + 170, signatureY);
+    doc.line(contentRight - 170, signatureY, contentRight, signatureY);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('Élève / Responsable', margin, signatureY + 12);
+    doc.text('Visa du professeur principal', contentRight - 170, signatureY + 12);
+
     const pages = doc.getNumberOfPages();
     for (let p = 1; p <= pages; p += 1) {
       doc.setPage(p);
+      doc.saveGraphicsState();
+      doc.setGState(new doc.GState({ opacity: 0.06 }));
+      doc.setTextColor(23, 43, 75);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(34);
+      doc.text('SUNU MOYENNE — DOCUMENT NON OFFICIEL', pageWidth / 2, pageHeight / 2, { align: 'center', angle: 38 });
+      doc.restoreGraphicsState();
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.setTextColor(113, 128, 120);
@@ -4413,27 +4475,76 @@
   if (els.loginForm) {
     els.loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
+      const email = String(els.email?.value || '').trim();
       const password = els.password.value;
-      if (!password) {
+      if (!email || !password) {
         showLoginError(els.loginError, t('prof_login_error'));
         return;
       }
       els.loginError.hidden = true;
-      const hash = await hashPassword(password);
-      if (hash && hash === PROF_PASSWORD_HASH) {
-        setAuthenticated(PROF_AUTH_VALUE);
-        showConsole();
+      if (els.loginBtn) els.loginBtn.disabled = true;
+      try {
+        const data = await profApi('/api/teacher/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+        setAuthenticated(true);
+        if (data.must_change_password) {
+          profNeedsPasswordChange = true;
+          showChangePassword();
+        } else {
+          profNeedsPasswordChange = false;
+          try { await loadRemoteStore(); }
+          catch (syncError) { setSyncStatus(`Chargement central impossible : ${syncError.message}. Réessayez avant de saisir des notes.`, true); store = {}; }
+          showConsole();
+        }
+      } catch (error) {
+        showLoginError(els.loginError, error.message || t('prof_login_error'));
+        els.password.value = '';
+        els.password.focus();
+      } finally {
+        if (els.loginBtn) els.loginBtn.disabled = false;
+      }
+    });
+  }
+
+  if (els.changeForm) {
+    els.changeForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (els.changePasswordError) els.changePasswordError.hidden = true;
+      const newPassword = els.newPassword.value;
+      if (newPassword !== els.confirmPassword.value) {
+        if (els.changePasswordError) {
+          els.changePasswordError.textContent = 'Les deux nouveaux mots de passe ne correspondent pas.';
+          els.changePasswordError.hidden = false;
+        }
         return;
       }
-      showLoginError(els.loginError, t('prof_login_error'));
-      els.password.value = '';
-      els.password.focus();
+      try {
+        await profApi('/api/teacher/change-password', {
+          method: 'POST',
+          body: JSON.stringify({ oldPassword: els.oldPassword.value, newPassword })
+        });
+        els.changeForm.reset();
+        profNeedsPasswordChange = false;
+        setAuthenticated(true);
+        try { await loadRemoteStore(); }
+        catch (syncError) { setSyncStatus(`Chargement central impossible : ${syncError.message}. Réessayez avant de saisir des notes.`, true); store = {}; }
+        showConsole();
+      } catch (error) {
+        if (els.changePasswordError) {
+          els.changePasswordError.textContent = error.message;
+          els.changePasswordError.hidden = false;
+        }
+      }
     });
   }
 
   if (els.logoutBtn) {
-    els.logoutBtn.addEventListener('click', () => {
-      setAuthenticated(null);
+    els.logoutBtn.addEventListener('click', async () => {
+      try { await profApi('/api/teacher/logout', { method: 'POST', body: '{}' }); } catch {}
+      setAuthenticated(false);
+      profNeedsPasswordChange = false;
       showLogin();
     });
   }
@@ -4443,7 +4554,7 @@
       const resetAll = () => {
         try {
           localStorage.removeItem(PROF_STORE_KEY);
-          localStorage.removeItem(PROF_AUTH_KEY);
+          try { sessionStorage.removeItem(PROF_AUTH_KEY); } catch {}
           localStorage.removeItem(PROF_TRASH_KEY);
           Object.keys(localStorage)
             .filter((key) => key.startsWith(`${PROF_ROWS_PREFIX}_`))
@@ -4733,23 +4844,32 @@
     }
   };
 
-  function init() {
+  async function init() {
     if (!els.screen || !els.loginCard || !els.console) return;
-    loadStore();
-    const isActiveScreen = els.screen.classList.contains('is-active');
-    if (isAuthenticated()) {
-      els.loginCard.hidden = true;
-      els.console.hidden = false;
-      if (isActiveScreen) showDash();
-    } else {
-      els.loginCard.hidden = false;
-      els.console.hidden = true;
+    if (els.resetDataBtn) els.resetDataBtn.hidden = true;
+    showLogin();
+    try {
+      const response = await fetch('/api/teacher/me', { credentials: 'same-origin' });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setAuthenticated(true);
+        try { await loadRemoteStore(); }
+        catch (syncError) { setSyncStatus(`Chargement central impossible : ${syncError.message}. Réessayez avant de saisir des notes.`, true); store = {}; }
+        showConsole();
+      } else if (data.error === 'changement_mot_de_passe_requis' && data.user) {
+        setAuthenticated(true);
+        profNeedsPasswordChange = true;
+        showChangePassword();
+      }
+    } catch {
+      setAuthenticated(false);
     }
 
     if ('MutationObserver' in window) {
       const observer = new MutationObserver(() => {
         if (els.screen.classList.contains('is-active')) {
-          if (isAuthenticated()) showConsole();
+          if (profNeedsPasswordChange) showChangePassword();
+          else if (isAuthenticated()) showConsole();
           else showLogin();
         }
       });
