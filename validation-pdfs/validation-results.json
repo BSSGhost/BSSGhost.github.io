@@ -1,0 +1,72 @@
+[
+  {
+    "id": "complete",
+    "general": 14.212,
+    "rows": 3,
+    "incomplete": false,
+    "pages": 1,
+    "accentuation": true,
+    "openable": true,
+    "studentFound": true
+  },
+  {
+    "id": "incomplete",
+    "general": null,
+    "rows": 2,
+    "incomplete": true,
+    "pages": 1,
+    "accentuation": true,
+    "openable": true,
+    "studentFound": true
+  },
+  {
+    "id": "multiple",
+    "general": 13.03,
+    "rows": 5,
+    "incomplete": false,
+    "pages": 1,
+    "accentuation": true,
+    "openable": true,
+    "studentFound": true
+  },
+  {
+    "id": "coefficients",
+    "general": 13.195714285714287,
+    "rows": 3,
+    "incomplete": false,
+    "pages": 1,
+    "accentuation": true,
+    "openable": true,
+    "studentFound": true
+  },
+  {
+    "id": "decimals",
+    "general": 14.625,
+    "rows": 2,
+    "incomplete": false,
+    "pages": 1,
+    "accentuation": true,
+    "openable": true,
+    "studentFound": true
+  },
+  {
+    "id": "multipage",
+    "general": 12.062444444444443,
+    "rows": 36,
+    "incomplete": false,
+    "pages": 2,
+    "accentuation": true,
+    "openable": true,
+    "studentFound": true
+  },
+  {
+    "id": "watermark",
+    "general": 14.78125,
+    "rows": 3,
+    "incomplete": false,
+    "pages": 1,
+    "accentuation": true,
+    "openable": true,
+    "studentFound": true
+  }
+]

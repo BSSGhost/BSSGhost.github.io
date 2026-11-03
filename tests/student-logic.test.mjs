@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, '..');
-await import(path.join(root, 'student-logic.js'));
+await import(pathToFileURL(path.join(root, 'student-logic.js')).href);
 const L = globalThis.StudentLogic;
 
 const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg || ''} attendu ${b}, obtenu ${a}`);

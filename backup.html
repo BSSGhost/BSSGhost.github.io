@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Sauvegarde — SUNU MOYENNE</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #f3f6fb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+
+    main {
+      width: min(760px, 100%);
+      margin: 0 auto;
+    }
+
+    header { margin-bottom: 24px; }
+
+    .eyebrow {
+      color: #2563eb;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 8px 0; font-size: clamp(1.7rem, 5vw, 2.4rem); }
+    p { line-height: 1.6; color: #526078; }
+
+    .panel {
+      background: white;
+      border: 1px solid #e1e7f0;
+      border-radius: 18px;
+      padding: 22px;
+      margin: 16px 0;
+      box-shadow: 0 8px 28px rgba(25, 45, 80, .05);
+    }
+
+    h2 { margin: 0 0 8px; font-size: 1.15rem; }
+
+    button, .file-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 11px 17px;
+      border: 0;
+      border-radius: 10px;
+      background: #1d4ed8;
+      color: white;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .secondary { background: #334155; }
+    input[type="file"] { display: block; width: 100%; margin: 14px 0; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .stat {
+      padding: 13px;
+      border-radius: 12px;
+      background: #f5f7fb;
+      overflow-wrap: anywhere;
+    }
+
+    .stat span {
+      display: block;
+      color: #64748b;
+      font-size: .8rem;
+      margin-bottom: 5px;
+    }
+
+    .stat strong { font-size: 1.05rem; }
+
+    #status {
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #eaf0f8;
+      color: #24344d;
+      overflow-wrap: anywhere;
+    }
+
+    #status[data-type="success"] { background: #e8f7ee; color: #17643a; }
+    #status[data-type="error"] { background: #fff0f0; color: #a32020; }
+
+    .warning {
+      border-left: 4px solid #d97706;
+      padding: 12px 14px;
+      background: #fff8e9;
+      border-radius: 8px;
+      color: #75430a;
+      font-size: .92rem;
+    }
+
+    footer { margin-top: 24px; font-size: .85rem; }
+    body.auth-pending main { visibility: hidden; }
+
+    @media (max-width: 480px) {
+      body { padding: 20px 12px; }
+      .panel { padding: 17px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body class="auth-pending">
+  <main>
+    <header>
+      <div class="eyebrow">Protection des données</div>
+      <h1>Sauvegarde de SUNU MOYENNE</h1>
+      <p>
+        Crée une copie des données enregistrées dans ce navigateur ou restaure
+        les clés manquantes à partir d'un fichier de sauvegarde.
+      </p>
+    </header>
+
+    <section class="panel">
+      <h2>1. Créer une sauvegarde</h2>
+      <p>
+        Toutes les clés de stockage local de ce site seront exportées telles
+        qu'elles sont enregistrées, sans modification.
+      </p>
+      <button id="createBackup" type="button">Télécharger ma sauvegarde</button>
+    </section>
+
+    <section class="panel">
+      <h2>2. Vérifier et restaurer</h2>
+      <p>Sélectionne un fichier JSON précédemment créé par cet outil.</p>
+      <input id="backupFile" type="file" accept=".json,application/json">
+
+      <div id="preview" hidden>
+        <div class="stats">
+          <div class="stat"><span>Date de sauvegarde</span><strong id="backupDate">—</strong></div>
+          <div class="stat"><span>Taille du fichier</span><strong id="backupSize">—</strong></div>
+          <div class="stat"><span>Clés dans le fichier</span><strong id="backupCount">—</strong></div>
+          <div class="stat"><span>Clés absentes à ajouter</span><strong id="missingCount">—</strong></div>
+          <div class="stat"><span>Clés déjà présentes</span><strong id="conflictCount">—</strong></div>
+        </div>
+        <p>
+          La restauration proposée ajoute uniquement les clés absentes.
+          Les clés déjà présentes ne seront pas remplacées.
+        </p>
+      </div>
+
+      <button id="restoreButton" class="secondary" type="button" disabled>
+        Restaurer les clés absentes
+      </button>
+    </section>
+
+    <section class="panel">
+      <h2>État de l'opération</h2>
+      <div id="status" role="status" aria-live="polite">
+        Chargement…
+      </div>
+    </section>
+
+    <div class="warning">
+      Attention : les fichiers de sauvegarde peuvent contenir des noms d'élèves
+      et des notes. Garde-les dans un emplacement privé. Ne les ajoute pas à
+      GitHub et ne les transmets pas à des personnes non autorisées.
+    </div>
+
+    <footer>
+      SUNU MOYENNE — Outil local de sauvegarde. Cette page ne transmet pas les
+      données à un serveur.
+    </footer>
+  </main>
+
+  <script type="module" src="./backup-manager.js"></script>
+</body>
+</html>
