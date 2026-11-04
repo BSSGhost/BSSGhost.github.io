@@ -775,14 +775,22 @@ body.sidebar-collapsed .nav-item { justify-content: center; padding-inline: 0; }
 #dashboard .welcome-panel p:last-child { color:#718096; }
 #dashboard .school-year-badge { border-radius:7px; box-shadow:none; }
 #dashboard .overview-stats { gap:16px; }
-#dashboard .stat-card { min-height:126px; display:flex; flex-direction:column; justify-content:center; padding:20px; border:1px solid #E5EAF2 !important; border-radius:8px !important; box-shadow:0 5px 20px rgba(23,43,75,.045) !important; }
-#dashboard .stat-card p { margin:0 0 8px; font-size:.76rem; }
+#dashboard .stat-card { min-height:126px; flex-direction:row; align-items:center; justify-content:flex-start; gap:14px; padding:20px; border:1px solid #E5EAF2 !important; border-radius:8px !important; box-shadow:0 5px 20px rgba(23,43,75,.045) !important; }
+#dashboard .stat-card-icon { width:42px; height:42px; display:grid; place-items:center; flex:none; border-radius:7px; background:#EDF3FB; color:#294A80; }
+#dashboard .stat-card-icon svg { width:20px; height:20px; }
+#dashboard .stat-card p { margin:0 0 6px; font-size:.76rem; }
 #dashboard .stat-card .stat { font-size:2rem; }
+#dashboard .overview-alert { display:flex; align-items:flex-start; gap:12px; margin-top:16px; padding:13px 15px; border:1px solid #F3D89D; border-radius:7px; background:#FFF8E8; color:#8A5B13; }
+#dashboard .overview-alert.hidden { display:none; }
+#dashboard .overview-alert > svg { width:19px; height:19px; flex:none; }
+#dashboard .overview-alert strong { font-size:.78rem; }
+#dashboard .overview-alert p { margin:3px 0 0; font-size:.75rem; line-height:1.45; }
 #dashboard .overview-columns { gap:16px; margin-top:16px; }
 #dashboard .panel-card { min-height:260px; border:1px solid #E5EAF2; border-radius:8px; box-shadow:0 5px 20px rgba(23,43,75,.045); }
 #dashboard .panel-head { padding-bottom:13px; border-bottom:1px solid #EEF2F6; }
 #dashboard .quick-actions { grid-template-columns:repeat(2,1fr); }
-#dashboard .quick-actions button { min-height:82px; border-radius:7px; font-size:.79rem; }
+#dashboard .quick-actions button { min-height:82px; display:flex; align-items:center; gap:11px; border-radius:7px; font-size:.79rem; text-align:left; }
+#dashboard .quick-actions button svg { width:19px; height:19px; flex:none; color:#294A80; }
 #dashboard .admin-view > .card, #dashboard .admin-view .card { border:1px solid #E3E9F2; border-radius:8px; box-shadow:0 5px 20px rgba(23,43,75,.045); }
 #dashboard .field { margin:0; }
 #dashboard .field input, #dashboard .field select { min-height:43px; border-radius:7px; border-color:#D7DFEA; outline:none; }
@@ -819,6 +827,8 @@ body.sidebar-collapsed #dashboard .admin-main { margin-left:76px; }
   #dashboard .welcome-panel { gap:14px; }
   #dashboard .welcome-panel h2 { font-size:1.35rem; }
   #dashboard .overview-stats, #dashboard .quick-actions { grid-template-columns:1fr; }
+  #dashboard .stat-card { min-height:102px; }
+  #dashboard .quick-actions button { min-height:68px; }
   #dashboard .school-year-badge { width:100%; }
   #dashboard .overview-columns { grid-template-columns:1fr; }
 }
