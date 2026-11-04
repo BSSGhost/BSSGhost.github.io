@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#172b4b">
   <title>SUNU MOYENNE — Administration</title>
   <link rel="stylesheet" href="/admin/admin.css">
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <style>
     :root{color-scheme:light;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#172b4b;background:#f3f6fb}
     *{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#172b4b}.wrap{max-width:1440px;margin:auto;padding:28px}
@@ -85,32 +86,41 @@
       <button class="btn" type="submit">Enregistrer</button><p id="change-error" class="error" role="alert"></p>
     </form>
   </section>
-  <section id="dashboard" class="hidden">
-    <header class="top"><div><h1>SUNU MOYENNE</h1><p id="welcome" class="muted"></p></div><button id="logout" class="btn secondary">Déconnexion</button></header>
-    <div class="grid">
-      <article class="card"><h2>Années scolaires</h2><p id="stat-years" class="stat">—</p></article>
-      <article class="card"><h2>Classes</h2><p id="stat-classes" class="stat">—</p></article>
-      <article class="card"><h2>Élèves</h2><p id="stat-students" class="stat">—</p></article>
-      <article class="card"><h2>Professeurs</h2><p id="stat-teachers" class="stat">—</p></article>
+  <section id="dashboard" class="admin-shell hidden">
+    <aside id="admin-sidebar" class="admin-sidebar">
+      <div class="admin-sidebar-brand"><img src="/LYNAQE.png" alt="SUNU MOYENNE"><div><strong>SUNU MOYENNE</strong><span>Administration</span></div></div>
+      <button id="sidebar-collapse" class="sidebar-collapse" type="button" aria-label="Réduire le menu">‹</button>
+      <nav class="admin-sidebar-nav">
+        <div class="nav-group"><p>Principal</p><button class="nav-item is-active" data-view="overview">Vue générale</button></div>
+        <div class="nav-group" data-permission-any="classes.view,settings.edit"><p>Gestion scolaire</p><button class="nav-item" data-view="years" data-permission="classes.view settings.edit">Années scolaires</button><button class="nav-item" data-view="students" data-permission="students.view">Élèves</button><button class="nav-item" data-view="teachers" data-permission="teachers.view">Professeurs</button><button class="nav-item" data-view="classes" data-permission="classes.view">Classes</button></div>
+        <div class="nav-group" data-permission-any="subjects.view,reports.view,grades.view"><p>Gestion pédagogique</p><button class="nav-item" data-view="subjects" data-permission="subjects.view">Matières</button><button class="nav-item" data-view="assignments" data-permission="subjects.view">Affectations</button><button class="nav-item" data-view="results" data-permission="reports.view grades.view">Résultats et moyennes</button></div>
+        <div class="nav-group" data-role="principal"><p>Administration</p><button class="nav-item" data-view="users">Administrateurs</button><button class="nav-item" data-view="audit">Journal d'activité</button><button class="nav-item" data-view="backups">Sauvegardes</button></div>
+        <div class="nav-group"><p>Mon espace</p><button class="nav-item" data-view="account">Mon compte</button><button class="nav-item nav-item-danger" id="sidebar-logout">Déconnexion</button></div>
+      </nav>
+    </aside>
+    <div class="admin-main">
+      <header class="admin-header"><button id="mobile-menu" class="mobile-menu" type="button" aria-label="Ouvrir le menu">☰</button><div><p id="breadcrumb" class="breadcrumb">Administration / Vue générale</p><h1 id="workspace-title">Vue générale</h1></div><div class="admin-user-menu"><div><strong id="header-admin-name"></strong><span id="header-admin-role"></span></div><button id="header-profile" class="admin-avatar" type="button" aria-label="Mon compte"></button><button id="logout" class="header-logout" type="button">Déconnexion</button></div></header>
+      <main class="admin-workspace">
+        <section id="view-overview" class="admin-view is-active">
+          <div class="welcome-panel"><div><p class="eyebrow">Vue générale</p><h2 id="welcome"></h2><p>Voici la situation générale de votre établissement.</p></div><span class="school-year-badge">Année active : <strong id="active-year">—</strong></span></div>
+          <div class="overview-stats"><article class="stat-card"><p>Élèves</p><strong id="stat-students" class="stat">—</strong></article><article class="stat-card"><p>Professeurs</p><strong id="stat-teachers" class="stat">—</strong></article><article class="stat-card"><p>Classes</p><strong id="stat-classes" class="stat">—</strong></article><article class="stat-card"><p>Années actives</p><strong id="stat-years" class="stat">—</strong></article></div>
+          <div class="overview-columns"><article class="panel-card"><div class="panel-head"><h3>Accès rapides</h3></div><div class="quick-actions"><button data-quick-view="students">Ajouter un élève</button><button data-quick-view="classes">Créer une classe</button><button data-quick-view="subjects">Ajouter une matière</button><button data-quick-view="results">Consulter les résultats</button></div></article><article class="panel-card"><div class="panel-head"><h3>Activité récente</h3><button class="text-button" data-quick-view="audit">Tout voir</button></div><div id="overview-audit" class="activity-list"><p class="muted">Chargement des activités…</p></div></article></div>
+        </section>
+        <section id="view-years" class="admin-view"><article id="years-card" class="card"><h2>Années scolaires</h2><form id="year-form" class="form-grid"><label class="field">Année (ex. 2026-2027)<input id="year-label" pattern="[0-9]{4}[-/][0-9]{4}" required></label><label class="field">Début<input id="year-start" type="date"></label><label class="field">Fin<input id="year-end" type="date"></label><label class="inline-check"><input id="year-current" type="checkbox"> Année en cours</label><button class="btn" type="submit">Créer l'année</button></form><div id="years-list" class="table-wrap"></div></article></section>
+        <section id="view-students" class="admin-view"><article id="students-card" class="card"><h2>Gestion des élèves</h2><form id="student-form" class="form-grid"><label class="field">Matricule<input id="student-matricule" maxlength="40" required></label><label class="field">Prénom<input id="student-first" maxlength="80" required></label><label class="field">Nom<input id="student-last" maxlength="80" required></label><label class="field">Genre<select id="student-gender"><option value="UNSPECIFIED">Non précisé</option><option value="M">Garçon</option><option value="F">Fille</option><option value="OTHER">Autre</option></select></label><label class="field">Classe<select id="student-class" required></select></label><button class="btn" type="submit">Ajouter l'élève</button></form><div id="students-list" class="table-wrap"></div></article></section>
+        <section id="view-teachers" class="admin-view"><article id="teachers-card" class="card"><h2>Gestion des professeurs</h2><form id="teacher-form" class="form-grid"><label class="field">Nom complet<input id="teacher-name" maxlength="140" required></label><label class="field">Adresse e-mail<input id="teacher-email" type="email" maxlength="150" required></label><label class="field">Téléphone<input id="teacher-phone" maxlength="40"></label><button class="btn" type="submit">Créer le compte professeur</button></form><p id="teacher-created" class="notice hidden" role="status"></p><div id="teachers-list" class="table-wrap"></div></article></section>
+        <section id="view-classes" class="admin-view"><article id="classes-card" class="card"><h2>Gestion des classes</h2><form id="class-form" class="form-grid"><label class="field">Nom de la classe<input id="class-name" maxlength="80" required placeholder="Ex. Terminale S2"></label><label class="field">Niveau<input id="class-level" maxlength="40" placeholder="Ex. Terminale"></label><label class="field">Année scolaire<select id="class-year" required></select></label><button class="btn" type="submit">Créer la classe</button></form><div id="classes-list" class="table-wrap"></div></article></section>
+        <section id="view-subjects" class="admin-view"><article id="subjects-card" class="card"><h2>Gestion des matières</h2><form id="subject-form" class="form-grid"><label class="field">Nom de la matière<input id="subject-name" maxlength="100" required></label><label class="field">Code (facultatif)<input id="subject-code" maxlength="30"></label><button class="btn" type="submit">Créer la matière</button></form><div id="subjects-list" class="table-wrap"></div></article></section>
+        <section id="view-assignments" class="admin-view"><article id="assignments-card" class="card"><h2>Affectations pédagogiques</h2><p class="muted">Associer une matière à une classe, un professeur et un coefficient.</p><form id="assignment-form" class="form-grid"><label class="field">Classe<select id="assignment-class" required></select></label><label class="field">Matière<select id="assignment-subject" required></select></label><label class="field">Semestre<select id="assignment-term" required></select></label><label class="field">Professeur<select id="assignment-teacher"><option value="">Non attribué</option></select></label><label class="field">Coefficient<input id="assignment-coef" type="number" min="1" max="8" step="1" value="1" required></label><label class="inline-check"><input id="assignment-composition" type="checkbox" checked> Composition prévue</label><button class="btn" type="submit">Enregistrer l'affectation</button></form><div id="assignments-list" class="table-wrap"></div></article></section>
+        <section id="view-results" class="admin-view"><article id="results-card" class="card"><h2>Résultats et moyennes</h2><form id="results-form" class="form-grid"><label class="field">Classe<select id="results-class" required></select></label><label class="field">Semestre<select id="results-term" required></select></label><button class="btn" type="submit">Consulter les résultats</button></form><div id="results-list" class="table-wrap"></div></article></section>
+        <section id="view-users" class="admin-view"><article id="users-card" class="card"><h2>Administrateurs</h2><div id="users" class="table-wrap"></div></article></section>
+        <section id="view-audit" class="admin-view"><article id="audit-card" class="card"><h2>Journal d'activité</h2><div id="audit" class="table-wrap"></div></article></section>
+        <section id="view-backups" class="admin-view"><article class="card"><h2>Sauvegardes</h2><p>Export des données scolaires et des comptes. Les sessions actives ne sont pas incluses.</p><button id="download-backup" class="btn" type="button">Télécharger une sauvegarde complète</button></article></section>
+        <section id="view-account" class="admin-view"><article class="card"><div class="section-head"><h2>Mon compte</h2><button id="show-change" class="btn secondary" type="button">Changer mon mot de passe</button></div><dl><dt>Adresse e-mail</dt><dd id="account"></dd><dt>Rôle</dt><dd id="role"></dd><dt>Permissions</dt><dd id="permissions"></dd></dl></article></section>
+        <p id="global-message" role="status" class="status"></p>
+      </main>
     </div>
-    <article class="card"><div class="section-head"><h2>Mon compte</h2><div><button id="download-backup" class="btn secondary hidden">Télécharger une sauvegarde complète</button> <button id="show-change" class="btn secondary">Changer mon mot de passe</button></div></div><p id="account"></p><p id="role" class="muted"></p><p id="permissions" class="muted"></p><p class="muted">La sauvegarde inclut les données scolaires et les comptes (hashs de mots de passe), mais exclut les sessions actives.</p></article>
-
-    <article id="years-card" class="card hidden"><h2>Années scolaires</h2><form id="year-form" class="form-grid"><label class="field">Année (ex. 2026-2027)<input id="year-label" pattern="[0-9]{4}[-/][0-9]{4}" required></label><label class="field">Début<input id="year-start" type="date"></label><label class="field">Fin<input id="year-end" type="date"></label><label class="inline-check"><input id="year-current" type="checkbox"> Année en cours</label><button class="btn" type="submit">Créer l'année</button></form><div id="years-list" class="table-wrap"></div></article>
-
-    <article id="classes-card" class="card hidden"><h2>Classes</h2><form id="class-form" class="form-grid"><label class="field">Nom de la classe<input id="class-name" maxlength="80" required placeholder="Ex. Terminale S2"></label><label class="field">Niveau<input id="class-level" maxlength="40" placeholder="Ex. Terminale"></label><label class="field">Année scolaire<select id="class-year" required></select></label><button class="btn" type="submit">Créer la classe</button></form><div id="classes-list" class="table-wrap"></div></article>
-
-    <article id="students-card" class="card hidden"><h2>Élèves</h2><form id="student-form" class="form-grid"><label class="field">Matricule<input id="student-matricule" maxlength="40" required></label><label class="field">Prénom<input id="student-first" maxlength="80" required></label><label class="field">Nom<input id="student-last" maxlength="80" required></label><label class="field">Genre<select id="student-gender"><option value="UNSPECIFIED">Non précisé</option><option value="M">Garçon</option><option value="F">Fille</option><option value="OTHER">Autre</option></select></label><label class="field">Classe<select id="student-class" required></select></label><button class="btn" type="submit">Ajouter l'élève</button></form><div id="students-list" class="table-wrap"></div></article>
-
-    <article id="teachers-card" class="card hidden"><h2>Professeurs</h2><form id="teacher-form" class="form-grid"><label class="field">Nom complet<input id="teacher-name" maxlength="140" required></label><label class="field">Adresse e-mail<input id="teacher-email" type="email" maxlength="150" required></label><label class="field">Téléphone<input id="teacher-phone" maxlength="40"></label><button class="btn" type="submit">Créer le compte professeur</button></form><p id="teacher-created" class="notice hidden" role="status"></p><div id="teachers-list" class="table-wrap"></div></article>
-
-    <article id="subjects-card" class="card hidden"><h2>Matières</h2><form id="subject-form" class="form-grid"><label class="field">Nom de la matière<input id="subject-name" maxlength="100" required></label><label class="field">Code (facultatif)<input id="subject-code" maxlength="30"></label><button class="btn" type="submit">Créer la matière</button></form><div id="subjects-list" class="table-wrap"></div></article>
-
-    <article id="assignments-card" class="card hidden"><h2>Affectations pédagogiques</h2><p class="muted">Associer une matière à une classe, un professeur et un coefficient.</p><form id="assignment-form" class="form-grid"><label class="field">Classe<select id="assignment-class" required></select></label><label class="field">Matière<select id="assignment-subject" required></select></label><label class="field">Semestre<select id="assignment-term" required></select></label><label class="field">Professeur<select id="assignment-teacher"><option value="">Non attribué</option></select></label><label class="field">Coefficient<input id="assignment-coef" type="number" min="1" max="8" step="1" value="1" required></label><label class="inline-check"><input id="assignment-composition" type="checkbox" checked> Composition prévue</label><button class="btn" type="submit">Enregistrer l'affectation</button></form><div id="assignments-list" class="table-wrap"></div></article>
-
-    <article id="results-card" class="card hidden"><h2>Résultats et moyennes</h2><form id="results-form" class="form-grid"><label class="field">Classe<select id="results-class" required></select></label><label class="field">Semestre<select id="results-term" required></select></label><button class="btn" type="submit">Consulter les résultats</button></form><div id="results-list" class="table-wrap"></div></article>
-    <article id="users-card" class="card hidden"><h2>Administrateurs</h2><div id="users" class="table-wrap"></div></article>
-    <article id="audit-card" class="card hidden"><h2>Journal d'activité récent</h2><div id="audit" class="table-wrap"></div></article>
-    <p id="global-message" role="status" class="status"></p>
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
   </section>
 </main>
 <script type="module">
@@ -132,23 +142,22 @@ function table(headers, rows) {
 function row(values) { return `<tr>${values.map((value) => `<td>${value}</td>`).join('')}</tr>`; }
 function message(text, isError = false) { $('global-message').textContent = text; $('global-message').className = isError ? 'status error' : 'status success'; }
 function renderAccount() {
-  $('welcome').textContent = `Bienvenue, ${current.full_name}`;
+  $('welcome').textContent = `Bonjour, ${current.full_name}`;
+  $('header-admin-name').textContent = current.full_name;
+  $('header-admin-role').textContent = current.role_name === 'principal' ? 'Administrateur principal' : 'Administrateur pédagogique';
   $('account').textContent = current.email;
   $('role').textContent = current.role_name === 'principal' ? 'Administrateur principal' : 'Administrateur pédagogique';
   $('permissions').textContent = `${current.permissions.length} permissions : ${current.permissions.join(' · ')}`;
-  $('download-backup').classList.toggle('hidden', current.role_name !== 'principal');
-  const cards = {
-    'years-card': has('settings.edit') || has('classes.view'),
-    'classes-card': has('classes.view'),
-    'students-card': has('students.view'),
-    'teachers-card': has('teachers.view'),
-    'subjects-card': has('subjects.view'),
-    'assignments-card': has('subjects.view'),
-    'results-card': has('reports.view') || has('grades.view'),
-    'users-card': current.role_name === 'principal',
-    'audit-card': current.role_name === 'principal'
-  };
-  for (const [id, visible] of Object.entries(cards)) $(id).classList.toggle('hidden', !visible);
+  $('header-profile').textContent = (current.full_name || 'A').trim().charAt(0).toUpperCase();
+  document.querySelectorAll('[data-role]').forEach((element) => element.classList.toggle('hidden', element.dataset.role !== current.role_name));
+  document.querySelectorAll('[data-permission]').forEach((element) => {
+    const permissions = element.dataset.permission.split(/\s+/).filter(Boolean);
+    element.classList.toggle('hidden', !permissions.some((permission) => has(permission)));
+  });
+  document.querySelectorAll('[data-permission-any]').forEach((element) => {
+    const permissions = element.dataset.permissionAny.split(',').map((permission) => permission.trim());
+    element.classList.toggle('hidden', !permissions.some((permission) => has(permission)));
+  });
   $('year-form').classList.toggle('hidden', !has('settings.edit'));
   $('class-form').classList.toggle('hidden', !has('classes.create'));
   $('student-form').classList.toggle('hidden', !has('students.create'));
@@ -165,6 +174,8 @@ async function loadYears() {
   const d = await api('/api/admin/school-years');
   $('years-list').innerHTML = table(['Année','Début','Fin','Statut'], d.school_years.map((y) => row([esc(y.label),esc(y.starts_on || '—'),esc(y.ends_on || '—'),y.is_current ? 'En cours' : (y.is_active ? 'Active' : 'Inactive')])));
   $('class-year').innerHTML = d.school_years.filter((y) => y.is_active).map((y) => `<option value="${y.id}">${esc(y.label)}</option>`).join('');
+  const activeYear = d.school_years.find((year) => year.is_current) || d.school_years.find((year) => year.is_active);
+  $('active-year').textContent = activeYear ? activeYear.label : 'Non définie';
 }
 async function loadClasses() {
   if (!has('classes.view')) return;
@@ -204,9 +215,11 @@ async function loadAssignments() {
 }
 async function loadUsersAndAudit() {
   if (current.role_name !== 'principal') return;
-  const [users,audit] = await Promise.all([api('/api/admin/users'),api('/api/admin/audit/logs')]);
-  $('users').innerHTML = table(['Nom','E-mail','Rôle','État','Dernière connexion'],users.users.map((u) => row([esc(u.full_name),esc(u.email),esc(u.role_name),u.is_active ? 'Actif' : 'Désactivé',esc(u.last_login || 'Jamais')])));
-  $('audit').innerHTML = table(['Date','Acteur','Type','Action','Ressource','IP'],audit.logs.map((l) => row([esc(l.created_at),esc(l.admin_name || 'Compte supprimé'),esc(l.actor_type || 'administrateur'),esc(l.action),esc(l.resource),esc(l.ip_address || '—')])));
+  const [usersData,auditData] = await Promise.all([api('/api/admin/users'),api('/api/admin/audit/logs')]);
+  $('users').innerHTML = table(['Nom','E-mail','Rôle','État','Dernière connexion'],usersData.users.map((u) => row([esc(u.full_name),esc(u.email),esc(u.role_name),u.is_active ? 'Actif' : 'Désactivé',esc(u.last_login || 'Jamais')])));
+  const logs = auditData.logs || [];
+  $('audit').innerHTML = logs.length ? table(['Date','Acteur','Type','Action','Ressource','IP'],logs.map((l) => row([esc(l.created_at),esc(l.admin_name || 'Compte supprimé'),esc(l.actor_type || 'administrateur'),esc(l.action),esc(l.resource),esc(l.ip_address || '—')]))) : '<p class="muted">Aucune activité enregistrée.</p>';
+  $('overview-audit').innerHTML = logs.length ? logs.slice(0, 5).map((log) => `<div class="activity-item"><strong>${esc(log.admin_name || 'Compte supprimé')}</strong><p>${esc(log.action)} · ${esc(log.resource)}</p><time>${esc(log.created_at)}</time></div>`).join('') : '<p class="muted">Aucune activité enregistrée.</p>';
 }
 async function refresh() {
   renderAccount();
@@ -255,7 +268,28 @@ $('assignment-form').addEventListener('submit', async (event) => { event.prevent
 $('dashboard').addEventListener('click', async (event) => { const button=event.target.closest('[data-toggle-entity]'); if(!button)return; const entity=button.dataset.toggleEntity; const id=button.dataset.id; const next=button.dataset.next==='true'; try { await api(`/api/admin/${entity}/${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify({is_active:next})}); await refresh(); message(`${entity} : statut mis à jour.`); } catch(e) { message(e.message,true); } });
 $('results-form').addEventListener('submit', async (event) => { event.preventDefault(); try { const d=await api(`/api/admin/results?class_id=${encodeURIComponent($('results-class').value)}&term_id=${encodeURIComponent($('results-term').value)}`); const headers=['Matricule','Prénom','Nom',...d.subjects.map((subject)=>subject.name),'Moyenne générale']; const rows=d.results.map((student)=>row([esc(student.matricule),esc(student.first_name),esc(student.last_name),...student.subjects.map((subject)=>subject.average===null?'—':Number(subject.average).toFixed(2)),student.general_average===null?'Incomplet':Number(student.general_average).toFixed(2)])); $('results-list').innerHTML=`<p class=\"muted\">${esc(d.class)} · ${esc(d.term)} — une moyenne générale n’est affichée que si toutes les matières affectées ont leurs notes complètes.</p>`+table(headers,rows); } catch(e) { message(e.message,true); } });
 $('download-backup').addEventListener('click', async () => { try { const response=await fetch('/api/admin/backup',{credentials:'same-origin'}); if(!response.ok){const d=await response.json().catch(()=>({}));throw new Error(d.error||`Erreur ${response.status}`);} const blob=await response.blob(); const url=URL.createObjectURL(blob); const link=document.createElement('a'); link.href=url; link.download=`sunu-moyenne-backup-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url); message('Sauvegarde téléchargée. Conserve-la dans un emplacement sécurisé.'); } catch(e) { message(e.message,true); } });
-load();
+const VIEW_TITLES = {overview:'Vue générale',years:'Années scolaires',students:'Gestion des élèves',teachers:'Gestion des professeurs',classes:'Gestion des classes',subjects:'Gestion des matières',assignments:'Affectations pédagogiques',results:'Résultats et moyennes',users:'Administrateurs',audit:"Journal d'activité",backups:'Sauvegardes',account:'Mon compte'};
+function navigate(view, updateHash = true) {
+  const known = Object.prototype.hasOwnProperty.call(VIEW_TITLES, view);
+  const target = known && (view === 'overview' || !document.querySelector(`.nav-item[data-view="${view}"]`)?.classList.contains('hidden')) ? view : 'overview';
+  document.querySelectorAll('.admin-view').forEach((section) => section.classList.toggle('is-active', section.id === `view-${target}`));
+  document.querySelectorAll('.nav-item[data-view]').forEach((item) => item.classList.toggle('is-active', item.dataset.view === target));
+  $('workspace-title').textContent = VIEW_TITLES[target];
+  $('breadcrumb').textContent = `Administration / ${VIEW_TITLES[target]}`;
+  document.title = `${VIEW_TITLES[target]} — SUNU MOYENNE`;
+  if (updateHash) history.replaceState(null, '', `#${target}`);
+  $('admin-sidebar').classList.remove('is-open');
+  $('sidebar-overlay').classList.remove('is-visible');
+}
+document.querySelectorAll('.nav-item[data-view]').forEach((item) => item.addEventListener('click', () => navigate(item.dataset.view)));
+document.querySelectorAll('[data-quick-view]').forEach((button) => button.addEventListener('click', () => navigate(button.dataset.quickView)));
+$('header-profile').addEventListener('click', () => navigate('account'));
+$('mobile-menu').addEventListener('click', () => { $('admin-sidebar').classList.add('is-open'); $('sidebar-overlay').classList.add('is-visible'); });
+$('sidebar-overlay').addEventListener('click', () => { $('admin-sidebar').classList.remove('is-open'); $('sidebar-overlay').classList.remove('is-visible'); });
+$('sidebar-collapse').addEventListener('click', () => document.body.classList.toggle('sidebar-collapsed'));
+$('sidebar-logout').addEventListener('click', () => $('logout').click());
+window.addEventListener('hashchange', () => navigate(location.hash.slice(1) || 'overview', false));
+load().then(() => navigate(location.hash.slice(1) || 'overview', false));
 </script>
 </body>
 </html>
