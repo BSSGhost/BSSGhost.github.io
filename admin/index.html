@@ -8,7 +8,12 @@
   <link rel="stylesheet" href="/admin/admin.css">
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <style>
-    :root{color-scheme:light;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#172b4b;background:#f3f6fb}
+    :root{
+      color-scheme:light;
+      font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+      color:#172b4b;
+      background:#f3f6fb
+    }
     *{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#172b4b}.wrap{max-width:1440px;margin:auto;padding:28px}
     .card{background:#fff;border:1px solid #e1e7f0;border-radius:16px;padding:22px;box-shadow:0 8px 30px #172b4b0a;margin-bottom:18px}
     .login{max-width:440px;margin:8vh auto}.hidden{display:none!important}.muted{color:#64748b}.error{color:#b42318}.success{color:#067647}
@@ -94,7 +99,6 @@
       <nav class="admin-sidebar-nav">
         <div class="nav-group"><p>Principal</p><button class="nav-item is-active" data-view="overview"><i data-lucide="layout-dashboard"></i><span>Vue générale</span></button></div>
         <div class="nav-group" data-permission-any="classes.view,settings.edit"><p>Gestion scolaire</p><button class="nav-item" data-view="years" data-permission="classes.view settings.edit"><i data-lucide="calendar-days"></i><span>Années scolaires</span></button><button class="nav-item" data-view="students" data-permission="students.view"><i data-lucide="graduation-cap"></i><span>Élèves</span></button><button class="nav-item" data-view="teachers" data-permission="teachers.view"><i data-lucide="users-round"></i><span>Professeurs</span></button><button class="nav-item" data-view="classes" data-permission="classes.view"><i data-lucide="school"></i><span>Classes</span></button></div>
-        <div class="nav-group" data-permission-any="subjects.view,reports.view,grades.view"><p>Gestion pédagogique</p><button class="nav-item" data-view="subjects" data-permission="subjects.view"><i data-lucide="book-open"></i><span>Matières</span></button><button class="nav-item" data-view="assignments" data-permission="subjects.view"><i data-lucide="network"></i><span>Affectations</span></button><button class="nav-item" data-view="results" data-permission="reports.view grades.view"><i data-lucide="chart-no-axes-column-increasing"></i><span>Résultats et moyennes</span></button></div>
         <div class="nav-group" data-role="principal"><p>Administration</p><button class="nav-item" data-view="users"><i data-lucide="shield-user"></i><span>Administrateurs</span></button><button class="nav-item" data-view="audit"><i data-lucide="history"></i><span>Journal d'activité</span></button><button class="nav-item" data-view="backups"><i data-lucide="database-backup"></i><span>Sauvegardes</span></button></div>
         <div class="nav-group"><p>Mon espace</p><button class="nav-item" data-view="account"><i data-lucide="circle-user-round"></i><span>Mon compte</span></button><button class="nav-item nav-item-danger" id="sidebar-logout"><i data-lucide="log-out"></i><span>Déconnexion</span></button></div>
       </nav>
@@ -109,7 +113,7 @@
           <div class="overview-columns"><article class="panel-card"><div class="panel-head"><h3>Accès rapides</h3></div><div class="quick-actions"><button data-quick-view="students"><i data-lucide="user-plus"></i><span>Ajouter un élève</span></button><button data-quick-view="classes"><i data-lucide="school"></i><span>Créer une classe</span></button><button data-quick-view="subjects"><i data-lucide="book-plus"></i><span>Ajouter une matière</span></button><button data-quick-view="results"><i data-lucide="chart-no-axes-column-increasing"></i><span>Consulter les résultats</span></button></div></article><article class="panel-card"><div class="panel-head"><h3>Activité récente</h3><button class="text-button" data-quick-view="audit">Tout voir</button></div><div id="overview-audit" class="activity-list"><p class="muted">Chargement des activités…</p></div></article></div>
         </section>
         <section id="view-years" class="admin-view"><article id="years-card" class="card"><h2>Années scolaires</h2><form id="year-form" class="form-grid"><label class="field">Année (ex. 2026-2027)<input id="year-label" pattern="[0-9]{4}[-/][0-9]{4}" required></label><label class="field">Début<input id="year-start" type="date"></label><label class="field">Fin<input id="year-end" type="date"></label><label class="inline-check"><input id="year-current" type="checkbox"> Année en cours</label><button class="btn" type="submit">Créer l'année</button></form><div id="years-list" class="table-wrap"></div></article></section>
-        <section id="view-students" class="admin-view"><article id="students-card" class="card"><h2>Gestion des élèves</h2><form id="student-form" class="form-grid"><label class="field">Matricule<input id="student-matricule" maxlength="40" required></label><label class="field">Prénom<input id="student-first" maxlength="80" required></label><label class="field">Nom<input id="student-last" maxlength="80" required></label><label class="field">Genre<select id="student-gender"><option value="UNSPECIFIED">Non précisé</option><option value="M">Garçon</option><option value="F">Fille</option><option value="OTHER">Autre</option></select></label><label class="field">Classe<select id="student-class" required></select></label><button class="btn" type="submit">Ajouter l'élève</button></form><div id="students-list" class="table-wrap"></div></article></section>
+        <section id="view-students" class="admin-view"><article id="students-card" class="card"><h2>Gestion des élèves</h2><form id="student-form" class="form-grid"><label class="field">Matricule<input id="student-matricule" maxlength="40" required></label><label class="field">Prénom<input id="student-first" maxlength="80" required></label><label class="field">Nom<input id="student-last" maxlength="80" required></label><label class="field">Genre<select id="student-gender"><option value="UNSPECIFIED">Non précisé</option><option value="M">Garçon</option><option value="F">Fille</option></select></label><label class="field">Classe<select id="student-class" required></select></label><button class="btn" type="submit">Ajouter l'élève</button></form><div id="students-list" class="table-wrap"></div></article></section>
         <section id="view-teachers" class="admin-view"><article id="teachers-card" class="card"><h2>Gestion des professeurs</h2><form id="teacher-form" class="form-grid"><label class="field">Nom complet<input id="teacher-name" maxlength="140" required></label><label class="field">Adresse e-mail<input id="teacher-email" type="email" maxlength="150" required></label><label class="field">Téléphone<input id="teacher-phone" maxlength="40"></label><button class="btn" type="submit">Créer le compte professeur</button></form><p id="teacher-created" class="notice hidden" role="status"></p><div id="teachers-list" class="table-wrap"></div></article></section>
         <section id="view-classes" class="admin-view"><article id="classes-card" class="card"><h2>Gestion des classes</h2><form id="class-form" class="form-grid"><label class="field">Nom de la classe<input id="class-name" maxlength="80" required placeholder="Ex. Terminale S2"></label><label class="field">Niveau<input id="class-level" maxlength="40" placeholder="Ex. Terminale"></label><label class="field">Année scolaire<select id="class-year" required></select></label><button class="btn" type="submit">Créer la classe</button></form><div id="classes-list" class="table-wrap"></div></article></section>
         <section id="view-subjects" class="admin-view"><article id="subjects-card" class="card"><h2>Gestion des matières</h2><form id="subject-form" class="form-grid"><label class="field">Nom de la matière<input id="subject-name" maxlength="100" required></label><label class="field">Code (facultatif)<input id="subject-code" maxlength="30"></label><button class="btn" type="submit">Créer la matière</button></form><div id="subjects-list" class="table-wrap"></div></article></section>
@@ -128,36 +132,30 @@
 <script type="module">
 const $ = (id) => document.getElementById(id);
 let current = null;
-const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const has = (permission) => current?.permissions?.includes(permission) || false;
 function show(id) { ['login','change','dashboard'].forEach((key) => $(key).classList.toggle('hidden', key !== id)); }
-async function api(path, options = {}) {
-  const response = await fetch(path, { credentials: 'same-origin', ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
-  let data = {}; try { data = await response.json(); } catch {}
-  if (!response.ok) { const error = new Error(data.message || data.error || `Erreur ${response.status}`); error.code = data.error; throw error; }
-  return data;
-}
+function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
 function table(headers, rows) {
   if (!rows.length) return '<p class="muted">Aucune donnée pour le moment.</p>';
-  return `<table><thead><tr>${headers.map((header) => `<th>${esc(header)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  return `<table><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
-function row(values) { return `<tr>${values.map((value) => `<td>${value}</td>`).join('')}</tr>`; }
+function row(values) { return `<tr>${values.map((value) => `<td>${escapeHtml(value)}</td>`).join('')}</tr>`; }
 function message(text, isError = false) { $('global-message').textContent = text; $('global-message').className = isError ? 'status error' : 'status success'; }
 function renderAccount() {
-  $('welcome').textContent = `Bonjour, ${current.full_name}`;
-  const roleLabel = current.role_name === 'principal' ? 'Administrateur principal' : 'Administrateur pédagogique';
-  $('header-admin-name').textContent = current.full_name;
+  $('welcome').textContent = `Bonjour, ${current?.full_name || ''}`;
+  const roleLabel = current?.role_name === 'principal' ? 'Administrateur principal' : 'Administrateur pédagogique';
+  $('header-admin-name').textContent = current?.full_name || '';
   $('header-admin-role').textContent = roleLabel;
-  $('sidebar-admin-name').textContent = current.full_name;
+  $('sidebar-admin-name').textContent = current?.full_name || '';
   $('sidebar-admin-role').textContent = roleLabel;
-  $('sidebar-avatar').textContent = (current.full_name || 'A').trim().charAt(0).toUpperCase();
-  $('account').textContent = current.email;
-  $('role').textContent = current.role_name === 'principal' ? 'Administrateur principal' : 'Administrateur pédagogique';
-  $('permissions').textContent = `${current.permissions.length} permissions : ${current.permissions.join(' · ')}`;
-  $('header-profile').textContent = (current.full_name || 'A').trim().charAt(0).toUpperCase();
+  $('sidebar-avatar').textContent = (current?.full_name || 'A').trim().charAt(0).toUpperCase();
+  $('account').textContent = current?.email || '';
+  $('role').textContent = roleLabel;
+  $('permissions').textContent = current?.permissions && current.permissions.length > 0 ? `${current.permissions.length} permissions : ${current.permissions.join(' · ')}` : 'Aucune permission';
+  $('header-profile').textContent = (current?.full_name || 'A').trim().charAt(0).toUpperCase();
   $('header-date').textContent = new Intl.DateTimeFormat('fr-FR', {weekday:'short', day:'numeric', month:'long'}).format(new Date());
   if (window.lucide) window.lucide.createIcons();
-  document.querySelectorAll('[data-role]').forEach((element) => element.classList.toggle('hidden', element.dataset.role !== current.role_name));
+  document.querySelectorAll('[data-role]').forEach((element) => element.classList.toggle('hidden', element.dataset.role !== current?.role_name));
   document.querySelectorAll('[data-permission]').forEach((element) => {
     const permissions = element.dataset.permission.split(/\s+/).filter(Boolean);
     element.classList.toggle('hidden', !permissions.some((permission) => has(permission)));
@@ -180,13 +178,13 @@ async function loadOverview() {
 async function loadYears() {
   if (!has('classes.view')) return;
   const d = await api('/api/admin/school-years');
-  $('years-list').innerHTML = table(['Année','Début','Fin','Statut'], d.school_years.map((y) => row([esc(y.label),esc(y.starts_on || '—'),esc(y.ends_on || '—'),y.is_current ? 'En cours' : (y.is_active ? 'Active' : 'Inactive')])));
-  $('class-year').innerHTML = d.school_years.filter((y) => y.is_active).map((y) => `<option value="${y.id}">${esc(y.label)}</option>`).join('');
+  $('years-list').innerHTML = table(['Année','Début','Fin','Statut'], d.school_years.map((y) => row([escapeHtml(y.label),escapeHtml(y.starts_on || '—'),escapeHtml(y.ends_on || '—'),y.is_current ? 'En cours' : (y.is_active ? 'Active' : 'Inactive')])));
+  $('class-year').innerHTML = d.school_years.filter((y) => y.is_active).map((y) => `<option value="${y.id}">${escapeHtml(y.label)}</option>`).join('');
   const activeYear = d.school_years.find((year) => year.is_current) || d.school_years.find((year) => year.is_active);
   $('active-year').textContent = activeYear ? activeYear.label : 'Non définie';
   $('header-active-year').textContent = activeYear ? activeYear.label : 'Non définie';
   if (!activeYear) {
-    $('overview-alert-text').textContent = 'Aucune année scolaire active n’est configurée. Sélectionnez une année active pour poursuivre les opérations scolaires.';
+    $('overview-alert-text').textContent = 'Aucune année scolaire active n\'est configurée. Sélectionnez une année active pour poursuivre les opérations scolaires.';
     $('overview-alert').classList.remove('hidden');
   } else {
     $('overview-alert').classList.add('hidden');
@@ -195,53 +193,61 @@ async function loadYears() {
 async function loadClasses() {
   if (!has('classes.view')) return;
   const d = await api('/api/admin/classes');
-  $('classes-list').innerHTML = table(['Classe','Niveau','Année','Élèves','État','Action'],d.classes.map((c) => row([esc(c.name),esc(c.level || '—'),esc(c.school_year),esc(c.student_count),c.is_active ? 'Active' : 'Inactive',`<button class=\"btn secondary\" data-toggle-entity=\"classes\" data-id=\"${c.id}\" data-next=\"${!c.is_active}\">${c.is_active?'Désactiver':'Réactiver'}</button>`])));
-  $('student-class').innerHTML = d.classes.filter((c) => c.is_active).map((c) => `<option value="${c.id}">${esc(c.name)} — ${esc(c.school_year)}</option>`).join('');
-  $('assignment-class').innerHTML = d.classes.filter((c) => c.is_active).map((c) => `<option value="${c.id}">${esc(c.name)} — ${esc(c.school_year)}</option>`).join('');
-  $('results-class').innerHTML = d.classes.filter((c) => c.is_active).map((c) => `<option value="${c.id}">${esc(c.name)} — ${esc(c.school_year)}</option>`).join('');
+  $('classes-list').innerHTML = table(['Classe','Niveau','Année','Élèves','État','Action'],d.classes.map((c) => row([escapeHtml(c.name),escapeHtml(c.level || '—'),escapeHtml(c.school_year),escapeHtml(c.student_count),c.is_active ? 'Active' : 'Inactive',`<button class="btn secondary" data-toggle-entity="classes" data-id="${c.id}" data-next="${!c.is_active}">${c.is_active?'Désactiver':'Réactiver'}</button>`])));
+  $('student-class').innerHTML = d.classes.filter((c) => c.is_active).map((c) => `<option value="${c.id}">${escapeHtml(c.name)} — ${escapeHtml(c.school_year)}</option>`).join('');
+  $('assignment-class').innerHTML = d.classes.filter((c) => c.is_active).map((c) => `<option value="${c.id}">${escapeHtml(c.name)} — ${escapeHtml(c.school_year)}</option>`).join('');
+  $('results-class').innerHTML = d.classes.filter((c) => c.is_active).map((c) => `<option value="${c.id}">${escapeHtml(c.name)} — ${escapeHtml(c.school_year)}</option>`).join('');
 }
 async function loadStudents() {
   if (!has('students.view')) return;
   const d = await api('/api/admin/students');
-  $('students-list').innerHTML = table(['Matricule','Prénom','Nom','Classe','Année','État','Action'],d.students.map((s) => row([esc(s.matricule),esc(s.first_name),esc(s.last_name),esc(s.class_name || '—'),esc(s.school_year || '—'),s.is_active ? 'Actif' : 'Inactif',`<button class=\"btn secondary\" data-toggle-entity=\"students\" data-id=\"${s.id}\" data-next=\"${!s.is_active}\">${s.is_active?'Désactiver':'Réactiver'}</button>`])));
+  $('students-list').innerHTML = table(['Matricule','Prénom','Nom','Classe','Année','État','Action'],d.students.map((s) => row([escapeHtml(s.matricule),escapeHtml(s.first_name),escapeHtml(s.last_name),escapeHtml(s.class_name || '—'),escapeHtml(s.school_year || '—'),s.is_active ? 'Actif' : 'Inactif',`<button class="btn secondary" data-toggle-entity="students" data-id="${s.id}" data-next="${!s.is_active}">${s.is_active?'Désactiver':'Réactiver'}</button>`])));
 }
 async function loadTeachers() {
   if (!has('teachers.view')) return;
   const d = await api('/api/admin/teachers');
-  $('teachers-list').innerHTML = table(['Nom','E-mail','Téléphone','État','Première connexion','Action'],d.teachers.map((t) => row([esc(t.full_name),esc(t.email),esc(t.phone || '—'),t.is_active ? 'Actif' : 'Inactif',t.must_change_password ? 'Mot de passe à changer' : 'Configuré',`<button class=\"btn secondary\" data-toggle-entity=\"teachers\" data-id=\"${t.id}\" data-next=\"${!t.is_active}\">${t.is_active?'Désactiver':'Réactiver'}</button>`])));
-  $('assignment-teacher').innerHTML = '<option value="">Non attribué</option>' + d.teachers.filter((t) => t.is_active).map((t) => `<option value="${t.id}">${esc(t.full_name)} — ${esc(t.email)}</option>`).join('');
+  $('teachers-list').innerHTML = table(['Nom','E-mail','Téléphone','État','Première connexion','Action'],d.teachers.map((t) => row([escapeHtml(t.full_name),escapeHtml(t.email),escapeHtml(t.phone || '—'),t.is_active ? 'Actif' : 'Inactif',t.must_change_password ? 'Mot de passe à changer' : 'Configuré',`<button class="btn secondary" data-toggle-entity="teachers" data-id="${t.id}" data-next="${!t.is_active}">${t.is_active?'Désactiver':'Réactiver'}</button>`])));
+  $('assignment-teacher').innerHTML = '<option value="">Non attribué</option>' + d.teachers.filter((t) => t.is_active).map((t) => `<option value="${t.id}">${escapeHtml(t.full_name)} — ${escapeHtml(t.email)}</option>`).join('');
 }
 async function loadSubjects() {
   if (!has('subjects.view')) return;
   const d = await api('/api/admin/subjects');
-  $('subjects-list').innerHTML = table(['Code','Matière','État','Action'],d.subjects.map((s) => row([esc(s.code || '—'),esc(s.name),s.is_active ? 'Active' : 'Inactive',`<button class=\"btn secondary\" data-toggle-entity=\"subjects\" data-id=\"${s.id}\" data-next=\"${!s.is_active}\">${s.is_active?'Désactiver':'Réactiver'}</button>`])));
-  $('assignment-subject').innerHTML = d.subjects.filter((s) => s.is_active).map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  $('subjects-list').innerHTML = table(['Code','Matière','État','Action'],d.subjects.map((s) => row([escapeHtml(s.code || '—'),escapeHtml(s.name),s.is_active ? 'Active' : 'Inactive',`<button class="btn secondary" data-toggle-entity="subjects" data-id="${s.id}" data-next="${!s.is_active}">${s.is_active?'Désactiver':'Réactiver'}</button>`])));
+  $('assignment-subject').innerHTML = d.subjects.filter((s) => s.is_active).map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
 }
 async function loadTerms() {
   if (!has('subjects.view')) return;
   const d = await api('/api/admin/terms');
-  $('assignment-term').innerHTML = d.terms.filter((term) => !term.is_closed).map((term) => `<option value="${term.id}">${esc(term.school_year)} · ${esc(term.name)}</option>`).join('');
-  $('results-term').innerHTML = d.terms.map((term) => `<option value="${term.id}">${esc(term.school_year)} · ${esc(term.name)}</option>`).join('');
+  $('assignment-term').innerHTML = d.terms.filter((term) => !term.is_closed).map((term) => `<option value="${term.id}">${escapeHtml(term.school_year)} · ${escapeHtml(term.name)}</option>`).join('');
+  $('results-term').innerHTML = d.terms.map((term) => `<option value="${term.id}">${escapeHtml(term.school_year)} · ${escapeHtml(term.name)}</option>`).join('');
 }
 async function loadAssignments() {
   if (!has('subjects.view')) return;
   const d = await api('/api/admin/class-subjects');
-  $('assignments-list').innerHTML = table(['Classe','Matière','Semestre','Professeur','Coefficient','Composition'],d.assignments.map((a) => row([esc(a.class_name),esc(a.subject_name),esc(a.term_name),esc(a.teacher_name || 'Non attribué'),esc(a.coefficient),a.has_composition ? 'Oui' : 'Non'])));
+  $('assignments-list').innerHTML = table(['Classe','Matière','Semestre','Professeur','Coefficient','Composition'],d.assignments.map((a) => row([escapeHtml(a.class_name),escapeHtml(a.subject_name),escapeHtml(a.term_name),escapeHtml(a.teacher_name || 'Non attribué'),escapeHtml(a.coefficient),a.has_composition ? 'Oui' : 'Non'])));
 }
 async function loadUsersAndAudit() {
-  if (current.role_name !== 'principal') return;
+  if (current?.role_name !== 'principal') return;
   const [usersData,auditData] = await Promise.all([api('/api/admin/users'),api('/api/admin/audit/logs')]);
-  $('users').innerHTML = table(['Nom','E-mail','Rôle','État','Dernière connexion'],usersData.users.map((u) => row([esc(u.full_name),esc(u.email),esc(u.role_name),u.is_active ? 'Actif' : 'Désactivé',esc(u.last_login || 'Jamais')])));
+  $('users').innerHTML = table(['Nom','E-mail','Rôle','État','Dernière connexion'],usersData.users.map((u) => row([escapeHtml(u.full_name),escapeHtml(u.email),escapeHtml(u.role_name),u.is_active ? 'Actif' : 'Désactivé',escapeHtml(u.last_login || 'Jamais')])));
   const logs = auditData.logs || [];
-  $('audit').innerHTML = logs.length ? table(['Date','Acteur','Type','Action','Ressource','IP'],logs.map((l) => row([esc(l.created_at),esc(l.admin_name || 'Compte supprimé'),esc(l.actor_type || 'administrateur'),esc(l.action),esc(l.resource),esc(l.ip_address || '—')]))) : '<p class="muted">Aucune activité enregistrée.</p>';
-  $('overview-audit').innerHTML = logs.length ? logs.slice(0, 5).map((log) => `<div class="activity-item"><strong>${esc(log.admin_name || 'Compte supprimé')}</strong><p>${esc(log.action)} · ${esc(log.resource)}</p><time>${esc(log.created_at)}</time></div>`).join('') : '<p class="muted">Aucune activité enregistrée.</p>';
+  const auditRows = logs.map((log) => row([
+    escapeHtml(log.created_at),
+    escapeHtml(log.admin_name || 'Compte supprimé'),
+    escapeHtml(log.actor_type || 'administrateur'),
+    escapeHtml(log.action),
+    escapeHtml(log.resource),
+    escapeHtml(log.ip_address || '—')
+  ]));
+  $('audit').innerHTML = logs.length ? table(['Date','Acteur','Type','Action','Ressource','IP'], auditRows) : '<p class="muted">Aucune activité enregistrée.</p>';
+  $('overview-audit').innerHTML = logs.length ? logs.slice(0, 5).map((log) => `<div class="activity-item"><strong>${escapeHtml(log.admin_name || 'Compte supprimé')}</strong><p>${escapeHtml(log.action)} · ${escapeHtml(log.resource)}</p><time>${escapeHtml(log.created_at)}</time></div>`).join('') : '<p class="muted">Aucune activité enregistrée.</p>';
 }
 async function refresh() {
   renderAccount();
   const tasks = [loadOverview(),loadYears(),loadClasses(),loadStudents(),loadTeachers(),loadSubjects(),loadTerms(),loadAssignments(),loadUsersAndAudit()];
   const results = await Promise.allSettled(tasks);
   const failed = results.filter((result) => result.status === 'rejected');
-  if (failed.length) message('Certaines listes n’ont pas pu être chargées. Vérifie les permissions et le schéma MySQL.', true);
+  if (failed.length) message('Certaines listes n\'ont pas pu être chargées. Vérifie les permissions et le schéma MySQL.', true);
 }
 async function load() {
   try { const d = await api('/api/admin/me'); current = d.user; if (current.must_change_password) { show('change'); return; } show('dashboard'); await refresh(); }
@@ -280,8 +286,7 @@ $('student-form').addEventListener('submit', async (event) => { event.preventDef
 $('teacher-form').addEventListener('submit', async (event) => { event.preventDefault(); $('teacher-created').classList.add('hidden'); try { const d=await api('/api/admin/teachers',{method:'POST',body:JSON.stringify({full_name:$('teacher-name').value,email:$('teacher-email').value,phone:$('teacher-phone').value})}); $('teacher-created').textContent=`Compte créé pour ${d.teacher.full_name}. Mot de passe temporaire à transmettre une seule fois : ${d.temporary_password}. Le professeur devra le changer à sa première connexion.`; $('teacher-created').classList.remove('hidden'); $('teacher-form').reset(); await refresh(); } catch(e) { message(e.message,true); } });
 $('subject-form').addEventListener('submit', async (event) => { event.preventDefault(); try { await api('/api/admin/subjects',{method:'POST',body:JSON.stringify({name:$('subject-name').value,code:$('subject-code').value})}); $('subject-form').reset(); await refresh(); message('Matière créée.'); } catch(e) { message(e.message,true); } });
 $('assignment-form').addEventListener('submit', async (event) => { event.preventDefault(); try { await api('/api/admin/class-subjects',{method:'POST',body:JSON.stringify({class_id:$('assignment-class').value,subject_id:$('assignment-subject').value,term_id:$('assignment-term').value,teacher_id:$('assignment-teacher').value||null,coefficient:$('assignment-coef').value,has_composition:$('assignment-composition').checked})}); await refresh(); message('Affectation enregistrée.'); } catch(e) { message(e.message,true); } });
-$('dashboard').addEventListener('click', async (event) => { const button=event.target.closest('[data-toggle-entity]'); if(!button)return; const entity=button.dataset.toggleEntity; const id=button.dataset.id; const next=button.dataset.next==='true'; try { await api(`/api/admin/${entity}/${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify({is_active:next})}); await refresh(); message(`${entity} : statut mis à jour.`); } catch(e) { message(e.message,true); } });
-$('results-form').addEventListener('submit', async (event) => { event.preventDefault(); try { const d=await api(`/api/admin/results?class_id=${encodeURIComponent($('results-class').value)}&term_id=${encodeURIComponent($('results-term').value)}`); const headers=['Matricule','Prénom','Nom',...d.subjects.map((subject)=>subject.name),'Moyenne générale']; const rows=d.results.map((student)=>row([esc(student.matricule),esc(student.first_name),esc(student.last_name),...student.subjects.map((subject)=>subject.average===null?'—':Number(subject.average).toFixed(2)),student.general_average===null?'Incomplet':Number(student.general_average).toFixed(2)])); $('results-list').innerHTML=`<p class=\"muted\">${esc(d.class)} · ${esc(d.term)} — une moyenne générale n’est affichée que si toutes les matières affectées ont leurs notes complètes.</p>`+table(headers,rows); } catch(e) { message(e.message,true); } });
+$('results-form').addEventListener('submit', async (event) => { event.preventDefault(); try { const d=await api(`/api/admin/results?class_id=${encodeURIComponent($('results-class').value)}&term_id=${encodeURIComponent($('results-term').value)}`); const headers=['Matricule','Prénom','Nom',...d.subjects.map((subject)=>subject.name),'Moyenne générale']; const rows=d.results.map((student)=>row([escapeHtml(student.matricule),escapeHtml(student.first_name),escapeHtml(student.last_name),...student.subjects.map((subject)=>subject.average===null?'—':Number(subject.average).toFixed(2)),student.general_average===null?'Incomplet':Number(student.general_average).toFixed(2)])); $('results-list').innerHTML=`<p class="muted">${escapeHtml(d.class)} · ${escapeHtml(d.term)} — une moyenne générale n\'est affichée que si toutes les matières affectées ont leurs notes complètes.</p>`+table(headers,rows); } catch(e) { message(e.message,true); } });
 $('download-backup').addEventListener('click', async () => { try { const response=await fetch('/api/admin/backup',{credentials:'same-origin'}); if(!response.ok){const d=await response.json().catch(()=>({}));throw new Error(d.error||`Erreur ${response.status}`);} const blob=await response.blob(); const url=URL.createObjectURL(blob); const link=document.createElement('a'); link.href=url; link.download=`sunu-moyenne-backup-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url); message('Sauvegarde téléchargée. Conserve-la dans un emplacement sécurisé.'); } catch(e) { message(e.message,true); } });
 const VIEW_TITLES = {overview:'Vue générale',years:'Années scolaires',students:'Gestion des élèves',teachers:'Gestion des professeurs',classes:'Gestion des classes',subjects:'Gestion des matières',assignments:'Affectations pédagogiques',results:'Résultats et moyennes',users:'Administrateurs',audit:"Journal d'activité",backups:'Sauvegardes',account:'Mon compte'};
 function navigate(view, updateHash = true) {
