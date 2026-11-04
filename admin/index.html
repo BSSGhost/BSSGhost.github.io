@@ -88,8 +88,9 @@
   </section>
   <section id="dashboard" class="admin-shell hidden">
     <aside id="admin-sidebar" class="admin-sidebar">
-      <div class="admin-sidebar-brand"><img src="/LYNAQE.png" alt="SUNU MOYENNE"><div><strong>SUNU MOYENNE</strong><span>Administration</span></div></div>
-      <button id="sidebar-collapse" class="sidebar-collapse" type="button" aria-label="Réduire le menu">‹</button>
+      <div class="admin-sidebar-brand"><div class="sidebar-logo-frame"><img src="/LYNAQE.png" alt="LYNAQE Sédhiou"></div><div class="sidebar-brand-copy"><strong>SUNU MOYENNE</strong><span>Administration</span></div></div>
+      <div id="sidebar-profile" class="sidebar-profile"><span id="sidebar-avatar" class="sidebar-avatar">A</span><div><strong id="sidebar-admin-name">Administrateur</strong><span id="sidebar-admin-role">Compte administration</span></div></div>
+      <button id="sidebar-collapse" class="sidebar-collapse" type="button" aria-label="Réduire le menu"><i data-lucide="panel-left-close"></i></button>
       <nav class="admin-sidebar-nav">
         <div class="nav-group"><p>Principal</p><button class="nav-item is-active" data-view="overview"><i data-lucide="layout-dashboard"></i><span>Vue générale</span></button></div>
         <div class="nav-group" data-permission-any="classes.view,settings.edit"><p>Gestion scolaire</p><button class="nav-item" data-view="years" data-permission="classes.view settings.edit"><i data-lucide="calendar-days"></i><span>Années scolaires</span></button><button class="nav-item" data-view="students" data-permission="students.view"><i data-lucide="graduation-cap"></i><span>Élèves</span></button><button class="nav-item" data-view="teachers" data-permission="teachers.view"><i data-lucide="users-round"></i><span>Professeurs</span></button><button class="nav-item" data-view="classes" data-permission="classes.view"><i data-lucide="school"></i><span>Classes</span></button></div>
@@ -99,7 +100,7 @@
       </nav>
     </aside>
     <div class="admin-main">
-      <header class="admin-header"><button id="mobile-menu" class="mobile-menu" type="button" aria-label="Ouvrir le menu">☰</button><div><p id="breadcrumb" class="breadcrumb">Administration / Vue générale</p><h1 id="workspace-title">Vue générale</h1></div><div class="admin-user-menu"><div><strong id="header-admin-name"></strong><span id="header-admin-role"></span></div><button id="header-profile" class="admin-avatar" type="button" aria-label="Mon compte"></button><button id="logout" class="header-logout" type="button">Déconnexion</button></div></header>
+      <header class="admin-header"><button id="mobile-menu" class="mobile-menu" type="button" aria-label="Ouvrir le menu"><i data-lucide="menu"></i></button><div class="topbar-title"><p id="breadcrumb" class="breadcrumb">Administration / Vue générale</p><h1 id="workspace-title">Vue générale</h1></div><div class="topbar-context"><span class="school-year-chip"><i data-lucide="calendar-days"></i><span>Année <strong id="header-active-year">—</strong></span></span><span id="header-date" class="header-date"></span></div><div class="admin-user-menu"><div><strong id="header-admin-name"></strong><span id="header-admin-role"></span></div><button id="header-profile" class="admin-avatar" type="button" aria-label="Mon compte"></button><button id="logout" class="header-logout" type="button" aria-label="Déconnexion"><i data-lucide="log-out"></i></button></div></header>
       <main class="admin-workspace">
         <section id="view-overview" class="admin-view is-active">
           <div class="welcome-panel"><div><p class="eyebrow">Vue générale</p><h2 id="welcome"></h2><p>Voici la situation générale de votre établissement.</p></div><span class="school-year-badge">Année active : <strong id="active-year">—</strong></span></div>
@@ -143,12 +144,17 @@ function row(values) { return `<tr>${values.map((value) => `<td>${value}</td>`).
 function message(text, isError = false) { $('global-message').textContent = text; $('global-message').className = isError ? 'status error' : 'status success'; }
 function renderAccount() {
   $('welcome').textContent = `Bonjour, ${current.full_name}`;
+  const roleLabel = current.role_name === 'principal' ? 'Administrateur principal' : 'Administrateur pédagogique';
   $('header-admin-name').textContent = current.full_name;
-  $('header-admin-role').textContent = current.role_name === 'principal' ? 'Administrateur principal' : 'Administrateur pédagogique';
+  $('header-admin-role').textContent = roleLabel;
+  $('sidebar-admin-name').textContent = current.full_name;
+  $('sidebar-admin-role').textContent = roleLabel;
+  $('sidebar-avatar').textContent = (current.full_name || 'A').trim().charAt(0).toUpperCase();
   $('account').textContent = current.email;
   $('role').textContent = current.role_name === 'principal' ? 'Administrateur principal' : 'Administrateur pédagogique';
   $('permissions').textContent = `${current.permissions.length} permissions : ${current.permissions.join(' · ')}`;
   $('header-profile').textContent = (current.full_name || 'A').trim().charAt(0).toUpperCase();
+  $('header-date').textContent = new Intl.DateTimeFormat('fr-FR', {weekday:'short', day:'numeric', month:'long'}).format(new Date());
   if (window.lucide) window.lucide.createIcons();
   document.querySelectorAll('[data-role]').forEach((element) => element.classList.toggle('hidden', element.dataset.role !== current.role_name));
   document.querySelectorAll('[data-permission]').forEach((element) => {
@@ -177,6 +183,7 @@ async function loadYears() {
   $('class-year').innerHTML = d.school_years.filter((y) => y.is_active).map((y) => `<option value="${y.id}">${esc(y.label)}</option>`).join('');
   const activeYear = d.school_years.find((year) => year.is_current) || d.school_years.find((year) => year.is_active);
   $('active-year').textContent = activeYear ? activeYear.label : 'Non définie';
+  $('header-active-year').textContent = activeYear ? activeYear.label : 'Non définie';
 }
 async function loadClasses() {
   if (!has('classes.view')) return;
