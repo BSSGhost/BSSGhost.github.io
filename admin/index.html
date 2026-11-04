@@ -91,11 +91,11 @@
       <div class="admin-sidebar-brand"><img src="/LYNAQE.png" alt="SUNU MOYENNE"><div><strong>SUNU MOYENNE</strong><span>Administration</span></div></div>
       <button id="sidebar-collapse" class="sidebar-collapse" type="button" aria-label="Réduire le menu">‹</button>
       <nav class="admin-sidebar-nav">
-        <div class="nav-group"><p>Principal</p><button class="nav-item is-active" data-view="overview">Vue générale</button></div>
-        <div class="nav-group" data-permission-any="classes.view,settings.edit"><p>Gestion scolaire</p><button class="nav-item" data-view="years" data-permission="classes.view settings.edit">Années scolaires</button><button class="nav-item" data-view="students" data-permission="students.view">Élèves</button><button class="nav-item" data-view="teachers" data-permission="teachers.view">Professeurs</button><button class="nav-item" data-view="classes" data-permission="classes.view">Classes</button></div>
-        <div class="nav-group" data-permission-any="subjects.view,reports.view,grades.view"><p>Gestion pédagogique</p><button class="nav-item" data-view="subjects" data-permission="subjects.view">Matières</button><button class="nav-item" data-view="assignments" data-permission="subjects.view">Affectations</button><button class="nav-item" data-view="results" data-permission="reports.view grades.view">Résultats et moyennes</button></div>
-        <div class="nav-group" data-role="principal"><p>Administration</p><button class="nav-item" data-view="users">Administrateurs</button><button class="nav-item" data-view="audit">Journal d'activité</button><button class="nav-item" data-view="backups">Sauvegardes</button></div>
-        <div class="nav-group"><p>Mon espace</p><button class="nav-item" data-view="account">Mon compte</button><button class="nav-item nav-item-danger" id="sidebar-logout">Déconnexion</button></div>
+        <div class="nav-group"><p>Principal</p><button class="nav-item is-active" data-view="overview"><i data-lucide="layout-dashboard"></i><span>Vue générale</span></button></div>
+        <div class="nav-group" data-permission-any="classes.view,settings.edit"><p>Gestion scolaire</p><button class="nav-item" data-view="years" data-permission="classes.view settings.edit"><i data-lucide="calendar-days"></i><span>Années scolaires</span></button><button class="nav-item" data-view="students" data-permission="students.view"><i data-lucide="graduation-cap"></i><span>Élèves</span></button><button class="nav-item" data-view="teachers" data-permission="teachers.view"><i data-lucide="users-round"></i><span>Professeurs</span></button><button class="nav-item" data-view="classes" data-permission="classes.view"><i data-lucide="school"></i><span>Classes</span></button></div>
+        <div class="nav-group" data-permission-any="subjects.view,reports.view,grades.view"><p>Gestion pédagogique</p><button class="nav-item" data-view="subjects" data-permission="subjects.view"><i data-lucide="book-open"></i><span>Matières</span></button><button class="nav-item" data-view="assignments" data-permission="subjects.view"><i data-lucide="network"></i><span>Affectations</span></button><button class="nav-item" data-view="results" data-permission="reports.view grades.view"><i data-lucide="chart-no-axes-column-increasing"></i><span>Résultats et moyennes</span></button></div>
+        <div class="nav-group" data-role="principal"><p>Administration</p><button class="nav-item" data-view="users"><i data-lucide="shield-user"></i><span>Administrateurs</span></button><button class="nav-item" data-view="audit"><i data-lucide="history"></i><span>Journal d'activité</span></button><button class="nav-item" data-view="backups"><i data-lucide="database-backup"></i><span>Sauvegardes</span></button></div>
+        <div class="nav-group"><p>Mon espace</p><button class="nav-item" data-view="account"><i data-lucide="circle-user-round"></i><span>Mon compte</span></button><button class="nav-item nav-item-danger" id="sidebar-logout"><i data-lucide="log-out"></i><span>Déconnexion</span></button></div>
       </nav>
     </aside>
     <div class="admin-main">
@@ -149,6 +149,7 @@ function renderAccount() {
   $('role').textContent = current.role_name === 'principal' ? 'Administrateur principal' : 'Administrateur pédagogique';
   $('permissions').textContent = `${current.permissions.length} permissions : ${current.permissions.join(' · ')}`;
   $('header-profile').textContent = (current.full_name || 'A').trim().charAt(0).toUpperCase();
+  if (window.lucide) window.lucide.createIcons();
   document.querySelectorAll('[data-role]').forEach((element) => element.classList.toggle('hidden', element.dataset.role !== current.role_name));
   document.querySelectorAll('[data-permission]').forEach((element) => {
     const permissions = element.dataset.permission.split(/\s+/).filter(Boolean);
