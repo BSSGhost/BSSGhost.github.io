@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import { isPublicStaticPath } from '../security/static-policy.js';
 
 test('les ressources publiques nécessaires restent accessibles', () => {
-  for (const path of ['/index.html', '/styles.css', '/script.js', '/prof.js', '/admin/index.html', '/admin/admin.css', '/fonts/plus-jakarta-sans-400.woff2']) {
+  for (const path of ['/index.html', '/styles.css', '/script.js', '/prof.js', '/admin/index.html', '/admin/admin.css', '/admin/app.css', '/admin/js/app.js', '/admin/js/ui.js', '/admin/js/icons.js', '/fonts/plus-jakarta-sans-400.woff2']) {
     assert.equal(isPublicStaticPath(path), true, path);
   }
 });
 
 test('les fichiers de configuration, certificats et SQL ne sont jamais servis', () => {
-  for (const path of ['/.env', '/.env.example', '/certs/aiven-ca.pem', '/database/migrations/school-core.sql', '/package.json', '/server.js', '/db-ssl.js', '/ADMIN-INSTALLATION.md', '/scripts/init-admins.mjs', '/security/static-policy.js']) {
+  for (const path of ['/.env', '/.env.example', '/certs/aiven-ca.pem', '/database/migrations/school-core.sql', '/package.json', '/server.js', '/db-ssl.js', '/ADMIN-INSTALLATION.md', '/scripts/init-admins.mjs', '/security/static-policy.js', '/admin/admin.js']) {
     assert.equal(isPublicStaticPath(path), false, path);
   }
 });
