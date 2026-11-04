@@ -1,8 +1,7 @@
 ﻿/*
    ADMIN — SUNU MOYENNE
-   Refonte graphique premium — Gestion côté client de l'espace administration
+   Gestion côté client de l'espace administration
    Gère l'authentification, la navigation et les appels API
-   Tout en préservant l'architecture backend existante.
 */
 
 /* État global */
@@ -131,8 +130,8 @@ function showAdminScreen() {
   let sectionsHTML = `
     <!-- Sidebar -->
     <div class="admin-sidebar">
-      <div class="admin-sidebar-brand">
-        <div class="sidebar-logo-frame"><img src="LYNAQE.png" alt="Logo" width="28" height="28" style="margin-right: 8px;"></div>
+      <div class="admin-brand-small">
+        <img src="LYNAQE.png" alt="Logo" width="28" height="28" style="margin-right: 8px;">
         SUNU MOYENNE
       </div>
       <div class="sidebar-nav">
@@ -154,9 +153,10 @@ function showAdminScreen() {
 
   // Ajouter les sections communes
   commonSections.forEach(section => {
+    const isAccessible = true; // Toutes les sections sont accessibles au minimum
     sectionsHTML += `
       <a href="#" class="sidebar-nav-link" data-section="${section.id}" 
-         style="color: rgba(255,255,255,0.7);">
+         ${!isAccessible ? 'style="color: var(--muted)"' : ''}>
         <span>${section.icon} ${section.label}</span>
       </a>
     `;
@@ -301,7 +301,7 @@ function showAdminScreen() {
       <section id="admin-users" class="admin-section">
         <div class="admin-card">
           <div class="admin-card-header">
-            <h3>Gestion des administrateurs</h3>
+            <h3>Gestion des Administrateurs</h3>
           </div>
           <div class="admin-card-content">
             <div class="admin-table-wrapper">
@@ -344,7 +344,25 @@ function showAdminScreen() {
             <h3>Paramètres de l'établissement</h3>
           </div>
           <div class="admin-card-content">
-            <p>La gestion des paramètres n'est pas encore disponible.</p>
+            <form id="admin-settings-form">
+              <div class="admin-form-group">
+                <label>Nom de l'établissement</label>
+                <input type="text" id="establishment-name" class="admin-input" value="LYNAQE Sédhiou" />
+              </div>
+              <div class="admin-form-group">
+                <label>Adresse</label>
+                <input type="text" id="establishment-address" class="admin-input" value="Sénégal" />
+              </div>
+              <div class="admin-form-group">
+                <label>Téléphone</label>
+                <input type="text" id="establishment-phone" class="admin-input" value="+221 ..." />
+              </div>
+              <div class="admin-form-group">
+                <label>Email</label>
+                <input type="text" id="establishment-email" class="admin-input" value="contact@sunu-moyenne.sn" />
+              </div>
+              <button type="submit" class="admin-btn-primary">Enregistrer</button>
+            </form>
           </div>
         </div>
       </section>
@@ -456,7 +474,6 @@ function renderAdminUsersContent(data) {
     </div>
   `;
 }
-
 function renderSectionContent(sectionId, data) {
   const contentArea = document.getElementById('admin-content');
   if (!contentArea) return;
@@ -507,9 +524,8 @@ function renderSectionContent(sectionId, data) {
 }
 
 /*
-   Rendre le contenu du tableau de bord
+   Charger les données du tableau de bord
 */
-
 async function fetchAdminData(endpoint) {
   const response = await fetch(endpoint, {
     method: 'GET',
@@ -776,10 +792,9 @@ async function handleChangePasswordSubmit(event) {
     submitBtn.textContent = originalText;
   }
 }
-
 /*
  * Déconnexion de l'administrateur
-*/
+ */
 async function logoutAdmin() {
   try {
     const response = await fetch('/api/admin/logout', {
@@ -804,166 +819,3 @@ async function logoutAdmin() {
   }
 }
 
-/*
-   Charger les données selon la section
-*/
-async function loadSectionData(sectionId) {
-  // Masquer d'abord toutes les sections
-  document.querySelectorAll('.admin-section').forEach((section) => {
-    section.classList.remove('is-active');
-  });
-
-  // Afficher la section demandée
-  const targetSection = document.getElementById(`view-${sectionId}`);
-  if (targetSection) {
-    targetSection.classList.add('is-active');
-  }
-
-  // Charger les données selon le type
-  switch (sectionId) {
-    case 'dashboard':
-      await loadDashboardData();
-      break;
-    case 'students':
-      await loadStudentsData();
-      break;
-    case 'classes':
-      await loadClassesData();
-      break;
-    case 'admin-users':
-      await loadUsersAndAudit();
-      break;
-  }
-}
-
-/*
-   Rendre le contenu tableau de bord
-*/
-async function renderDashboardContent(data) {
-  const stats = data || await fetchAdminData('/api/admin/overview');
-
-  const content = `
-    <div class="admin-card">
-      <div class="admin-card-header">
-        <h3>Tableau de bord</h3>
-      </div>
-      <div class="admin-grid-view">
-        <div class="admin-grid-card">
-          <div class="admin-grid-icon">👥</div>
-          <div class="admin-grid-label">Élèves</div>
-          <div class="admin-grid-value" id="dashboard-students">Chargement...</div>
-        </div>
-        <div class="admin-grid-card">
-          <div class="admin-grid-icon">👨‍🏫</div>
-          <div class="admin-grid-label">Professeurs</div>
-          <div class="admin-grid-value" id="dashboard-teachers">Chargement...</div>
-        </div>
-        <div class="admin-grid-card">
-          <div class="admin-grid-icon">📚</div>
-          <div class="admin-grid-label">Matières</div>
-          <div class="admin-grid-value" id="dashboard-subjects">Chargement...</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="admin-card" style="margin-top: 24px;">
-      <div class="admin-card-header">
-        <h3>Activité récente</h3>
-      </div>
-      <div id="admin-activity-list" class="admin-activity-list">
-        <p>Chargement de l'activité récente...</p>
-      </div>
-    </div>
-  `;
-
-  document.getElementById('admin-content').innerHTML = content;
-
-  // Mise à jour des stats
-  document.getElementById('dashboard-students').textContent = stats.totalStudents || 0;
-  document.getElementById('dashboard-teachers').textContent = stats.totalTeachers || 0;
-  document.getElementById('dashboard-subjects').textContent = stats.totalSchoolYears || 0;
-}
-
-/*
-   Charger les utilisateurs et le journal
-*/
-async function loadUsersAndAudit() {
-  if (adminUser.role_name !== 'principal') return;
-  const [usersData, auditData] = await Promise.all([api('/api/admin/users'), api('/api/admin/audit/logs')]);
-  const usersSection = document.getElementById('admin-users');
-  if (usersSection) {
-    usersSection.innerHTML = `
-      <div class="admin-card">
-        <div class="admin-card-header">
-          <h3>Gestion des administrateurs</h3>
-        </div>
-        <div class="admin-table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Nom</th>
-                <th>Email</th>
-                <th>Rôle</th>
-                <th>Statut</th>
-                <th>Dernière connexion</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${(usersData.users || []).map((u) => `
-                <tr>
-                  <td>${escapeAdminHtml(u.full_name)}</td>
-                  <td>${escapeAdminHtml(u.email)}</td>
-                  <td>${escapeAdminHtml(u.role_name)}</td>
-                  <td>${u.is_active ? 'Actif' : 'Désactivé'}</td>
-                  <td>${u.last_login ? escapeAdminHtml(new Date(u.last_login).toLocaleString('fr-FR')) : 'Jamais connecté'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  }
-
-  const logs = auditData.logs || [];
-  const auditSection = document.getElementById('audit');
-  if (auditSection) {
-    auditSection.innerHTML = logs.length ? `
-      <div class="admin-card">
-        <div class="admin-card-header">
-          <h3>Journal d'activité</h3>
-        </div>
-        <div class="admin-table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Acteur</th>
-                <th>Type</th>
-                <th>Action</th>
-                <th>Ressource</th>
-                <th>IP</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${logs.map((l) => `
-                <tr>
-                  <td>${escapeAdminHtml(l.created_at)}</td>
-                  <td>${escapeAdminHtml(l.admin_name || 'Compte supprimé')}</td>
-                  <td>${escapeAdminHtml(l.actor_type || 'administrateur')}</td>
-                  <td>${escapeAdminHtml(l.action)}</td>
-                  <td>${escapeAdminHtml(l.resource)}</td>
-                  <td>${escapeHtml(l.ip_address || '—')}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    ` : '<p class="muted">Aucune activité enregistrée.</p>';
-  }
-}
-
-/* Hooks exposés */
-window.changePassword = changePassword;
-window.logoutAdmin = logoutAdmin;
