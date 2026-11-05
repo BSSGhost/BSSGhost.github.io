@@ -417,7 +417,7 @@ async function teacherApi(req, res, url) {
       }));
       const [terms] = await db.execute('SELECT id,name FROM terms WHERE school_year_id=?', [classRow.school_year_id]);
       const termIds = Object.fromEntries(terms.map((term) => [term.name,term.id]));
-      const [assignments] = await db.execute(`SELECT cs.id,cs.term_id,t.name AS term_name,cs.coefficient,cs.has_composition,s.name AS subject_name
+      const [assignments] = await db.execute(`SELECT cs.id,cs.term_id,t.name AS term_name,s.coefficient,cs.has_composition,s.name AS subject_name
         FROM class_subjects cs JOIN subjects s ON s.id=cs.subject_id JOIN terms t ON t.id=cs.term_id
         WHERE cs.class_id=? AND cs.teacher_id=? AND cs.is_active=TRUE ORDER BY t.name,s.name`, [classRow.id,teacher.id]);
       for (const assignment of assignments) {
@@ -502,8 +502,14 @@ async function teacherApi(req, res, url) {
             let [subjectRows] = await connection.execute('SELECT id FROM subjects WHERE name=? LIMIT 1',[subjectName]);
             let subjectId;
             if (subjectRows.length) subjectId = subjectRows[0].id;
-            else { const [created] = await connection.execute('INSERT INTO subjects (name) VALUES (?)',[subjectName]); subjectId = created.insertId; }
-            const coefficient = Number(record.coefficient ?? 1);
+            else {
+              const importedCoefficient = Number(record.coefficient ?? 1);
+              if (!isValidCoefficient(importedCoefficient)) throw new Error('coefficient_invalide');
+              const [created] = await connection.execute('INSERT INTO subjects (name,coefficient) VALUES (?,?)',[subjectName,importedCoefficient]);
+              subjectId = created.insertId;
+            }
+            const [subjectDefinition] = await connection.execute('SELECT coefficient FROM subjects WHERE id=? LIMIT 1',[subjectId]);
+            const coefficient = Number(subjectDefinition[0]?.coefficient ?? record.coefficient ?? 1);
             if (!isValidCoefficient(coefficient)) throw new Error('coefficient_invalide');
             const [existingAssignment] = await connection.execute('SELECT id,teacher_id FROM class_subjects WHERE class_id=? AND subject_id=? AND term_id=? LIMIT 1',[classId,subjectId,termId]);
             if (existingAssignment.length && existingAssignment[0].teacher_id && Number(existingAssignment[0].teacher_id) !== Number(teacher.id)) throw new Error('matiere_deja_attribuee');
@@ -540,7 +546,7 @@ async function teacherApi(req, res, url) {
   }
   if (req.method === 'GET' && url.pathname === '/api/teacher/classes') {
     const [rows] = await db.execute(`SELECT cs.id AS class_subject_id, cs.class_id, c.name AS class_name, c.school_year_id, y.label AS school_year,
-      cs.subject_id, s.name AS subject_name, t.id AS term_id, t.name AS term_name, cs.coefficient, cs.has_composition
+      cs.subject_id, s.name AS subject_name, t.id AS term_id, t.name AS term_name, s.coefficient, cs.has_composition
       FROM class_subjects cs JOIN classes c ON c.id=cs.class_id JOIN school_years y ON y.id=c.school_year_id
       JOIN subjects s ON s.id=cs.subject_id JOIN terms t ON t.id=cs.term_id WHERE cs.teacher_id=? AND cs.is_active=TRUE AND c.is_active=TRUE AND y.is_active=TRUE
       ORDER BY y.is_current DESC, c.name, s.name`, [teacher.id]);
@@ -716,10 +722,11 @@ async function adminApi(req, res, url) {
     if(entity==='subjects'){
       if(!can('subjects.edit'))return json(res,403,{error:'droits_insuffisants'});
       const [rows]=await db.execute('SELECT id FROM subjects WHERE id=? LIMIT 1',[id]);if(!rows.length)return json(res,404,{error:'matiere_introuvable'});
-      const name=body.name===undefined?null:String(body.name).trim();const code=body.code===undefined?null:(String(body.code).trim()||null);
+      const name=body.name===undefined?null:String(body.name).trim();const coefficient=body.coefficient===undefined?null:Number(body.coefficient);
       if(name!==null&&(!name||name.length>100))return json(res,400,{error:'nom_matiere_invalide'});
-      if(code!==null&&code.length>30)return json(res,400,{error:'code_matiere_invalide'});
-      await db.execute('UPDATE subjects SET name=COALESCE(?,name),code=COALESCE(?,code),is_active=COALESCE(?,is_active) WHERE id=?',[name,code,active??null,id]);
+      if(coefficient!==null&&!isValidCoefficient(coefficient))return json(res,400,{error:'coefficient_matiere_invalide'});
+      await db.execute('UPDATE subjects SET name=COALESCE(?,name),coefficient=COALESCE(?,coefficient),is_active=COALESCE(?,is_active) WHERE id=?',[name,coefficient,active??null,id]);
+      if(coefficient!==null)await db.execute('UPDATE class_subjects SET coefficient=? WHERE subject_id=?',[coefficient,id]);
       if(active===false)await db.execute('UPDATE class_subjects SET is_active=FALSE WHERE subject_id=?',[id]);
       await audit(db,user.id,'subject_updated','subject',req,{subject_id:id,is_active:active});return json(res,200,{ok:true});
     }
@@ -785,13 +792,13 @@ async function adminApi(req, res, url) {
   }
   if (req.method === 'GET' && url.pathname === '/api/admin/subjects') {
     if (!can('subjects.view')) return json(res,403,{error:'droits_insuffisants'});
-    const [rows]=await db.execute('SELECT id,code,name,is_active FROM subjects ORDER BY name'); return json(res,200,{subjects:rows});
+    const [rows]=await db.execute('SELECT id,code,name,coefficient,is_active FROM subjects ORDER BY name'); return json(res,200,{subjects:rows});
   }
   if (req.method === 'POST' && url.pathname === '/api/admin/subjects') {
     if (!can('subjects.create')) return json(res,403,{error:'droits_insuffisants'});
-    const body=await readJsonBody(req); const name=String(body.name||'').trim(); const code=String(body.code||'').trim()||null;
-    if(!name||name.length>100||(code&&code.length>30))return json(res,400,{error:'donnees_invalides'});
-    try{const [result]=await db.execute('INSERT INTO subjects (code,name) VALUES (?,?)',[code,name]);await audit(db,user.id,'subject_created','subject',req,{subject_id:result.insertId,name});return json(res,201,{ok:true,id:result.insertId});}
+    const body=await readJsonBody(req); const name=String(body.name||'').trim(); const coefficient=Number(body.coefficient);
+    if(!name||name.length>100||!isValidCoefficient(coefficient))return json(res,400,{error:'donnees_invalides'});
+    try{const [result]=await db.execute('INSERT INTO subjects (name,coefficient) VALUES (?,?)',[name,coefficient]);await audit(db,user.id,'subject_created','subject',req,{subject_id:result.insertId,name,coefficient});return json(res,201,{ok:true,id:result.insertId});}
     catch(error){if(error?.code==='ER_DUP_ENTRY')return json(res,409,{error:'matiere_deja_existante'});throw error;}
   }
   if (req.method === 'GET' && url.pathname === '/api/admin/results') {
@@ -803,7 +810,7 @@ async function adminApi(req, res, url) {
     if(!valid.length)return json(res,404,{error:'classe_ou_semestre_introuvable'});
     const [students]=await db.execute(`SELECT e.id AS enrollment_id,st.id AS student_id,st.matricule,st.first_name,st.last_name
       FROM enrollments e JOIN students st ON st.id=e.student_id WHERE e.class_id=? AND e.status='ACTIVE' AND st.is_active=TRUE ORDER BY st.last_name,st.first_name`,[classId]);
-    const [assignments]=await db.execute(`SELECT cs.id AS class_subject_id,s.name AS subject_name,cs.coefficient,cs.has_composition
+    const [assignments]=await db.execute(`SELECT cs.id AS class_subject_id,s.name AS subject_name,s.coefficient,cs.has_composition
       FROM class_subjects cs JOIN subjects s ON s.id=cs.subject_id WHERE cs.class_id=? AND cs.term_id=? AND cs.is_active=TRUE ORDER BY s.name`,[classId,termId]);
     const [grades]=assignments.length && students.length ? await db.execute(`SELECT g.enrollment_id,g.class_subject_id,g.devoir1,g.devoir2,g.composition
       FROM student_grades g WHERE g.term_id=? AND g.class_subject_id IN (${assignments.map(()=>'?').join(',')}) AND g.enrollment_id IN (${students.map(()=>'?').join(',')})`,[termId,...assignments.map(a=>a.class_subject_id),...students.map(st=>st.enrollment_id)]) : [[]];
@@ -831,16 +838,19 @@ async function adminApi(req, res, url) {
   }
   if (req.method === 'GET' && url.pathname === '/api/admin/class-subjects') {
     if (!can('subjects.view')) return json(res,403,{error:'droits_insuffisants'});
-    const [rows]=await db.execute(`SELECT cs.id,cs.class_id,c.name AS class_name,cs.subject_id,s.name AS subject_name,cs.teacher_id,teacher.full_name AS teacher_name,term.name AS term_name,cs.coefficient,cs.has_composition
+    const [rows]=await db.execute(`SELECT cs.id,cs.class_id,c.name AS class_name,cs.subject_id,s.name AS subject_name,s.coefficient,cs.teacher_id,teacher.full_name AS teacher_name,term.name AS term_name,cs.has_composition
       FROM class_subjects cs JOIN classes c ON c.id=cs.class_id JOIN subjects s ON s.id=cs.subject_id JOIN terms term ON term.id=cs.term_id LEFT JOIN teachers teacher ON teacher.id=cs.teacher_id ORDER BY c.name,term.name,s.name`);
     return json(res,200,{assignments:rows});
   }
   if (req.method === 'POST' && url.pathname === '/api/admin/class-subjects') {
     if (!can('subjects.edit')) return json(res,403,{error:'droits_insuffisants'});
-    const body=await readJsonBody(req);const classId=Number(body.class_id);const subjectId=Number(body.subject_id);const termId=Number(body.term_id);const teacherId=body.teacher_id?Number(body.teacher_id):null;const coefficient=Number(body.coefficient??1);const hasComposition=body.has_composition!==false;
-    if(![classId,subjectId,termId].every(v=>Number.isSafeInteger(v)&&v>0)|| (teacherId!==null&&(!Number.isSafeInteger(teacherId)||teacherId<1)) || !isValidCoefficient(coefficient))return json(res,400,{error:'donnees_invalides'});
+    const body=await readJsonBody(req);const classId=Number(body.class_id);const subjectId=Number(body.subject_id);const termId=Number(body.term_id);const teacherId=body.teacher_id?Number(body.teacher_id):null;const hasComposition=body.has_composition!==false;
+    if(![classId,subjectId,termId].every(v=>Number.isSafeInteger(v)&&v>0)||(teacherId!==null&&(!Number.isSafeInteger(teacherId)||teacherId<1)))return json(res,400,{error:'donnees_invalides'});
     const [validAssignment]=await db.execute('SELECT c.id FROM classes c JOIN terms t ON t.school_year_id=c.school_year_id WHERE c.id=? AND t.id=? LIMIT 1',[classId,termId]);
     if(!validAssignment.length)return json(res,400,{error:'classe_ou_semestre_invalide'});
+    const [subjectRows]=await db.execute('SELECT coefficient FROM subjects WHERE id=? LIMIT 1',[subjectId]);
+    if(!subjectRows.length||!isValidCoefficient(Number(subjectRows[0].coefficient)))return json(res,400,{error:'matiere_ou_coefficient_invalide'});
+    const coefficient=Number(subjectRows[0].coefficient);
     await db.execute(`INSERT INTO class_subjects (class_id,subject_id,term_id,teacher_id,coefficient,has_composition) VALUES (?,?,?,?,?,?)
       ON DUPLICATE KEY UPDATE teacher_id=VALUES(teacher_id),coefficient=VALUES(coefficient),has_composition=VALUES(has_composition),is_active=TRUE`,[classId,subjectId,termId,teacherId,coefficient,hasComposition]);
     if (teacherId) await db.execute(`INSERT INTO teacher_class_access (teacher_id,class_id,is_active) VALUES (?,?,TRUE) ON DUPLICATE KEY UPDATE is_active=TRUE`,[teacherId,classId]);

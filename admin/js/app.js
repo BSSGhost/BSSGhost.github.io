@@ -354,21 +354,21 @@ function lSubjects() {
   if (!S.loaded) return '';
   const f = S.ui.subjects; const q = norm(f.q);
   let rows = byStatus(D.subjects || [], f.status);
-  if (q) rows = rows.filter((s) => norm(`${s.name} ${s.code || ''}`).includes(q));
+  if (q) rows = rows.filter((s) => norm(`${s.name} coefficient ${s.coefficient}`).includes(q));
   const pg = paginate(rows, f.page, 12); f.page = pg.page;
   if (!rows.length) return empty('book-open', 'Aucune matière trouvée', (D.subjects || []).length ? 'Modifiez vos filtres ou votre recherche.' : 'Créez la première matière.');
-  return `<div class="ui-table-card"><table class="ui-table"><thead><tr><th>Matière</th><th>Code</th><th>Coefficients</th><th>Affectations</th><th>Statut</th><th class="ui-th-act"><span class="sr-only">Actions</span></th></tr></thead><tbody>${pg.items.map((s) => {
-    const as = (D.assignments || []).filter((a) => a.subject_id === s.id); const co = as.map((a) => Number(a.coefficient)); const range = co.length ? (Math.min(...co) === Math.max(...co) ? `${Math.min(...co)}` : `${Math.min(...co)} – ${Math.max(...co)}`) : '—';
-    return `<tr><td data-label="Matière"><strong>${esc(s.name)}</strong></td><td data-label="Code">${esc(s.code || '—')}</td><td data-label="Coefficients">${esc(range)}</td><td data-label="Affectations">${D.assignments ? as.length : '—'}</td><td data-label="Statut">${statusBadge(s.is_active, 'Active', 'Inactive')}</td><td class="ui-td-act">${menu([can('subjects.edit') && { act: 'subject-edit', label: 'Modifier', icon: 'pencil', data: { id: s.id } }, can('subjects.edit') && { act: 'toggle', label: s.is_active ? 'Désactiver' : 'Réactiver', icon: s.is_active ? 'power' : 'rotate-ccw', danger: s.is_active, data: { entity: 'subjects', id: s.id, next: !s.is_active, name: s.name } }])}</td></tr>`; }).join('')}</tbody></table>${pager(pg, 'subjects')}</div>`;
+  return `<div class="ui-table-card"><table class="ui-table"><thead><tr><th>Matière</th><th>Coefficient</th><th>Affectations</th><th>Statut</th><th class="ui-th-act"><span class="sr-only">Actions</span></th></tr></thead><tbody>${pg.items.map((s) => {
+    const as = (D.assignments || []).filter((a) => a.subject_id === s.id);
+    return `<tr><td data-label="Matière"><strong>${esc(s.name)}</strong></td><td data-label="Coefficient">${esc(s.coefficient)}</td><td data-label="Affectations">${D.assignments ? as.length : '—'}</td><td data-label="Statut">${statusBadge(s.is_active, 'Active', 'Inactive')}</td><td class="ui-td-act">${menu([can('subjects.edit') && { act: 'subject-edit', label: 'Modifier', icon: 'pencil', data: { id: s.id } }, can('subjects.edit') && { act: 'toggle', label: s.is_active ? 'Désactiver' : 'Réactiver', icon: s.is_active ? 'power' : 'rotate-ccw', danger: s.is_active, data: { entity: 'subjects', id: s.id, next: !s.is_active, name: s.name } }])}</td></tr>`; }).join('')}</tbody></table>${pager(pg, 'subjects')}</div>`;
 }
 function subjectNew() {
-  formModal({ title: 'Nouvelle matière', submitLabel: 'Créer la matière', fields: `${field('Nom de la matière', input('name', { required: true, maxlength: 100 }))}${field('Code (facultatif)', input('code', { maxlength: 30 }))}`,
-    onSubmit: async (fd, m) => { await api('/api/admin/subjects', { method: 'POST', body: JSON.stringify({ name: fd.get('name'), code: fd.get('code') }) }); m.close(); await mutate(async () => {}, 'Matière créée.'); } });
+  formModal({ title: 'Nouvelle matière', submitLabel: 'Créer la matière', fields: `${field('Nom de la matière', input('name', { required: true, maxlength: 100 }))}${field('Coefficient', input('coefficient', { type: 'number', min: 1, max: 8, step: 1, required: true }))}`,
+    onSubmit: async (fd, m) => { await api('/api/admin/subjects', { method: 'POST', body: JSON.stringify({ name: fd.get('name'), coefficient: fd.get('coefficient') }) }); m.close(); await mutate(async () => {}, 'Matière créée.'); } });
 }
 function subjectEdit(id) {
   const s = (D.subjects || []).find((x) => String(x.id) === String(id)); if (!s) return;
-  formModal({ title: 'Modifier la matière', fields: `${field('Nom de la matière', input('name', { required: true, maxlength: 100, value: s.name }))}${field('Code', input('code', { maxlength: 30, value: s.code || '' }))}`,
-    onSubmit: async (fd, m) => { await api(`/api/admin/subjects/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ name: fd.get('name'), code: fd.get('code') }) }); m.close(); await mutate(async () => {}, 'Matière mise à jour.'); } });
+  formModal({ title: 'Modifier la matière', fields: `${field('Nom de la matière', input('name', { required: true, maxlength: 100, value: s.name }))}${field('Coefficient', input('coefficient', { type: 'number', min: 1, max: 8, step: 1, required: true, value: s.coefficient }))}`,
+    onSubmit: async (fd, m) => { await api(`/api/admin/subjects/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ name: fd.get('name'), coefficient: fd.get('coefficient') }) }); m.close(); await mutate(async () => {}, 'Matière mise à jour.'); } });
 }
 
 /* ============================== VUE : Affectations ============================== */
@@ -393,9 +393,9 @@ function assignForm(existing) {
   const termOpts = (cid) => termsFor(cid).map((t) => ({ value: t.id, label: `${t.school_year} · ${t.name}` }));
   const lock = existing ? 'disabled' : 'required';
   const m = formModal({ title: existing ? 'Modifier l’affectation' : 'Nouvelle affectation', submitLabel: existing ? 'Mettre à jour' : 'Enregistrer l’affectation',
-    fields: `<div class="ui-row">${field('Classe', select('class_id', classes.concat(ec && !ec.is_active ? [ec] : []).map((c) => ({ value: c.id, label: classLabel(c) })), firstClass, lock))}${field('Matière', select('subject_id', subjects.map((s) => ({ value: s.id, label: s.name })), existing?.subject_id, lock))}</div><div class="ui-row">${field('Semestre', select('term_id', termOpts(firstClass), et?.id, lock))}${field('Professeur', select('teacher_id', [{ value: '', label: 'Non attribué' }, ...teachers.map((t) => ({ value: t.id, label: `${t.full_name} — ${t.email}` }))], existing?.teacher_id || ''))}</div><div class="ui-row">${field('Coefficient (1 à 8)', input('coefficient', { type: 'number', min: 1, max: 8, step: 1, value: existing ? existing.coefficient : 1, required: true }))}<label class="ui-check ui-check--pad"><input type="checkbox" name="has_composition" ${!existing || existing.has_composition ? 'checked' : ''}><span>Composition prévue</span></label></div><p class="ui-dup hidden" id="dup-hint"></p>`,
+    fields: `<div class="ui-row">${field('Classe', select('class_id', classes.concat(ec && !ec.is_active ? [ec] : []).map((c) => ({ value: c.id, label: classLabel(c) })), firstClass, lock))}${field('Matière', select('subject_id', subjects.map((s) => ({ value: s.id, label: `${s.name} — coefficient ${s.coefficient}` })), existing?.subject_id, lock))}</div><div class="ui-row">${field('Semestre', select('term_id', termOpts(firstClass), et?.id, lock))}${field('Professeur', select('teacher_id', [{ value: '', label: 'Non attribué' }, ...teachers.map((t) => ({ value: t.id, label: `${t.full_name} — ${t.email}` }))], existing?.teacher_id || ''))}</div><label class="ui-check"><input type="checkbox" name="has_composition" ${!existing || existing.has_composition ? 'checked' : ''}><span>Composition prévue</span></label><p class="ui-dup hidden" id="dup-hint"></p>`,
     onSubmit: async (fd, mm) => {
-      const body = { class_id: existing ? existing.class_id : fd.get('class_id'), subject_id: existing ? existing.subject_id : fd.get('subject_id'), term_id: existing ? et?.id : fd.get('term_id'), teacher_id: fd.get('teacher_id') || null, coefficient: fd.get('coefficient'), has_composition: fd.get('has_composition') === 'on' };
+      const body = { class_id: existing ? existing.class_id : fd.get('class_id'), subject_id: existing ? existing.subject_id : fd.get('subject_id'), term_id: existing ? et?.id : fd.get('term_id'), teacher_id: fd.get('teacher_id') || null, has_composition: fd.get('has_composition') === 'on' };
       if (!body.term_id) throw new Error('Aucun semestre disponible pour cette classe.');
       await api('/api/admin/class-subjects', { method: 'POST', body: JSON.stringify(body) }); mm.close(); await mutate(async () => {}, existing ? 'Affectation mise à jour.' : 'Affectation enregistrée.');
     } });
@@ -513,7 +513,7 @@ function runSearch(value) {
   (D.students || []).filter((s) => norm(`${s.first_name} ${s.last_name} ${s.matricule}`).includes(q)).slice(0, 4).forEach((s) => hits.push({ ic: 'graduation-cap', t: `${s.first_name} ${s.last_name}`, s: `Élève · ${s.matricule}`, route: 'eleves', key: 'students', q: s.matricule }));
   (D.teachers || []).filter((t) => norm(`${t.full_name} ${t.email}`).includes(q)).slice(0, 3).forEach((t) => hits.push({ ic: 'presentation', t: t.full_name, s: `Professeur · ${t.email}`, route: 'professeurs', key: 'teachers', q: t.full_name }));
   (D.classes || []).filter((c) => norm(c.name).includes(q)).slice(0, 3).forEach((c) => hits.push({ ic: 'school', t: c.name, s: `Classe · ${c.school_year}`, route: 'classes', key: 'classes', q: c.name }));
-  (D.subjects || []).filter((s) => norm(`${s.name} ${s.code || ''}`).includes(q)).slice(0, 3).forEach((s) => hits.push({ ic: 'book-open', t: s.name, s: 'Matière', route: 'matieres', key: 'subjects', q: s.name }));
+  (D.subjects || []).filter((s) => norm(`${s.name} coefficient ${s.coefficient}`).includes(q)).slice(0, 3).forEach((s) => hits.push({ ic: 'book-open', t: s.name, s: 'Matière', route: 'matieres', key: 'subjects', q: s.name }));
   box.innerHTML = hits.length ? hits.map((h) => `<button type="button" class="ui-hit" data-act="search-go" data-route-name="${h.route}" data-key="${h.key}" data-q="${esc(h.q)}">${icon(h.ic)}<span><strong>${esc(h.t)}</strong><small>${esc(h.s)}</small></span></button>`).join('') : `<p class="ui-pop-empty">Aucun résultat pour « ${esc(value)} »</p>`;
   box.classList.remove('hidden');
 }
