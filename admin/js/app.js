@@ -2,6 +2,7 @@
    Toute la donnée provient des API /api/admin/* existantes. Aucune donnée fictive.
    Les permissions sont appliquées côté interface ET côté serveur (le serveur reste l'autorité). */
 import { icon } from './icons.js';
+import { createTimetables } from './timetables.js';
 import { $, esc, norm, debounce, initials, fmtDate, fmtDateTime, relTime, badge, statusBadge, empty, skeleton, paginate, pager, toast, modal, confirmDialog, formModal, field, input, select, barChart } from './ui.js';
 
 /* ============================== État & API ============================== */
@@ -62,6 +63,7 @@ const ROUTES = {
   classes: { title: 'Classes', icon: 'school', group: 'GESTION SCOLAIRE', show: () => can('classes.view'), render: vClasses, list: lClasses },
   matieres: { title: 'Matières', icon: 'book-open', group: 'GESTION PÉDAGOGIQUE', show: () => can('subjects.view'), render: vSubjects, list: lSubjects },
   affectations: { title: 'Affectations', icon: 'link', group: 'GESTION PÉDAGOGIQUE', show: () => can('subjects.view'), render: vAssignments, list: lAssignments },
+  emplois: { title: 'Emplois du temps', icon: 'clock', group: 'GESTION PÉDAGOGIQUE', show: () => TT.show(), render: () => TT.render() },
   resultats: { title: 'Résultats et moyennes', icon: 'bar-chart', group: 'GESTION PÉDAGOGIQUE', show: () => can('reports.view') || can('grades.view'), render: vResults, list: lResults },
   administrateurs: { title: 'Administrateurs', icon: 'shield-check', group: 'ADMINISTRATION', show: isPrincipal, render: vAdmins },
   journal: { title: 'Journal d’activité', icon: 'scroll-text', group: 'ADMINISTRATION', show: isPrincipal, render: vLogs, list: lLogs },
@@ -97,6 +99,7 @@ const need = (fn) => (S.loaded ? fn() : skeleton(5));
 const pageHead = (title, sub, actions = '') => `<header class="ui-page-head"><div><h1>${esc(title)}</h1>${sub ? `<p>${esc(sub)}</p>` : ''}</div><div class="ui-page-actions">${actions}</div></header>`;
 const btn = (label, act, ic, cls = 'primary', data = '') => `<button type="button" class="ui-btn ui-btn--${cls}" data-act="${act}" ${data}>${ic ? icon(ic) : ''}<span>${esc(label)}</span></button>`;
 const menu = (items) => `<div class="ui-menu"><button type="button" class="ui-icon-btn" data-act="menu" aria-label="Actions" aria-haspopup="true">${icon('ellipsis')}</button><div class="ui-menu-list" role="menu">${items.filter(Boolean).map((i) => `<button type="button" role="menuitem" class="ui-menu-item ${i.danger ? 'is-danger' : ''}" data-act="${i.act}" ${Object.entries(i.data || {}).map(([k, v]) => `data-${k}="${esc(v)}"`).join(' ')}>${icon(i.icon)}<span>${esc(i.label)}</span></button>`).join('')}</div></div>`;
+const TT = createTimetables({ api, can, pageHead, btn, menu, rerender: () => renderRoute(false) });
 function filterBar(view, selects = []) {
   const f = S.ui[view];
   return `<div class="ui-filters"><label class="ui-search">${icon('search')}<input type="search" data-filter="${view}.q" value="${esc(f.q)}" placeholder="Rechercher…" aria-label="Rechercher"></label>${selects.map((s) => `<select class="ui-input ui-filter-select" data-filter="${view}.${s.key}" aria-label="${esc(s.label)}">${[{ value: '', label: s.all }, ...s.options].map((o) => `<option value="${esc(o.value)}" ${String(o.value) === String(f[s.key]) ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`).join('')}</div>`;
@@ -134,7 +137,10 @@ const ACTIONS = {
   school_year_created: ['Année scolaire créée', 'calendar-days', 'creation', true], class_created: ['Classe créée', 'school', 'creation'], class_updated: ['Classe modifiée', 'school', 'modification'],
   student_created: ['Élève ajouté', 'user-plus', 'creation'], student_updated: ['Fiche élève modifiée', 'graduation-cap', 'modification'],
   teacher_created: ['Compte professeur créé', 'presentation', 'creation', true], teacher_updated: ['Professeur modifié', 'presentation', 'modification'],
-  subject_created: ['Matière créée', 'book-open', 'creation'], subject_updated: ['Matière modifiée', 'book-open', 'modification'], class_subject_assigned: ['Affectation enregistrée', 'link', 'creation']
+  subject_created: ['Matière créée', 'book-open', 'creation'], subject_updated: ['Matière modifiée', 'book-open', 'modification'], class_subject_assigned: ['Affectation enregistrée', 'link', 'creation'],
+  timetable_created: ['Emploi du temps créé', 'clock', 'creation'], timetable_imported: ['Emploi du temps importé', 'upload', 'creation'], timetable_updated: ['Emploi du temps modifié', 'clock', 'modification'],
+  timetable_document_replaced: ['Document d’emploi du temps remplacé', 'upload', 'modification'], timetable_published: ['Emploi du temps publié', 'send', 'modification'], timetable_unpublished: ['Emploi du temps dépublié', 'clock', 'modification'],
+  timetable_archived: ['Emploi du temps archivé', 'archive', 'modification'], timetable_deleted: ['Emploi du temps supprimé', 'trash', 'modification']
 };
 function describe(log) {
   const base = ACTIONS[log.action] || [String(log.action || 'Action').replace(/_/g, ' '), 'activity', 'autre'];
@@ -514,6 +520,7 @@ function runSearch(value) {
 
 /* ============================== Actions (délégation) ============================== */
 const ACT = {
+  ...TT.acts,
   menu: (d, el) => { const m = el.closest('.ui-menu'); const open = !m.classList.contains('is-open'); closeMenus(); m.classList.toggle('is-open', open); },
   goto: (d) => go(d.routeName),
   logout: async () => { try { await api('/api/admin/logout', { method: 'POST', body: '{}' }); } finally { S.user = null; show('login'); setPasswordVisible(false); } },

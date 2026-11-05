@@ -10705,3 +10705,21 @@ html.dark-mode .dash2-error { color: #ff8f8f; }
 /* Accès discret à l'administration */
 .footer-admin-link{color:inherit;text-decoration:underline;text-underline-offset:3px;opacity:.72;font-size:.92em}.footer-admin-link:hover{opacity:1}
 .prof-sync-status{margin:0 0 14px;padding:9px 12px;border-radius:9px;background:#eaf4ff;color:#174a7e;font-size:.88rem}.prof-sync-status.is-error{background:#fff0ee;color:#9f2418}
+
+/* ===== Espace professeur : Emplois du temps (consultation) ===== */
+.prof-tt-body { display: grid; gap: 14px; margin-top: 14px; }
+.prof-tt-empty { text-align: center; padding: 48px 20px; border: 1px dashed rgba(120, 130, 150, 0.4); border-radius: 18px; color: var(--muted); }
+.prof-tt-empty svg { opacity: 0.6; margin-bottom: 8px; } .prof-tt-empty p { margin: 0; font-size: 0.98rem; }
+.prof-tt-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.prof-tt-chip { flex: 0 0 auto; padding: 9px 16px; border-radius: 999px; border: 1.5px solid rgba(120, 130, 150, 0.35); background: var(--card-strong); color: inherit; font: inherit; font-weight: 700; font-size: 0.88rem; cursor: pointer; }
+.prof-tt-chip.is-active { background: var(--blue-700); border-color: var(--blue-700); color: #fff; }
+.prof-tt-card { background: var(--card-strong); border: 1px solid rgba(15, 23, 42, 0.04); border-radius: 18px; box-shadow: var(--shadow); padding: 18px; }
+.prof-tt-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.prof-tt-head h4 { margin: 0; font-size: 1.1rem; } .prof-tt-head p { margin: 4px 0 0; color: var(--muted); font-size: 0.82rem; }
+.prof-tt-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.prof-tt-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1.5px solid var(--blue-700); background: transparent; color: var(--blue-700); font: inherit; font-weight: 700; font-size: 0.85rem; text-decoration: none; cursor: pointer; }
+html.dark-mode .prof-tt-btn { color: #cfe0ff; border-color: #4e71aa; }
+.prof-tt-img { max-width: 100%; display: block; margin: 0 auto; border-radius: 12px; }
+.prof-tt-frame { width: 100%; height: 70vh; border: 1px solid rgba(120, 130, 150, 0.3); border-radius: 12px; background: #fff; }
+.prof-tt-pdf-mobile { display: none; margin: 8px 0 0; color: var(--muted); font-size: 0.85rem; }
+@media (max-width: 720px) { .prof-tt-frame { display: none; } .prof-tt-pdf-mobile { display: block; } .prof-tt-actions, .prof-tt-actions .prof-tt-btn { width: 100%; } .prof-tt-card { padding: 14px; } }

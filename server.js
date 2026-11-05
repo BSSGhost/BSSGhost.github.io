@@ -14,6 +14,7 @@ const scrypt = promisify(scryptCallback);
 import mysql from 'mysql2/promise';
 import { getDbSslConfig } from './db-ssl.js';
 import { isPublicStaticPath } from './security/static-policy.js';
+import { handleAdminTimetables, handleTeacherTimetables } from './backend/services/timetable.service.js';
 import { calculateSubjectAverage, calculateGeneralAverage, parseGradeValue, isValidCoefficient } from './school-calculations.js';
 
 let mysqlInstance = null;
@@ -376,6 +377,7 @@ async function teacherApi(req, res, url) {
   if (context.error) return json(res, context.error === 'changement_mot_de_passe_requis' ? 403 : 401, { error: context.error, user: context.teacher });
   const teacher = context.teacher;
   if (req.method === 'GET' && url.pathname === '/api/teacher/me') return json(res, 200, { ok: true, user: teacher });
+  if (await handleTeacherTimetables({ req, res, url, db, teacher, json, auditTeacher })) return;
   if (allowChange) {
     const body = await readJsonBody(req);
     const oldPassword = String(body.oldPassword || '');
@@ -673,6 +675,7 @@ async function adminApi(req, res, url) {
     return json(res,200,{ok:true,message:'Mot de passe modifié.'});
   }
   const can = (permission) => user.permissions.includes(permission);
+  if (await handleAdminTimetables({ req, res, url, db, user, can, json, readJsonBody, audit })) return;
   const patchMatch = url.pathname.match(/^\/api\/admin\/(classes|students|teachers|subjects)\/(\d+)$/);
   if (req.method === 'PATCH' && patchMatch) {
     const entity=patchMatch[1];const id=Number(patchMatch[2]);

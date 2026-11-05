@@ -12,6 +12,8 @@
     "init-admins": "node scripts/init-admins.mjs",
     "check-admin-schema": "node scripts/check-admin-schema.mjs",
     "check-school-schema": "node scripts/check-school-schema.mjs",
+    "install-timetables": "node scripts/install-timetables.mjs",
+    "check-timetables": "node scripts/install-timetables.mjs --check",
     "install-test-schema": "node scripts/install-test-schema.mjs",
     "restore-test-backup": "node scripts/restore-test-backup.mjs",
     "validate-pdfs": "node scripts/generate-pdf-validation.mjs"

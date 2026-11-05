@@ -125,6 +125,9 @@
     viewStudents: $('prof-view-students'),
     viewRanking: $('prof-view-ranking'),
     viewStats: $('prof-view-stats'),
+    viewTimetables: $('prof-view-timetables'),
+    ttBody: $('prof-tt-body'),
+    tabTimetables: $('prof-tab-timetables'),
     tabDash: $('prof-tab-dash'),
     tabClasses: $('prof-tab-classes'),
     tabStudents: $('prof-tab-students'),
@@ -1086,7 +1089,7 @@
   }
 
   function profViewsList() {
-    return [els.viewDash, els.viewStudents, els.viewRanking, els.viewStats, els.viewHome, els.viewClass, els.viewSubject];
+    return [els.viewDash, els.viewStudents, els.viewRanking, els.viewStats, els.viewTimetables, els.viewHome, els.viewClass, els.viewSubject];
   }
 
   function showView(target, opts) {
@@ -1147,6 +1150,70 @@
         renderStats();
       }
     });
+  }
+
+  /* ============ EMPLOIS DU TEMPS (consultation seule) ============
+     Les droits sont vérifiés par le serveur : /api/teacher/timetables ne renvoie que les emplois du temps
+     PUBLIÉS des classes auxquelles ce professeur est affecté. Aucune écriture n'existe côté professeur. */
+  let ttState = { loaded: false, list: [], selected: null, error: false };
+
+  function showTimetablesView() {
+    showView(els.viewTimetables, { tab: 'timetables', afterShow: loadTimetables });
+  }
+
+  async function loadTimetables() {
+    if (!els.ttBody) return;
+    els.ttBody.innerHTML = `<p class="tt-none">${escHtml(t('prof_tt_loading'))}</p>`;
+    try {
+      const res = await fetch('/api/teacher/timetables', { credentials: 'same-origin', cache: 'no-store' });
+      if (!res.ok) throw new Error(String(res.status));
+      const data = await res.json();
+      ttState = { loaded: true, list: data.timetables || [], selected: null, error: false };
+      if (ttState.list.length) ttState.selected = ttState.list[0].id;
+    } catch {
+      ttState = { loaded: false, list: [], selected: null, error: true };
+    }
+    renderTimetables();
+  }
+
+  async function renderTimetables() {
+    if (!els.ttBody) return;
+    if (ttState.error) { els.ttBody.innerHTML = `<p class="tt-none">${escHtml(t('prof_tt_error'))}</p>`; return; }
+    if (!ttState.list.length) {
+      els.ttBody.innerHTML = `<div class="prof-tt-empty"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><p>${escHtml(t('prof_tt_empty'))}</p></div>`;
+      return;
+    }
+    const core = await import('/timetable-core.js');
+    const cur = ttState.list.find((x) => x.id === ttState.selected) || ttState.list[0];
+    const chips = ttState.list.length > 1
+      ? `<div class="prof-tt-chips" role="tablist">${ttState.list.map((x) => `<button type="button" role="tab" class="prof-tt-chip ${x.id === cur.id ? 'is-active' : ''}" aria-selected="${x.id === cur.id}" data-tt-id="${x.id}">${core.esc(x.class_name)}</button>`).join('')}</div>` : '';
+    const dateTxt = cur.published_at ? new Date(cur.published_at).toLocaleDateString(getLang() === 'en' ? 'en-GB' : 'fr-FR') : '';
+    const docBase = `/api/teacher/timetables/${encodeURIComponent(cur.id)}/document`;
+    const isImg = (cur.document_mime || '').startsWith('image/');
+    let content; let actions;
+    if (cur.kind === 'GRID') {
+      content = core.gridHtml(core.buildGrid(cur.sessions, cur.days));
+      actions = `<button type="button" class="prof-tt-btn" data-tt-print>${escHtml(t('prof_tt_print'))}</button>`;
+    } else {
+      content = isImg
+        ? `<img class="prof-tt-img" src="${docBase}" alt="${core.esc(cur.class_name)}">`
+        : `<iframe class="prof-tt-frame" src="${docBase}" title="${core.esc(cur.class_name)}"></iframe><p class="prof-tt-pdf-mobile">${escHtml(t('prof_tt_pdf_mobile'))}</p>`;
+      actions = `<a class="prof-tt-btn" href="${docBase}" target="_blank" rel="noopener">${escHtml(t('prof_tt_open'))}</a><a class="prof-tt-btn" href="${docBase}?download=1">${escHtml(t('prof_tt_download'))}</a><button type="button" class="prof-tt-btn" data-tt-print>${escHtml(t('prof_tt_print'))}</button>`;
+    }
+    els.ttBody.innerHTML = `${chips}<section class="prof-tt-card"><header class="prof-tt-head"><div><h4>${core.esc(cur.class_name)}${cur.title ? ` · ${core.esc(cur.title)}` : ''}</h4><p>${core.esc(cur.school_year)}${dateTxt ? ` · ${escHtml(t('prof_tt_published', { date: dateTxt }))}` : ''}</p></div><div class="prof-tt-actions">${actions}</div></header><div class="prof-tt-content">${content}</div></section>`;
+    els.ttBody.querySelectorAll('[data-tt-id]').forEach((b) => b.addEventListener('click', () => { ttState.selected = Number(b.dataset.ttId); renderTimetables(); }));
+    els.ttBody.querySelector('[data-tt-print]')?.addEventListener('click', () => printTimetable(cur, core, docBase, isImg));
+  }
+
+  function printTimetable(cur, core, docBase, isImg) {
+    if (cur.kind !== 'GRID' && !isImg) { window.open(docBase, '_blank', 'noopener'); return; }
+    const host = document.getElementById('tt-print'); if (!host) return;
+    const body = cur.kind === 'GRID' ? core.gridHtml(core.buildGrid(cur.sessions, cur.days)) : `<img src="${docBase}" alt="">`;
+    host.innerHTML = `<div class="tt-head"><h1>${core.esc(cur.class_name)} — ${escHtml(t('prof_tt_title'))}</h1><p>LYNAQE Sédhiou · ${core.esc(cur.school_year)}</p></div>${body}`;
+    document.body.classList.add('tt-printing');
+    const done = () => { document.body.classList.remove('tt-printing'); host.innerHTML = ''; window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
   }
 
   function showHome() {
@@ -1320,7 +1387,8 @@
       classes: els.tabClasses,
       students: els.tabStudents,
       ranking: els.tabRanking,
-      stats: els.tabStats
+      stats: els.tabStats,
+      timetables: els.tabTimetables
     };
     const activeBtn = tabMap[which];
     Object.values(tabMap).forEach((btn) => {
@@ -4585,6 +4653,7 @@
     if (els.tabStudents) els.tabStudents.addEventListener('click', () => showStudentsView());
     if (els.tabRanking) els.tabRanking.addEventListener('click', showRankingView);
     if (els.tabStats) els.tabStats.addEventListener('click', showStatsView);
+    if (els.tabTimetables) els.tabTimetables.addEventListener('click', showTimetablesView);
 
     /* Boutons de la bannière "Votre espace professeur" */
     document.querySelectorAll('.prof-hero-cta[data-act]').forEach((btn) => {
@@ -4652,7 +4721,7 @@
         } else {
           showClassView();
         }
-      } else if (!els.viewStudents.hidden || !els.viewRanking.hidden || !els.viewStats.hidden) {
+      } else if (!els.viewStudents.hidden || !els.viewRanking.hidden || !els.viewStats.hidden || !els.viewTimetables.hidden) {
         showDash();
       } else if (!els.viewClass.hidden) {
         showHome();
