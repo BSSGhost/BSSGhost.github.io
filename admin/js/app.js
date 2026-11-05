@@ -42,8 +42,7 @@ const LOADERS = {
   terms: { ok: () => can('subjects.view'), url: '/api/admin/terms', pick: (d) => d.terms },
   assignments: { ok: () => can('subjects.view'), url: '/api/admin/class-subjects', pick: (d) => d.assignments },
   users: { ok: () => isPrincipal(), url: '/api/admin/users', pick: (d) => d.users },
-  logs: { ok: () => isPrincipal(), url: '/api/admin/audit/logs', pick: (d) => d.logs },
-  timetables: { ok: () => can('timetable.view'), url: '/api/admin/timetables', pick: (d) => d.timetables }
+  logs: { ok: () => isPrincipal(), url: '/api/admin/audit/logs', pick: (d) => d.logs }
 };
 async function loadAll() {
   const keys = Object.keys(LOADERS).filter((k) => LOADERS[k].ok());
@@ -63,7 +62,6 @@ const ROUTES = {
   classes: { title: 'Classes', icon: 'school', group: 'GESTION SCOLAIRE', show: () => can('classes.view'), render: vClasses, list: lClasses },
   matieres: { title: 'Matières', icon: 'book-open', group: 'GESTION PÉDAGOGIQUE', show: () => can('subjects.view'), render: vSubjects, list: lSubjects },
   affectations: { title: 'Affectations', icon: 'link', group: 'GESTION PÉDAGOGIQUE', show: () => can('subjects.view'), render: vAssignments, list: lAssignments },
-  emplois_du_temps: { title: 'Emplois du temps', icon: 'calendar-range', group: 'GESTION PÉDAGOGIQUE', show: () => can('timetable.view'), render: vTimetables },
   resultats: { title: 'Résultats et moyennes', icon: 'bar-chart', group: 'GESTION PÉDAGOGIQUE', show: () => can('reports.view') || can('grades.view'), render: vResults, list: lResults },
   administrateurs: { title: 'Administrateurs', icon: 'shield-check', group: 'ADMINISTRATION', show: isPrincipal, render: vAdmins },
   journal: { title: 'Journal d’activité', icon: 'scroll-text', group: 'ADMINISTRATION', show: isPrincipal, render: vLogs, list: lLogs },
@@ -472,36 +470,6 @@ function lLogs() {
     return `${sep}<div class="ui-event ${d.important ? 'is-important' : ''}"><span class="ui-event-ic">${icon(d.icon)}</span><div class="ui-event-body"><strong>${esc(d.label)}</strong>${d.important ? badge('Important', 'orange') : ''}<small>${esc(l.admin_name || 'Compte supprimé')} · ${esc(l.actor_type || 'administrateur')} · ${esc(l.resource || '')}${l.ip_address ? ` · ${esc(l.ip_address)}` : ''}</small></div><time>${esc(new Date(l.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))}</time></div>`; }).join('')}</div>${pager(pg, 'logs')}`;
 }
 
-/* ============================== VUE : Emplois du temps ============================== */
-function vTimetables() {
-  if (!S.loaded) return skeleton(5);
-  const rows = D.timetables || [];
-  const actions = can('timetable.create') ? btn('Nouvel emploi du temps', 'timetable-new', 'plus') : '';
-  const body = rows.length ? `<div class="ui-table-wrap"><table class="ui-table"><thead><tr><th>Classe</th><th>Année</th><th>Séances</th><th>État</th><th></th></tr></thead><tbody>${rows.map((t) => `<tr><td><strong>${esc(t.class_name)}</strong><br><small>${esc(t.title || '')}</small></td><td>${esc(t.school_year)}</td><td>${Number(t.session_count || 0)}</td><td>${badge(t.status === 'PUBLISHED' ? 'Publié' : 'Brouillon', t.status === 'PUBLISHED' ? 'green' : 'gray')}</td><td>${menu([
-    can('timetable.publish') ? { act: `timetable-${t.status === 'PUBLISHED' ? 'unpublish' : 'publish'}`, id: t.id, label: t.status === 'PUBLISHED' ? 'Dépublier' : 'Publier' } : null,
-    can('timetable.delete') ? { act: 'timetable-delete', id: t.id, label: 'Supprimer', danger: true } : null
-  ])}</td></tr>`).join('')}</tbody></table></div>` : empty('calendar-range', 'Aucun emploi du temps', 'Créez un premier emploi du temps pour une classe.');
-  return pageHead('Emplois du temps', 'Organisation et publication des horaires scolaires', actions) + `<section class="ui-card">${body}</section>`;
-}
-async function timetableNew() {
-  const years = D.years || []; const classes = D.classes || [];
-  if (!years.length || !classes.length) throw new Error('Une année scolaire et une classe sont nécessaires.');
-  formModal({ title: 'Nouvel emploi du temps', submitLabel: 'Créer', fields: `${field('Titre', input('title', { maxlength: 160, placeholder: 'Emploi du temps' }))}${field('Année scolaire', select('school_year_id', years.map((y) => ({ value: y.id, label: y.label })), years.find((y) => y.is_current)?.id || years[0].id))}${field('Classe', select('class_id', classes.map((c) => ({ value: c.id, label: `${c.name}${c.school_year ? ` — ${c.school_year}` : ''}` }))))}`, onSubmit: async (fd, modal) => {
-    await timetableCreate({ title: fd.get('title'), school_year_id: Number(fd.get('school_year_id')), class_id: Number(fd.get('class_id')) }); modal.close(); await mutate(async () => {}, 'Emploi du temps créé.');
-  } });
-}
-function timetableCreate(payload) {
-  return api('/api/admin/timetables', { method: 'POST', body: JSON.stringify({ ...payload, sessions: [] }) });
-}
-async function timetableToggle(id, publish) {
-  await api(`/api/admin/timetables/${id}/${publish ? 'publish' : 'unpublish'}`, { method: 'POST', body: '{}' });
-  await mutate(async () => {}, 'Statut de l’emploi du temps mis à jour.');
-}
-async function timetableDelete(id) {
-  if (!(await confirmDialog({ title: 'Supprimer l’emploi du temps ?', message: 'Cette action supprimera également ses séances.', confirmText: 'Supprimer' }))) return;
-  await api(`/api/admin/timetables/${id}`, { method: 'DELETE' }); await mutate(async () => {}, 'Emploi du temps supprimé.');
-}
-
 /* ============================== VUE : Sauvegardes ============================== */
 function vBackups() {
   return pageHead('Sauvegardes', 'Export complet des données de la plateforme') + `<section class="ui-card ui-backup"><span class="ui-stat-ic ui-stat-ic--lg">${icon('database')}</span><div><h2>Télécharger une sauvegarde complète</h2><p>Génère un fichier JSON signé (somme de contrôle SHA-256) contenant l’ensemble des données scolaires et des comptes.</p>${S.lastBackup ? `<p class="ui-hint">Dernière sauvegarde téléchargée dans cette session : ${esc(fmtDateTime(S.lastBackup))}</p>` : ''}</div>${btn('Télécharger la sauvegarde', 'backup', 'download')}</section>
@@ -559,10 +527,6 @@ const ACT = {
   'subject-new': subjectNew, 'subject-edit': (d) => subjectEdit(d.id),
   'assign-new': () => assignForm(null), 'assign-edit': (d) => assignForm((D.assignments || []).find((a) => String(a.id) === String(d.id))),
   backup: downloadBackup,
-  'timetable-new': timetableNew,
-  'timetable-publish': (d) => timetableToggle(d.id, true),
-  'timetable-unpublish': (d) => timetableToggle(d.id, false),
-  'timetable-delete': (d) => timetableDelete(d.id),
   'search-go': (d) => { S.ui[d.key].q = d.q; S.ui[d.key].page = 1; $('search-results').classList.add('hidden'); $('global-search').value = ''; go(d.routeName); },
   'sb-collapse': () => { const c = document.body.classList.toggle('sb-collapsed'); try { localStorage.setItem('sm-sb', c ? '1' : '0'); } catch {} },
   'sb-open': () => document.body.classList.add('sb-open'), 'sb-close': () => document.body.classList.remove('sb-open'),
