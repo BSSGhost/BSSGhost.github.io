@@ -159,6 +159,15 @@ INSERT IGNORE INTO permissions (name, description, category) VALUES
 ('reports.generate', 'Générer un bulletin', 'reports'),
 ('reports.delete', 'Supprimer un bulletin', 'reports');
 
+-- Permissions Emplois du temps
+INSERT IGNORE INTO permissions (name, description, category) VALUES
+('timetable.view', 'Consulter les emplois du temps', 'timetable'),
+('timetable.create', 'Créer un emploi du temps', 'timetable'),
+('timetable.edit', 'Modifier un emploi du temps', 'timetable'),
+('timetable.delete', 'Supprimer un emploi du temps', 'timetable'),
+('timetable.publish', 'Publier ou dépublier un emploi du temps', 'timetable'),
+('timetable.upload', 'Importer ou remplacer un document emploi du temps', 'timetable');
+
 -- Permissions Administrateurs
 INSERT IGNORE INTO permissions (name, description, category) VALUES
 ('admins.view', 'Consulter les administrateurs', 'admins'),
@@ -212,7 +221,10 @@ WHERE r.name = 'pedagogical'
     -- Notes
     'grades.view', 'grades.edit',
     -- Rapports
-    'reports.view', 'reports.generate'
+    'reports.view', 'reports.generate',
+    -- Emplois du temps
+    'timetable.view', 'timetable.create', 'timetable.edit',
+    'timetable.publish', 'timetable.upload'
   );
 
 -- ----------------------------------------------------------------------------

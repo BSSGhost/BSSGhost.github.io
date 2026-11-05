@@ -15,6 +15,7 @@ import mysql from 'mysql2/promise';
 import { getDbSslConfig } from './db-ssl.js';
 import { isPublicStaticPath } from './security/static-policy.js';
 import { calculateSubjectAverage, calculateGeneralAverage, parseGradeValue, isValidCoefficient } from './school-calculations.js';
+import { adminTimetableApi, adminTimetableUpload, teacherTimetableApi } from './timetable-api.js';
 
 let mysqlInstance = null;
 const ROOT = process.cwd();
@@ -128,12 +129,12 @@ async function serveStatic(res, pathname, method = 'GET') {
   }
 }
 
-async function readJsonBody(req) {
+async function readJsonBody(req, maxBytes = MAX_BODY_BYTES) {
   let total = 0;
   const chunks = [];
   for await (const chunk of req) {
     total += chunk.length;
-    if (total > MAX_BODY_BYTES) throw new Error('payload_too_large');
+    if (total > maxBytes) throw new Error('payload_too_large');
     chunks.push(chunk);
   }
   const raw = Buffer.concat(chunks).toString('utf8');
@@ -376,6 +377,8 @@ async function teacherApi(req, res, url) {
   if (context.error) return json(res, context.error === 'changement_mot_de_passe_requis' ? 403 : 401, { error: context.error, user: context.teacher });
   const teacher = context.teacher;
   if (req.method === 'GET' && url.pathname === '/api/teacher/me') return json(res, 200, { ok: true, user: teacher });
+  const timetableResponse = await teacherTimetableApi(req, res, url, db, teacher, json, (request, maxBytes) => readJsonBody(request, maxBytes));
+  if (timetableResponse !== null) return timetableResponse;
   if (allowChange) {
     const body = await readJsonBody(req);
     const oldPassword = String(body.oldPassword || '');
@@ -673,6 +676,17 @@ async function adminApi(req, res, url) {
     return json(res,200,{ok:true,message:'Mot de passe modifié.'});
   }
   const can = (permission) => user.permissions.includes(permission);
+  const timetableUpload = await adminTimetableUpload(req, res, url, db, user, (request, maxBytes) => readJsonBody(request, maxBytes), audit);
+  if (timetableUpload !== null) {
+    if (timetableUpload.handled && timetableUpload.response === 'forbidden') return json(res, 403, { error: 'droits_insuffisants' });
+    if (timetableUpload.handled && timetableUpload.response === 'invalid_document') return json(res, 400, { error: 'document_invalide' });
+    if (timetableUpload.handled && timetableUpload.response === 'invalid_document_type') return json(res, 400, { error: 'type_document_invalide' });
+    if (timetableUpload.handled && timetableUpload.response === 'storage_not_configured') return json(res, 503, { error: 'storage_not_configured' });
+    if (timetableUpload.handled && timetableUpload.response === 'ok') return json(res, 201, { ok: true });
+    return timetableUpload;
+  }
+  const timetableResponse = await adminTimetableApi(req, res, url, db, user, json, (request, maxBytes) => readJsonBody(request, maxBytes), audit);
+  if (timetableResponse !== null) return timetableResponse;
   const patchMatch = url.pathname.match(/^\/api\/admin\/(classes|students|teachers|subjects)\/(\d+)$/);
   if (req.method === 'PATCH' && patchMatch) {
     const entity=patchMatch[1];const id=Number(patchMatch[2]);

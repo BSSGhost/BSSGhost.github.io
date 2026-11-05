@@ -125,11 +125,14 @@
     viewStudents: $('prof-view-students'),
     viewRanking: $('prof-view-ranking'),
     viewStats: $('prof-view-stats'),
+    viewTimetables: $('prof-view-timetables'),
+    timetablesList: $('prof-timetables-list'),
     tabDash: $('prof-tab-dash'),
     tabClasses: $('prof-tab-classes'),
     tabStudents: $('prof-tab-students'),
     tabRanking: $('prof-tab-ranking'),
     tabStats: $('prof-tab-stats'),
+    tabTimetables: $('prof-tab-timetables'),
     sidebar: $('prof-sidebar'),
     mobileNavBtn: $('prof-mobile-nav-btn'),
     dashHeadStats: $('prof-dash-head-stats'),
@@ -1086,7 +1089,7 @@
   }
 
   function profViewsList() {
-    return [els.viewDash, els.viewStudents, els.viewRanking, els.viewStats, els.viewHome, els.viewClass, els.viewSubject];
+    return [els.viewDash, els.viewStudents, els.viewRanking, els.viewStats, els.viewTimetables, els.viewHome, els.viewClass, els.viewSubject];
   }
 
   function showView(target, opts) {
@@ -1151,6 +1154,45 @@
 
   function showHome() {
     showView(els.viewHome, { tab: 'classes', afterShow: renderHome });
+  }
+
+  function escapeTimetableHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+  }
+
+  async function showTimetablesView() {
+    showView(els.viewTimetables, { tab: 'timetables' });
+    if (!els.timetablesList) return;
+    els.timetablesList.innerHTML = '<p>Chargement…</p>';
+    try {
+      const data = await profApi('/api/teacher/timetables');
+      const timetables = Array.isArray(data.timetables) ? data.timetables : [];
+      if (!timetables.length) {
+        els.timetablesList.innerHTML = '<div class="prof-empty-state"><p>Aucun emploi du temps publié n’est disponible pour vos classes autorisées.</p></div>';
+        return;
+      }
+      els.timetablesList.innerHTML = timetables.map((item) => `<article class="prof-card"><h3>${escapeTimetableHtml(item.class_name)}</h3><p>${escapeTimetableHtml(item.school_year)} · ${escapeTimetableHtml(item.title || 'Emploi du temps')}</p><button type="button" class="prof-btn" data-timetable-open="${Number(item.id)}">Consulter</button></article>`).join('');
+      els.timetablesList.querySelectorAll('[data-timetable-open]').forEach((button) => button.addEventListener('click', () => openTeacherTimetable(Number(button.dataset.timetableOpen))));
+    } catch (error) {
+      els.timetablesList.innerHTML = `<div class="prof-empty-state"><p>Impossible de charger les emplois du temps : ${escapeTimetableHtml(error.message)}</p></div>`;
+    }
+  }
+
+  async function openTeacherTimetable(id) {
+    if (!els.timetablesList || !Number.isSafeInteger(id)) return;
+    els.timetablesList.innerHTML = '<p>Chargement…</p>';
+    try {
+      const data = await profApi(`/api/teacher/timetables/${id}`);
+      const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+      const weekdays = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
+      const rows = weekdays.map((day) => sessions.filter((session) => session.weekday === day)).filter((dayRows) => dayRows.length).map((dayRows) => `<div class="prof-timetable-day"><strong>${escapeTimetableHtml(dayRows[0].weekday)}</strong>${dayRows.map((session) => `<p>${escapeTimetableHtml(session.starts_at)}–${escapeTimetableHtml(session.ends_at)} · ${escapeTimetableHtml(session.subject_name || session.session_type)}${session.room ? ` · ${escapeTimetableHtml(session.room)}` : ''}${session.note ? ` · ${escapeTimetableHtml(session.note)}` : ''}</p>`).join('')}</div>`).join('');
+      const documentLink = data.document ? `<p><a class="prof-btn" href="/api/teacher/timetable-documents/${Number(data.document.id)}" target="_blank" rel="noopener">Ouvrir le document joint</a></p>` : '';
+      els.timetablesList.innerHTML = `<button type="button" class="prof-btn" id="prof-timetables-back">Retour à la liste</button>${rows || '<p>Aucune séance publiée.</p>'}${documentLink}`;
+      els.timetablesList.querySelector('#prof-timetables-back')?.addEventListener('click', showTimetablesView);
+    } catch (error) {
+      els.timetablesList.innerHTML = `<p>Impossible d’ouvrir cet emploi du temps : ${escapeTimetableHtml(error.message)}</p><button type="button" class="prof-btn" id="prof-timetables-back-error">Retour</button>`;
+      els.timetablesList.querySelector('#prof-timetables-back-error')?.addEventListener('click', showTimetablesView);
+    }
   }
 
   function showClassView() {
@@ -1320,7 +1362,8 @@
       classes: els.tabClasses,
       students: els.tabStudents,
       ranking: els.tabRanking,
-      stats: els.tabStats
+      stats: els.tabStats,
+      timetables: els.tabTimetables
     };
     const activeBtn = tabMap[which];
     Object.values(tabMap).forEach((btn) => {
@@ -4585,6 +4628,7 @@
     if (els.tabStudents) els.tabStudents.addEventListener('click', () => showStudentsView());
     if (els.tabRanking) els.tabRanking.addEventListener('click', showRankingView);
     if (els.tabStats) els.tabStats.addEventListener('click', showStatsView);
+    if (els.tabTimetables) els.tabTimetables.addEventListener('click', showTimetablesView);
 
     /* Boutons de la bannière "Votre espace professeur" */
     document.querySelectorAll('.prof-hero-cta[data-act]').forEach((btn) => {

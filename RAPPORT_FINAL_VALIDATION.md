@@ -136,3 +136,25 @@ Aucune donnée ni formule scolaire modifiée.
 2. Après cette création, relancer les validations locales ; aucune Aiven/defaultdb ne sera consultée.
 3. Valider les données fictives admin/professeur.
 4. Confirmer les PDF téléchargés depuis l'application réelle dans Chrome.
+
+## 7. Module Emplois du temps — reprise et intégration
+
+### Statut technique : PARTIELLEMENT VALIDÉ
+
+Travaux terminés dans le dépôt :
+- API administrateur et professeur intégrée dans `server.js`.
+- Interface d'administration ajoutée à `admin/js/app.js` avec création, publication, dépublication et suppression.
+- Interface professeur ajoutée dans `index.html` et `prof.js` avec liste, grille et document joint.
+- Upload Cloudinary protégé par authentification, limites de taille et détection des signatures PDF/PNG/JPEG.
+- Validation serveur des matières affectées à la classe et des professeurs ayant accès à la classe.
+- Création et remplacement des séances placés dans des transactions MySQL avec retour arrière en cas d'erreur.
+
+Validé automatiquement le 2026-11-05 :
+- Syntaxe Node.js de `server.js`, `timetable-api.js`, `prof.js` et `admin/js/app.js` : réussie.
+- Tests automatisés : 48 réussis, 0 échec.
+
+NON VALIDÉ à ce jour :
+- Migration MySQL réelle des trois tables `timetables`, `timetable_sessions` et `timetable_documents`.
+- Upload réel vers Cloudinary.
+- Création/pagination/restrictions d'accès sur une base isolée.
+Ces opérations restent bloquées par l'absence d'un compte MySQL local autorisé et par l'absence de configuration Cloudinary de validation. Aucun test n'a été porté sur Aiven/defaultdb.
