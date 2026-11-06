@@ -4,6 +4,7 @@
 import { icon } from './icons.js';
 import { createTimetables } from './timetables.js';
 import { $, esc, norm, debounce, initials, fmtDate, fmtDateTime, relTime, badge, statusBadge, empty, skeleton, paginate, pager, toast, modal, confirmDialog, formModal, field, input, select, barChart } from './ui.js';
+import { showAdminBulletin } from './bulletin.js';
 
 /* ============================== État & API ============================== */
 const S = { user: null, loaded: false, route: 'accueil', lastBackup: null,
@@ -40,7 +41,7 @@ const LOADERS = {
   students: { ok: () => can('students.view'), url: '/api/admin/students', pick: (d) => d.students },
   teachers: { ok: () => can('teachers.view'), url: '/api/admin/teachers', pick: (d) => d.teachers },
   subjects: { ok: () => can('subjects.view'), url: '/api/admin/subjects', pick: (d) => d.subjects },
-  terms: { ok: () => can('subjects.view'), url: '/api/admin/terms', pick: (d) => d.terms },
+  terms: { ok: () => can('subjects.view') || can('reports.view') || can('grades.view'), url: '/api/admin/terms', pick: (d) => d.terms },
   assignments: { ok: () => can('subjects.view'), url: '/api/admin/class-subjects', pick: (d) => d.assignments },
   users: { ok: () => isPrincipal(), url: '/api/admin/users', pick: (d) => d.users },
   logs: { ok: () => isPrincipal(), url: '/api/admin/audit/logs', pick: (d) => d.logs }
@@ -247,7 +248,7 @@ function lStudents() {
   if (q) rows = rows.filter((s) => norm(`${s.first_name} ${s.last_name} ${s.matricule}`).includes(q));
   const pg = paginate(rows, f.page); f.page = pg.page;
   if (!rows.length) return empty('graduation-cap', 'Aucun élève trouvé', (D.students || []).length ? 'Modifiez vos filtres ou votre recherche.' : 'Ajoutez le premier élève pour commencer.');
-  return `<div class="ui-table-card"><table class="ui-table"><thead><tr><th>Élève</th><th>Classe</th><th>Année</th><th>Statut</th><th class="ui-th-act"><span class="sr-only">Actions</span></th></tr></thead><tbody>${pg.items.map((s) => `<tr><td data-label="Élève"><button type="button" class="ui-person" data-act="student-view" data-id="${s.id}"><span class="ui-avatar">${esc(initials(`${s.first_name} ${s.last_name}`))}</span><span><strong>${esc(s.first_name)} ${esc(s.last_name)}</strong><small>${esc(s.matricule)}</small></span></button></td><td data-label="Classe">${esc(s.class_name || '—')}</td><td data-label="Année">${esc(s.school_year || '—')}</td><td data-label="Statut">${statusBadge(s.is_active)}</td><td class="ui-td-act">${menu([{ act: 'student-view', label: 'Voir la fiche', icon: 'eye', data: { id: s.id } }, can('students.edit') && { act: 'student-edit', label: 'Modifier', icon: 'pencil', data: { id: s.id } }, can('students.edit') && { act: 'toggle', label: s.is_active ? 'Désactiver' : 'Réactiver', icon: s.is_active ? 'power' : 'rotate-ccw', danger: s.is_active, data: { entity: 'students', id: s.id, next: !s.is_active, name: `${s.first_name} ${s.last_name}` } }])}</td></tr>`).join('')}</tbody></table>${pager(pg, 'students')}</div>`;
+  return `<div class="ui-table-card"><table class="ui-table ui-table--student-actions"><thead><tr><th>Élève</th><th>Classe</th><th>Année</th><th>Statut</th><th class="ui-th-act"><span class="sr-only">Actions</span></th></tr></thead><tbody>${pg.items.map((s) => `<tr><td data-label="Élève"><button type="button" class="ui-person" data-act="student-view" data-id="${s.id}"><span class="ui-avatar">${esc(initials(`${s.first_name} ${s.last_name}`))}</span><span><strong>${esc(s.first_name)} ${esc(s.last_name)}</strong><small>${esc(s.matricule)}</small></span></button></td><td data-label="Classe">${esc(s.class_name || '—')}</td><td data-label="Année">${esc(s.school_year || '—')}</td><td data-label="Statut">${statusBadge(s.is_active)}</td><td class="ui-td-act"><div class="admin-student-actions"><button type="button" class="ghost-button prof-row-action" data-act="student-bulletin" data-id="${s.id}">Voir le bulletin</button>${can('students.edit') ? `<button type="button" class="ghost-button prof-row-action" data-act="student-edit" data-id="${s.id}">Modifier</button>${s.is_active ? `<button type="button" class="ghost-button prof-row-action prof-danger-text" data-act="toggle" data-entity="students" data-next="false" data-name="${esc(`${s.first_name} ${s.last_name}`)}" data-id="${s.id}">Supprimer</button>` : ''}` : ''}</div></td></tr>`).join('')}</tbody></table>${pager(pg, 'students')}</div>`;
 }
 function studentView(id) {
   const s = (D.students || []).find((x) => String(x.id) === String(id)); if (!s) return;
@@ -266,6 +267,28 @@ function studentEdit(id) {
   const s = (D.students || []).find((x) => String(x.id) === String(id)); if (!s) return;
   formModal({ title: 'Modifier l’élève', fields: `<div class="ui-row">${field('Prénom', input('first_name', { required: true, maxlength: 80, value: s.first_name }))}${field('Nom', input('last_name', { required: true, maxlength: 80, value: s.last_name }))}</div>${field('Genre', select('gender', Object.entries(GENDER).map(([value, label]) => ({ value, label })), s.gender || 'UNSPECIFIED'))}<p class="ui-hint">Matricule : ${esc(s.matricule)} (non modifiable).</p>`,
     onSubmit: async (fd, m) => { await api(`/api/admin/students/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ first_name: fd.get('first_name'), last_name: fd.get('last_name'), gender: fd.get('gender') }) }); m.close(); await mutate(async () => {}, 'Fiche élève mise à jour.'); } });
+}
+
+async function showAdminStudentBulletin(id) {
+  if (!(can('reports.view') || can('grades.view'))) {
+    toast('Vous n’avez pas la permission de consulter les bulletins.', 'error');
+    return;
+  }
+  const student = (D.students || []).find((s) => String(s.id) === String(id));
+  if (!student) return;
+  const classe = (D.classes || []).find((c) => String(c.id) === String(student.class_id));
+  let terms = D.terms || [];
+  if (!terms.length && (can('subjects.view') || can('reports.view') || can('grades.view'))) {
+    terms = (await api('/api/admin/terms')).terms || [];
+    D.terms = terms;
+  }
+  const matchingTerms = terms.filter((term) => !classe || String(term.school_year_id) === String(classe.school_year_id));
+  const term = matchingTerms[0];
+  if (!student.class_id || !term) {
+    toast('Aucun semestre disponible pour cet élève.', 'error');
+    return;
+  }
+  await showAdminBulletin({ student, classId: student.class_id, termId: term.id, api });
 }
 
 /* ============================== Activation / désactivation (commun) ============================== */
@@ -527,7 +550,7 @@ const ACT = {
   pw: () => { $('change-cancel').classList.remove('hidden'); show('change'); },
   toggle: (d) => toggleEntity(d),
   'year-new': yearNew, 'year-view': (d) => yearView(d.id),
-  'student-new': studentNew, 'student-view': (d) => studentView(d.id), 'student-edit': (d) => studentEdit(d.id),
+  'student-new': studentNew, 'student-view': (d) => studentView(d.id), 'student-edit': (d) => studentEdit(d.id), 'student-bulletin': (d) => showAdminStudentBulletin(d.id),
   'teacher-new': teacherNew, 'teacher-view': (d) => teacherView(d.id), 'teacher-edit': (d) => teacherEdit(d.id),
   'class-new': classNew, 'class-edit': (d) => classEdit(d.id),
   'class-students': (d) => { S.ui.students = { q: '', cls: d.id, year: '', status: '', page: 1 }; go('eleves'); },

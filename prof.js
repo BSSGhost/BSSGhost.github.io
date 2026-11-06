@@ -2739,6 +2739,7 @@
           ${summary}
           ${table}
         </div>
+        <p class="bltn-watermark">Document non officiel, à vérifier auprès de l'administration</p>
         <footer class="bltn-foot">
           <button type="button" class="bltn-btn bltn-btn-text" data-close>${escHtml(t('prof_bulletin_close'))}</button>
           <div class="bltn-foot-main">

@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const server = await readFile(new URL('../server.js', import.meta.url), 'utf8');
 const adminHtml = await readFile(new URL('../admin/index.html', import.meta.url), 'utf8');
+const adminApp = await readFile(new URL('../admin/js/app.js', import.meta.url), 'utf8');
 const professor = await readFile(new URL('../prof.js', import.meta.url), 'utf8');
 const schema = await readFile(new URL('../database/migrations/school-core.sql', import.meta.url), 'utf8');
 const calculations = await import('../school-calculations.js');
@@ -23,9 +24,10 @@ test('les référentiels peuvent être désactivés sans suppression physique', 
 });
 
 test('l’administration propose les formulaires et listes des référentiels', () => {
-  for (const id of ['year-form','class-form','student-form','teacher-form','subject-form','assignment-form']) {
-    assert.ok(adminHtml.includes(`id="${id}"`), `formulaire absent: ${id}`);
+  for (const handler of ['yearNew','classNew','studentNew','teacherNew','subjectNew']) {
+    assert.ok(adminApp.includes(`function ${handler}(`), `formulaire absent: ${handler}`);
   }
+  assert.ok(adminApp.includes('function assignForm('), 'formulaire absent: affectation');
 });
 
 test('le stockage de l’espace professeur est synchronisé avec les API serveur', () => {
@@ -42,7 +44,7 @@ test('les matières sont affectées par semestre et les élèves ont un identifi
 
 test('la sauvegarde complète est réservée à l’administrateur principal', () => {
   assert.match(server, /url\.pathname === '\/api\/admin\/backup'[\s\S]{0,120}user\.role_name !== 'principal'/);
-  assert.match(adminHtml, /download-backup/);
+  assert.ok(adminApp.includes('backup: downloadBackup'), 'action de sauvegarde absente');
 });
 
 

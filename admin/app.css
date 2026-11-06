@@ -166,6 +166,14 @@ a.ui-stat:hover { transform: translateY(-2px); border-color: #C9D6EC; box-shadow
 .ui-table tbody tr:hover { background: #FAFBFE; }
 .ui-table tbody tr:last-child td { border-bottom: 0; }
 .ui-th-act, .ui-td-act { width: 56px; text-align: right !important; }
+.ui-table--student-actions .ui-td-act { width: 330px; }
+.admin-student-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.admin-student-actions .prof-row-action { min-height: 34px; padding: 6px 10px; white-space: nowrap; }
+.prof-danger-text { color: #B93A3A !important; }
+@media (max-width: 900px) {
+  .ui-table--student-actions .ui-td-act { width: auto; }
+  .admin-student-actions { flex-wrap: wrap; }
+}
 .ui-person { display: flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none; text-align: left; color: inherit; cursor: pointer; font: inherit; min-width: 0; }
 .ui-person strong, .ui-person small { display: block; }
 .ui-person strong { font-size: .9rem; overflow-wrap: anywhere; }

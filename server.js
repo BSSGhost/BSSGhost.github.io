@@ -777,7 +777,7 @@ async function adminApi(req, res, url) {
   if (req.method === 'GET' && url.pathname === '/api/admin/students') {
     if (!can('students.view')) return json(res, 403, { error: 'droits_insuffisants' });
     const [rows] = await db.execute(`SELECT st.id,st.matricule,st.first_name,st.last_name,st.gender,st.birth_date,st.is_active,
-      c.id AS class_id,c.name AS class_name,y.label AS school_year FROM students st
+      c.id AS class_id,c.name AS class_name,c.school_year_id,y.label AS school_year FROM students st
       LEFT JOIN enrollments e ON e.student_id=st.id AND e.status='ACTIVE' LEFT JOIN classes c ON c.id=e.class_id
       LEFT JOIN school_years y ON y.id=e.school_year_id ORDER BY st.last_name,st.first_name LIMIT 1000`);
     return json(res,200,{students:rows});
@@ -827,12 +827,12 @@ async function adminApi(req, res, url) {
         if(average===null)complete=false;
         return {...subject,devoir1:d1,devoir2:d2,composition:compo,average};
       });
-      return {enrollment_id:student.enrollment_id,matricule:student.matricule,first_name:student.first_name,last_name:student.last_name,subjects,complete,general_average:complete?calculateGeneralAverage(subjects):null};
+      return {student_id:student.student_id,enrollment_id:student.enrollment_id,matricule:student.matricule,first_name:student.first_name,last_name:student.last_name,subjects,complete,general_average:complete?calculateGeneralAverage(subjects):null};
     });
     return json(res,200,{class:valid[0].name,term:valid[0].term_name,subjects:subjectDefs,results});
   }
   if (req.method === 'GET' && url.pathname === '/api/admin/terms') {
-    if (!can('subjects.view')) return json(res,403,{error:'droits_insuffisants'});
+    if (!can('subjects.view') && !can('reports.view') && !can('grades.view')) return json(res,403,{error:'droits_insuffisants'});
     const [rows]=await db.execute('SELECT t.id,t.name,t.school_year_id,y.label AS school_year,t.is_closed FROM terms t JOIN school_years y ON y.id=t.school_year_id ORDER BY y.label DESC,t.name');
     return json(res,200,{terms:rows});
   }

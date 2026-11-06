@@ -9798,6 +9798,19 @@ html.dark-mode .migration-security { background:rgba(255,255,255,.06); }
   --b-low: #a33a3a;
   --b-low-bg: #fbeaea;
   --b-blue-bg: #e9eef7;
+  --blu-white: #ffffff;
+  --blu-text: #1e2535;
+  --blu-primary: #16213e;
+  --blu-royal: #2a6fb2;
+  --blu-light: #e9eef7;
+  --blu-very-light: #f8f9fa;
+  --blu-ink: #0d1320;
+  --blu-ink-soft: #3d5a80;
+  --blu-muted: #4a5a70;
+  --b-radius: 10px;
+  --b-spacing-md: 12px;
+  --b-spacing-lg: 16px;
+  --b-shadow-card: 0 24px 60px rgba(10, 18, 32, 0.15);
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -9870,7 +9883,11 @@ html.dark-mode .bltn-modal {
   max-width: 660px;
   max-height: 88vh;
   max-height: 88dvh;
-  background: var(--blu-white);
+  background-color: var(--blu-white);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58' viewBox='0 0 58 58'%3E%3Cg fill='none' stroke='%231d6a52' stroke-opacity='0.065' stroke-width='1.3'%3E%3Cpath d='M29 5 L53 29 L29 53 L5 29 Z'/%3E%3C/g%3E%3Ccircle cx='29' cy='29' r='2.1' fill='%23d2a84a' fill-opacity='0.16'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 58px 58px;
   color: var(--blu-text);
   border: 1px solid var(--b-line);
   border-radius: var(--b-radius);
@@ -9878,6 +9895,21 @@ html.dark-mode .bltn-modal {
   overflow: hidden;
   outline: none;
   animation: bltn-in 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.bltn-watermark {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%) rotate(-24deg);
+  margin: 0;
+  color: rgba(23, 43, 75, 0.16);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
 }
 
 @keyframes bltn-in {
@@ -10409,6 +10441,13 @@ html.dark-mode .bltn-btn-primary {
     box-shadow: none;
     overflow: visible;
     animation: none;
+    background-color: #fff !important;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58' viewBox='0 0 58 58'%3E%3Cg fill='none' stroke='%231d6a52' stroke-opacity='0.065' stroke-width='1.3'%3E%3Cpath d='M29 5 L53 29 L29 53 L5 29 Z'/%3E%3C/g%3E%3Ccircle cx='29' cy='29' r='2.1' fill='%23d2a84a' fill-opacity='0.16'/%3E%3C/svg%3E") !important;
+    background-repeat: repeat !important;
+    background-size: 58px 58px !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   body.bltn-printing .bltn-body { overflow: visible; padding: 18px 0 0; }
