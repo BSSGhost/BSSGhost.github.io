@@ -83,7 +83,7 @@ router.post('/login', async (req, res) => {
 router.post('/logout', authenticate, async (req, res) => {
   try {
     const result = await logoutAdmin();
-    res.clearCookie('admin_token');
+    res.clearCookie('admin_session');
     return res.status(200).json(result);
   } catch (error) {
     return res.status(500).json({ error: 'serveur_indisponible' });

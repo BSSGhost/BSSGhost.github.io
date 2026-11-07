@@ -10,6 +10,7 @@
 
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 function json(res, status, payload) {
   return res.status(status).json(payload);
@@ -18,6 +19,15 @@ function json(res, status, payload) {
 let pool = null;
 export function initAuthPool(mysqlPool) {
   pool = mysqlPool;
+}
+
+/**
+ * Générer un hash SHA-256 d'une chaîne (utilisé pour comparer les tokens sessions)
+ * @param {string} token - La chaîne à hasher
+ * @returns {string} - Hash hexadécimal
+ */
+function hashCode(token) {
+  return crypto.createHash('sha256').update(token, 'utf8').digest('hex');
 }
 
 const SALT_ROUNDS = 12; // ou Argon2id selon la configuration
@@ -97,50 +107,204 @@ export function verifyToken(token, secret) {
  * @param {function} next - Fonction next Express
  * @returns {void}
  */
+/**
+ * Lire la valeur d'un cookie depuis l'en-tête Cookie (équivalent léger de cookie-parser)
+ * @param {object} req - Requête Express
+ * @param {string} name - Nom du cookie
+ * @returns {string} - Valeur du cookie ou chaîne vide
+ */
+function readCookie(req, name) {
+  const raw = req.headers.cookie || '';
+  for (const part of raw.split(';')) {
+    const index = part.indexOf('=');
+    if (index > -1 && part.slice(0, index).trim() === name) {
+      try { return decodeURIComponent(part.slice(index + 1).trim()); } catch { return ''; }
+    }
+  }
+  return '';
+}
+
+/**
+ * Middleware d'authentification admin utilisant les sessions cookie.
+ * Lit le cookie admin_session, vérifie son existence en base
+ * (table admin_sessions) et ajoute l'identité admin à req.admin.
+ * Fonctionne sans cookie-parser, compatible HTTPS/Render.
+ * @param {object} req - Requête Express
+ * @param {object} res - Réponse Express
+ * @param {function} next - Fonction next Express
+ * @returns {void}
+ */
 export function adminAuthMiddleware(req, res, next) {
   try {
-    let token = null;
+    // Récupérer le token depuis le cookie admin_session
+    // (Le serveur le définit via setAdminCookie lors de la connexion)
+    let token = readCookie(req, 'admin_session');
 
-    // Essayer de récupérer le token depuis l'en-tête Authorization
-    const authHeader = req.headers['authorization'];
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-    }
-
-    // Sinon essayer depuis les cookies
-    if (!token && req.cookies) {
-      token = req.cookies.admin_token;
+    // Fallback : tenter l'en-tête Authorization Bearer pour compatibilité
+    if (!token) {
+      const authHeader = req.headers['authorization'];
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
     }
 
     if (!token) {
-      return json(res, 401, { error: 'non_authentifie', message: 'Token d\'authentification requis' });
+      return res.status(401).json({ error: 'non_authentifie', message: 'Aucun token d\'authentification trouvé (cookie admin_session manquant)' });
     }
 
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      return json(res, 503, { error: 'jwt_non_configure' });
-    }
-    const payload = verifyToken(token, secret);
+    const db = await getDb();
 
-    if (!payload) {
-      return json(res, 401, { error: 'token_invalide', message: 'Token invalide ou expiré' });
+    // Vérifier que le token existe en base et n'a pas expiré
+    const [sessions] = await db.execute(
+      'SELECT token_hash, expires_at, admin_user_id FROM admin_sessions WHERE token_hash = ? AND expires_at > NOW() LIMIT 1',
+      [hashCode(token)]
+    );
+
+    if (!sessions.length) {
+      // Token invalide ou expiré - essayer tout de même la vérification du compte
+      // pour ne pas révéler si le cookie est simplement expiré
+      const [users] = await db.execute(
+        'SELECT id, email, full_name, role_id, is_active, must_change_password FROM admin_users WHERE is_active = TRUE LIMIT 1'
+      );
+      if (!users.length) {
+        return res.status(401).json({ error: 'compte_desactive', message: 'Aucun administrateur actif trouvé' });
+      }
+      return res.status(401).json({ error: 'session_expiree', message: 'Votre session a expiré. Veuillez vous reconnecter.' });
     }
 
-    // Vérifier que l'administrateur est actif
-    // (La vérification DB complète se fait dans le contrôleur)
+    const session = sessions[0];
+
+    // Récupérer les infos de l administrateur
+    const [users] = await db.execute(
+      'SELECT id, email, full_name, role_id, is_active, must_change_password FROM admin_users WHERE id = ? AND is_active = TRUE',
+      [session.admin_user_id]
+    );
+
+    if (!users.length) {
+      // Compte désactivé - nettoyer les sessions orphelines
+      await db.execute('DELETE FROM admin_sessions WHERE admin_user_id = ?', [session.admin_user_id]);
+      return res.status(401).json({ error: 'compte_desactive', message: 'Votre compte est désactivé' });
+    }
+
+    const user = users[0];
+
+    // Vérifier si le mot de passe doit être changé
+    if (user.must_change_password) {
+      return res.status(403).json({
+        must_change_password: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name
+        }
+      });
+    }
+
+    // Récupérer les permissions
+    const [rolePermissions] = await db.execute(
+      'SELECT permission_id FROM role_permissions WHERE role_id = ?',
+      [user.role_id]
+    );
+
+    const permissionIds = rolePermissions.map(rp => rp.permission_id);
+
+    const [permissions] = await db.execute(
+      'SELECT name, category FROM permissions WHERE id IN (?)',
+      [permissionIds]
+    );
+
+    // Construire l identité admin
     req.admin = {
-      id: payload.id,
-      email: payload.email,
-      role: payload.role,
-      permissions: payload.permissions
+      id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      role_id: user.role_id,
+      permissions: permissions.map(p => p.name)
     };
 
     next();
   } catch (error) {
     console.error('Erreur middleware adminAuth:', error);
-    return json(res, 500, { error: 'serveur_indisponible' });
+    return res.status(500).json({ error: 'serveur_indisponible', message: 'Erreur interne lors de la vérification d\'authentification' });
   }
 }
+
+/**
+ * Vérifier si un administrateur a une permission donnée
+ * @param {string|string[]} requiredPermission - Nom de la permission ou tableau
+ * @returns {function} - Middleware Express
+ */
+export function checkPermission(requiredPermission) {
+  return async function(req, res, next) {
+    try {
+      const admin = req.admin;
+      if (!admin || !admin.permissions) {
+        return res.status(403).json({ error: 'permission_refusee', message: 'Permissions insuffisantes' });
+      }
+
+      const needed = Array.isArray(requiredPermission) ? requiredPermission : [requiredPermission];
+      const hasPermission = needed.some(perm => admin.permissions.includes(perm));
+
+      if (!hasPermission) {
+        if (req.admin && req.admin.id) {
+          recordAuditAction(req, 'permission_denied', 'admin_action', req.admin.id, { requiredPermission, adminRole: admin.role });
+        }
+        return res.status(403).json({ error: 'permission_refusee', message: 'Vous n\'avez pas la permission requise' });
+      }
+
+      next();
+    } catch (error) {
+      console.error('Erreur checkPermission:', error);
+      return res.status(500).json({ error: 'serveur_indisponible' });
+    }
+  };
+}
+
+/**
+ * Middleware de vérification de rôle admin.
+ * @param {string|string[]} allowedRoles - Rôle ou tableau de rôles autorisés
+ * @returns {function} - Middleware Express
+ */
+export function checkRole(allowedRoles) {
+  return async function(req, res, next) {
+    try {
+      const admin = req.admin;
+      if (!admin || !admin.role) {
+        return res.status(403).json({ error: 'role_refusee', message: 'Rôle requis' });
+      }
+
+      const allowed = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+      const hasRole = allowed.includes(admin.role);
+
+      if (!hasRole) {
+        return res.status(403).json({ error: 'role_refusee', message: 'Rôle requis' });
+      }
+
+      next();
+    } catch (error) {
+      console.error('Erreur checkRole:', error);
+      return res.status(500).json({ error: 'serveur_indisponible' });
+    }
+  };
+}
+
+/**
+ * Obtenir les permissions de ladmin connecté
+ * @returns {Promise<Array<string>>} - Liste des noms de permissions
+ */
+export function getAdminPermissions() {
+  if (!req || !req.admin || !req.admin.permissions) {
+    return [];
+  }
+  return req.admin.permissions;
+}
+
+export default {
+  adminAuthMiddleware,
+  checkPermission,
+  checkRole,
+  getAdminPermissions
+};
 
 /**
  * Middleware de vérification de permission

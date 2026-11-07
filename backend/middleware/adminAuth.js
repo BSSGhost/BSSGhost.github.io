@@ -55,8 +55,8 @@ export function authenticate(req, res, next) {
 
       if (users.length === 0) {
         // Session invalide (admin désactivé)
-        // Supprimer le cookie token
-        res.clearCookie('admin_token');
+        // Supprimer le cookie session
+        res.clearCookie('admin_session');
         return json(res, 401, { error: 'compte_desactive', message: 'Votre compte est désactivé' });
       }
 
