@@ -95,6 +95,12 @@ function renderRoute(animate = true) {
   document.querySelectorAll('.ui-nav-item[data-route]').forEach((a) => a.classList.toggle('is-active', a.dataset.route === name));
   $('crumb').textContent = r.title; document.title = `${r.title} — SUNU MOYENNE`;
   document.body.classList.remove('sb-open'); renderBell();
+  if (name === 'eleves_import') {
+    StudentsImportWizard({
+      classes: D.classes || [],
+      schoolYears: D.years || []
+    });
+  }
 }
 function refreshList() { const r = ROUTES[S.route]; if (r?.list) $('list').innerHTML = r.list(); }
 
@@ -630,10 +636,6 @@ async function boot() {
   try { document.body.classList.toggle('sb-collapsed', localStorage.getItem('sm-sb') === '1'); } catch {}
   S.loaded = false; renderRoute();
   await loadAll(); 
-  // Initialiser le wizard d'import d'élèves
-  const importWizard = StudentsImportWizard();
-  // Garder une référence pour le nettoyage
-  window.importWizard = importWizard;
   renderRoute();
 }
 async function load() {

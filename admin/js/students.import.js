@@ -214,16 +214,26 @@ export function parseXlsxFileClient(file) {
           const extraLen = dv.getUint16(pos + 28, true);
           const entryName = new TextDecoder().decode(data.slice(pos + 30, pos + 30 + nameLen));
           const entryDataStart = pos + 30 + nameLen + extraLen;
-          entries[entryName] = { method, compSize, dataStart };
+          entries[entryName] = { method, compSize, dataStart: entryDataStart };
           pos = entryDataStart + compSize;
         }
 
+        const inflateEntry = async (entry) => {
+          const raw = data.slice(entry.dataStart, entry.dataStart + entry.compSize);
+          if (entry.method === 0) return raw;
+          if (entry.method !== 8 || typeof DecompressionStream === 'undefined') {
+            throw new Error('Compression XLSX non prise en charge par ce navigateur');
+          }
+          const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+          return new Uint8Array(await new Response(stream).arrayBuffer());
+        };
+
+        const parser = new DOMParser();
         // Read shared strings
         let sharedStrings = [];
         if ('xl/sharedStrings.xml' in entries) {
-          const ssData = data.slice(entries['xl/sharedStrings.xml'].dataStart, entries['xl/sharedStrings.xml'].dataStart + entries['xl/sharedStrings.xml'].compSize);
+          const ssData = await inflateEntry(entries['xl/sharedStrings.xml']);
           const ssText = new TextDecoder('utf-8').decode(ssData);
-          const parser = new DOMParser();
           const doc = parser.parseFromString(ssText, 'application/xml');
           if (doc.querySelectorAll) {
             doc.querySelectorAll('si').forEach((si) => {
@@ -238,7 +248,7 @@ export function parseXlsxFileClient(file) {
 
         // Read sheet1
         if ('xl/worksheets/sheet1.xml' in entries) {
-          const sheetData = data.slice(entries['xl/worksheets/sheet1.xml'].dataStart, entries['xl/worksheets/sheet1.xml'].dataStart + entries['xl/worksheets/sheet1.xml'].compSize);
+          const sheetData = await inflateEntry(entries['xl/worksheets/sheet1.xml']);
           const sheetText = new TextDecoder('utf-8').decode(sheetData);
           const doc = parser.parseFromString(sheetText, 'application/xml');
           const rows = [];
@@ -375,4 +385,102 @@ export async function extractPdfTextClient(file) {
     reader.onerror = (e) => reject(e.error);
     reader.readAsArrayBuffer(file);
   });
+}
+
+/* ============================== Assistant d'import ============================== */
+export function StudentsImportWizard(options = {}) {
+  const target = document.getElementById('importWizard') || document.getElementById('import-wizard');
+  if (!target) return null;
+  if (target.dataset.initialized === 'true') return target.wizardController || null;
+
+  let rows = [];
+  let mapping = {};
+  const classes = options.classes || [];
+  const schoolYears = options.schoolYears || [];
+  const escHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[char]);
+
+  target.innerHTML = `
+    <div class="student-import-wizard">
+      <label class="ui-field"><span class="ui-label">Fichier élève</span><input class="ui-input" id="student-import-file" type="file" accept=".csv,.xlsx,.xls,.pdf" /></label>
+      <div class="ui-row">
+        <label class="ui-field"><span class="ui-label">Classe</span><select class="ui-input" id="student-import-class">${classes.map((item) => `<option value="${escHtml(item.id)}">${escHtml(item.name)}${item.level ? ` - ${escHtml(item.level)}` : ''}</option>`).join('')}</select></label>
+        <label class="ui-field"><span class="ui-label">Année scolaire</span><select class="ui-input" id="student-import-year">${schoolYears.map((item) => `<option value="${escHtml(item.id)}" ${item.is_current ? 'selected' : ''}>${escHtml(item.label)}</option>`).join('')}</select></label>
+      </div>
+      <p id="student-import-status" role="status"></p>
+      <div id="student-import-preview"></div>
+      <button class="ui-btn ui-btn--primary" id="student-import-submit" type="button" disabled>Importer les élèves</button>
+    </div>`;
+
+  const fileInput = target.querySelector('#student-import-file');
+  const status = target.querySelector('#student-import-status');
+  const preview = target.querySelector('#student-import-preview');
+  const submit = target.querySelector('#student-import-submit');
+
+  const renderPreview = () => {
+    if (!rows.length) {
+      preview.innerHTML = '';
+      submit.disabled = true;
+      return;
+    }
+    preview.innerHTML = `<div class="ui-table-card"><table class="ui-table"><thead><tr>${rows[0].map((header) => `<th>${escHtml(header)}</th>`).join('')}</tr></thead><tbody>${rows.slice(1, 11).map((row) => `<tr>${rows[0].map((_, index) => `<td>${escHtml(row[index] ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    submit.disabled = rows.length < 2;
+  };
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    submit.disabled = true;
+    status.textContent = 'Analyse du fichier…';
+    try {
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.csv')) rows = await parseCsvFileClient(file);
+      else if (name.endsWith('.xlsx') || name.endsWith('.xls')) rows = await parseXlsxFileClient(file);
+      else if (name.endsWith('.pdf')) {
+        const pdfInfo = await detectPdfTypeClient(file);
+        if (pdfInfo.isScanned) throw new Error(pdfInfo.message || 'Ce PDF ne contient pas de texte sélectionnable.');
+        const lines = await extractPdfTextClient(file);
+        rows = lines.map((line) => line.split(/\s{2,}|\t|;/)).filter((row) => row.length && row.some(Boolean));
+      } else throw new Error('Format de fichier non pris en charge.');
+      if (rows.length < 2) throw new Error('Le fichier ne contient aucune ligne élève.');
+      mapping = autoMapColumns(rows[0], KNOWN_FIELDS);
+      status.textContent = `${rows.length - 1} élève(s) détecté(s).`;
+      renderPreview();
+    } catch (error) {
+      rows = [];
+      renderPreview();
+      status.textContent = error.message || 'Impossible de lire le fichier.';
+    }
+  });
+
+  submit.addEventListener('click', async () => {
+    submit.disabled = true;
+    status.textContent = 'Importation en cours…';
+    try {
+      const response = await fetch('/api/admin/students/import', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rows,
+          columnMapping: mapping,
+          targetClassId: target.querySelector('#student-import-class').value,
+          schoolYearId: target.querySelector('#student-import-year').value || null,
+          fileName: fileInput.files?.[0]?.name || null
+        })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || result.error || 'Échec de l’importation.');
+      status.textContent = `${result.created ?? 0} élève(s) importé(s), ${result.duplicates ?? 0} doublon(s), ${result.errors ?? 0} erreur(s).`;
+    } catch (error) {
+      status.textContent = error.message || 'Échec de l’importation.';
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
+  target.dataset.initialized = 'true';
+  target.wizardController = { refresh: renderPreview };
+  return target.wizardController;
 }
