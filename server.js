@@ -790,6 +790,66 @@ async function adminApi(req, res, url) {
     try { await connection.beginTransaction(); const [classes]=await connection.execute('SELECT id,school_year_id FROM classes WHERE id=? AND is_active=TRUE LIMIT 1',[classId]); if(!classes.length){await connection.rollback();return json(res,400,{error:'classe_introuvable'});} const [result]=await connection.execute('INSERT INTO students (matricule,first_name,last_name,gender,birth_date,guardian_name,guardian_phone) VALUES (?,?,?,?,?,?,?)',[matricule,firstName,lastName,['M','F','OTHER','UNSPECIFIED'].includes(body.gender)?body.gender:'UNSPECIFIED',body.birth_date||null,String(body.guardian_name||'').trim()||null,String(body.guardian_phone||'').trim()||null]); await connection.execute('INSERT INTO enrollments (student_id,class_id,school_year_id) VALUES (?,?,?)',[result.insertId,classId,classes[0].school_year_id]); await connection.commit(); await audit(db,user.id,'student_created','student',req,{student_id:result.insertId,matricule,class_id:classId}); return json(res,201,{ok:true,id:result.insertId}); }
     catch(error){await connection.rollback();if(error?.code==='ER_DUP_ENTRY')return json(res,409,{error:'matricule_deja_utilise'});throw error;} finally{connection.release();}
   }
+  if (req.method === 'POST' && url.pathname === '/api/admin/students/import') {
+    if (!can('students.create')) return json(res,403,{error:'droits_insuffisants'});
+    const body=await readJsonBody(req);
+    if (!Array.isArray(body.rows) || body.rows.length < 2 || !Array.isArray(body.rows[0])) return json(res,400,{error:'donnees_invalides',message:'Aucune donnée élève valide.'});
+    const headers=body.rows[0];
+    const columnMapping=body.columnMapping && typeof body.columnMapping === 'object' ? body.columnMapping : {};
+    const classId=Number(body.targetClassId);
+    if (!Number.isSafeInteger(classId) || classId < 1) return json(res,400,{error:'classe_invalide'});
+    const schoolYearId=body.schoolYearId===null||body.schoolYearId==='' ? null : Number(body.schoolYearId);
+    const [classes]=await db.execute('SELECT id,school_year_id FROM classes WHERE id=? AND is_active=TRUE LIMIT 1',[classId]);
+    if (!classes.length) return json(res,400,{error:'classe_introuvable'});
+    const resolvedYearId=Number.isSafeInteger(schoolYearId)&&schoolYearId>0 ? schoolYearId : classes[0].school_year_id;
+    const getValue=(row,field)=>{
+      const index=Object.keys(columnMapping).find(key=>String(columnMapping[key])===field);
+      if (index===undefined) return '';
+      return String(row[Number(index)]||'').trim();
+    };
+    const results={total:body.rows.length-1,created:0,duplicates:0,errors:0,ignored:0,lines:[]};
+    const connection=await db.getConnection();
+    try {
+      await connection.beginTransaction();
+      for (let i=1;i<body.rows.length;i++) {
+        const row=body.rows[i];
+        const firstName=getValue(row,'firstName');
+        const lastName=getValue(row,'lastName');
+        const matricule=getValue(row,'matricule');
+        const gender=['M','F','OTHER','UNSPECIFIED'].includes(getValue(row,'gender'))?getValue(row,'gender'):'UNSPECIFIED';
+        if (!firstName || !lastName) {
+          results.errors++;
+          results.lines.push({row:i+1,status:'error',reason:'donnees_incompletes'});
+          continue;
+        }
+        let existing=[[]];
+        if (matricule) [existing]=await connection.execute('SELECT id FROM students WHERE matricule=? LIMIT 1',[matricule]);
+        if (existing.length) {
+          results.duplicates++;
+          results.ignored++;
+          results.lines.push({row:i+1,status:'duplicate',matricule});
+          continue;
+        }
+        try {
+          const [created]=await connection.execute('INSERT INTO students (matricule,first_name,last_name,gender,is_active) VALUES (?,?,?,?,TRUE)',[matricule||null,firstName,lastName,gender]);
+          await connection.execute("INSERT INTO enrollments (student_id,class_id,school_year_id,status) VALUES (?, ?, ?, 'ACTIVE') ON DUPLICATE KEY UPDATE class_id=VALUES(class_id),status='ACTIVE'",[created.insertId,classId,resolvedYearId]);
+          results.created++;
+          results.lines.push({row:i+1,status:'created'});
+        } catch (error) {
+          if (error?.code==='ER_DUP_ENTRY') { results.duplicates++; results.ignored++; results.lines.push({row:i+1,status:'duplicate',matricule}); }
+          else throw error;
+        }
+      }
+      await connection.commit();
+      await audit(db,user.id,'students_imported','students',req,{created:results.created,duplicates:results.duplicates,errors:results.errors,file:String(body.fileName||'')});
+      return json(res,200,{ok:true,...results});
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
   if (req.method === 'GET' && url.pathname === '/api/admin/subjects') {
     if (!can('subjects.view')) return json(res,403,{error:'droits_insuffisants'});
     const [rows]=await db.execute('SELECT id,code,name,coefficient,is_active FROM subjects ORDER BY name'); return json(res,200,{subjects:rows});

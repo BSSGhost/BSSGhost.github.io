@@ -45,8 +45,7 @@ const LOADERS = {
   terms: { ok: () => can('subjects.view') || can('reports.view') || can('grades.view'), url: '/api/admin/terms', pick: (d) => d.terms },
   assignments: { ok: () => can('subjects.view'), url: '/api/admin/class-subjects', pick: (d) => d.assignments },
   users: { ok: () => isPrincipal(), url: '/api/admin/users', pick: (d) => d.users },
-  logs: { ok: () => isPrincipal(), url: '/api/admin/audit/logs', pick: (d) => d.logs },
-  students_import: { ok: () => can('students.create'), url: '/api/admin/students/import', pick: (d) => d.bilan }
+  logs: { ok: () => isPrincipal(), url: '/api/admin/audit/logs', pick: (d) => d.logs }
 };
 async function loadAll() {
   const keys = Object.keys(LOADERS).filter((k) => LOADERS[k].ok());
@@ -638,17 +637,40 @@ async function boot() {
   await loadAll(); 
   renderRoute();
 }
-async function load() {
-  try {
-    const d = await api('/api/admin/me'); S.user = d.user;
-    if (S.user.must_change_password) { $('change-cancel').classList.add('hidden'); show('change'); return; }
-    show('dashboard'); await boot();
-  } catch (error) { if (error.code === 'changement_mot_de_passe_requis') { $('change-cancel').classList.add('hidden'); show('change'); } else show('login'); }
+let sessionInitialization = null;
+async function initializeSession() {
+  if (sessionInitialization) return sessionInitialization;
+  sessionInitialization = (async () => {
+    try {
+      const d = await api('/api/admin/me');
+      S.user = d.user;
+      if (S.user.must_change_password) { $('change-cancel').classList.add('hidden'); show('change'); return; }
+      show('dashboard');
+      await boot();
+    } catch (error) {
+      S.user = null;
+      if (error.code === 'changement_mot_de_passe_requis') { $('change-cancel').classList.add('hidden'); show('change'); }
+      else if (error.code === 'non_authentifie' || error.code === 'session_invalide' || error.code === 'session_expiree') show('login');
+      else {
+        console.error('Vérification de session administrative:', error);
+        show('login');
+        toast(error.message || 'Impossible de vérifier la session administrateur.', 'error');
+      }
+    } finally {
+      sessionInitialization = null;
+    }
+  })();
+  return sessionInitialization;
 }
 $('login-form').addEventListener('submit', async (event) => {
   event.preventDefault(); $('login-error').textContent = '';
   setLoginLoading(true);
-  try { const d = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ email: $('email').value, password: $('password').value }) }); S.user = d.user; if (d.must_change_password) { $('change-cancel').classList.add('hidden'); show('change'); } else await load(); }
+  try {
+    const d = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ email: $('email').value, password: $('password').value }) });
+    S.user = d.user;
+    if (d.must_change_password) { $('change-cancel').classList.add('hidden'); show('change'); }
+    else { show('dashboard'); await boot(); }
+  }
   catch (error) { $('login-error').textContent = error.message; }
   finally { setLoginLoading(false); setPasswordVisible(false); }
 });
@@ -656,11 +678,11 @@ $('change-form').addEventListener('submit', async (event) => {
   event.preventDefault(); $('change-error').textContent = '';
   if ($('new-password').value !== $('confirm-password').value) { $('change-error').textContent = 'Les mots de passe ne correspondent pas.'; return; }
   const b = $('change-submit'); b.disabled = true; b.classList.add('is-loading');
-  try { await api('/api/admin/change-password', { method: 'POST', body: JSON.stringify({ oldPassword: $('old-password').value, newPassword: $('new-password').value }) }); $('change-form').reset(); await load(); toast('Mot de passe modifié avec succès.'); }
+  try { await api('/api/admin/change-password', { method: 'POST', body: JSON.stringify({ oldPassword: $('old-password').value, newPassword: $('new-password').value }) }); $('change-form').reset(); await initializeSession(); toast('Mot de passe modifié avec succès.'); }
   catch (error) { $('change-error').textContent = error.message; }
   finally { b.disabled = false; b.classList.remove('is-loading'); }
 });
 $('change-cancel').addEventListener('click', () => { $('change-form').reset(); $('change-error').textContent = ''; show('dashboard'); });
 /* Icônes des éléments statiques */
 document.querySelectorAll('[data-icon]').forEach((el) => { el.insertAdjacentHTML('afterbegin', icon(el.dataset.icon)); });
-load();
+initializeSession();
