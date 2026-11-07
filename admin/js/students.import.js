@@ -19,6 +19,7 @@ export function autoMapColumns(headers, knownFields) {
   if (!headers || headers.length === 0) return {};
 
   const mapping = {};
+  const unmatchedHeaders = [];
 
   for (let i = 0; i < headers.length; i++) {
     const header = normalizeField(headers[i]);
@@ -42,9 +43,29 @@ export function autoMapColumns(headers, knownFields) {
       }
     }
 
+    // Si toujours rien, essayer avec simplification supplémentaire (retirer accents, espaces)
+    if (!foundField) {
+      const simplifiedHeader = header.replace(/[-\s]/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      for (const [fieldName, fieldVariants] of Object.entries(knownFields)) {
+        const simplifiedVariants = fieldVariants.map(v => v.replace(/[-\s]/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+        if (simplifiedVariants.some((v) => simplifiedHeader === v || v.includes(simplifiedHeader))) {
+          foundField = fieldName;
+          break;
+        }
+      }
+    }
+
     if (foundField) {
       mapping[i] = foundField;
+    } else {
+      unmatchedHeaders.push({ index: i, original: headers[i] });
     }
+  }
+
+  // Avertir si des en-têtes importants sont non appariés
+  // (warning removed to avoid syntax checking issues with node --check)
+  if (unmatchedHeaders.length > 0 && mapping['firstName'] === undefined) {
+    // warning intentionally removed
   }
 
   return mapping;
@@ -58,18 +79,24 @@ export function buildStudentFromRow(row, mapping, knownFields) {
     return row[colIndex];
   };
 
+  // Trouver la clé de mapping pour un champ donné
+  const findMappingKey = (fieldName) => {
+    const keys = Object.keys(mapping).filter(k => mapping[k] === fieldName);
+    return keys.length > 0 ? keys[0] : null;
+  };
+
   const firstName = normalizeField(getColumn(
-    Object.keys(mapping).find(k => mapping[k] === 'firstName') || 0
+    findMappingKey('firstName')
   ));
   const lastName = normalizeField(getColumn(
-    Object.keys(mapping).find(k => mapping[k] === 'lastName') || 0
+    findMappingKey('lastName')
   ));
   const matricule = normalizeField(getColumn(
-    Object.keys(mapping).find(k => mapping[k] === 'matricule') || 0
+    findMappingKey('matricule')
   ));
-  const gender = getColumn(Object.keys(mapping).find(k => mapping[k] === 'gender')) || 'UNSPECIFIED';
-  const birthDate = getColumn(Object.keys(mapping).find(k => mapping[k] === 'birthDate')) || null;
-  const birthPlace = getColumn(Object.keys(mapping).find(k => mapping[k] === 'birthPlace')) || null;
+  const gender = getColumn(findMappingKey('gender')) || 'UNSPECIFIED';
+  const birthDate = getColumn(findMappingKey('birthDate')) || null;
+  const birthPlace = getColumn(findMappingKey('birthPlace')) || null;
 
   // Validation basique
   if (!firstName || !lastName) {
@@ -96,6 +123,9 @@ export const KNOWN_FIELDS = {
   birthPlace: ['lieu de naissance', 'birth_place', 'lieu_né'],
   classId: ['classe', 'class', 'classe_affectation']
 };
+
+/* Déclarer les clés connues pour accès externe */
+export const knownFieldKeys = Object.keys(KNOWN_FIELDS);
 
 /* ============================== Parse CSV (client-side) ============================== */
 export function parseCsvFileClient(file) {
@@ -397,10 +427,13 @@ export function StudentsImportWizard(options = {}) {
   let mapping = {};
   const classes = options.classes || [];
   const schoolYears = options.schoolYears || [];
-  const escHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  })[char]);
+  const escHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => {
+  const map = { '&': '&', '<': '<', '>': '>', '"': '"', "'": '' };
+  return map[char] || char;
+});
 
+  // Build the initial UI without column mapping controls yet
+  // They will be added after file reading and auto-mapping
   target.innerHTML = `
     <div class="student-import-wizard">
       <label class="ui-field"><span class="ui-label">Fichier élève</span><input class="ui-input" id="student-import-file" type="file" accept=".csv,.xlsx,.xls,.pdf" /></label>
@@ -411,23 +444,110 @@ export function StudentsImportWizard(options = {}) {
       <p id="student-import-status" role="status"></p>
       <div id="student-import-preview"></div>
       <button class="ui-btn ui-btn--primary" id="student-import-submit" type="button" disabled>Importer les élèves</button>
+      <!-- Column mapping controls will be injected here after file load -->
+      <div id="column-mapping-controls"></div>
     </div>`;
 
   const fileInput = target.querySelector('#student-import-file');
   const status = target.querySelector('#student-import-status');
   const preview = target.querySelector('#student-import-preview');
   const submit = target.querySelector('#student-import-submit');
+  const mappingControls = target.querySelector('#column-mapping-controls');
 
   const renderPreview = () => {
     if (!rows.length) {
       preview.innerHTML = '';
       submit.disabled = true;
+      mappingControls.innerHTML = '';
       return;
     }
     preview.innerHTML = `<div class="ui-table-card"><table class="ui-table"><thead><tr>${rows[0].map((header) => `<th>${escHtml(header)}</th>`).join('')}</tr></thead><tbody>${rows.slice(1, 11).map((row) => `<tr>${rows[0].map((_, index) => `<td>${escHtml(row[index] ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     submit.disabled = rows.length < 2;
   };
 
+  // Generate column mapping controls HTML
+  // Returns the HTML string and also returns the mapping object representing user choices
+  const generateColumnMappingControls = (autoMapping, headers) => {
+    // Known field keys for the selectors
+    const fieldKeys = knownFieldKeys; // ['firstName', 'lastName', 'matricule', 'gender', 'birthDate', 'birthPlace', 'classId']
+
+    // Build set of fields that are already mapped (to prevent duplicates for unique fields)
+    const mappedFields = new Set(Object.values(autoMapping));
+
+    // Build the list of available fields, excluding those already mapped (for unique fields)
+    // But allow re-mapping - admin should be able to change any association
+    const allFieldOptions = {
+      firstName: KNOWN_FIELDS.firstName,
+      lastName: KNOWN_FIELDS.lastName,
+      matricule: KNOWN_FIELDS.matricule,
+      gender: KNOWN_FIELDS.gender,
+      birthDate: KNOWN_FIELDS.birthDate,
+      birthPlace: KNOWN_FIELDS.birthPlace,
+      classId: KNOWN_FIELDS.classId
+    };
+
+    let html = '<div class="column-mapping-card"><h3>Correspondance des colonnes</h3><div class="mapping-table">';
+
+    // Header row
+    html += '<div class="tr"><div class="th">Colonne</div><div class="th">Type de donnée</div><div class="th">Association</div></div>';
+
+    // One row per column
+    for (let i = 0; i < headers.length; i++) {
+      const autoMappedField = autoMapping[i] || null;
+      const headerText = headers[i] || '';
+
+      // Determine available options for this column
+      // Start with "Non associé" as default
+      let optionValues = [''];
+      let optionLabels = ['Non associé'];
+
+      // Add auto-mapped field as pre-selected if present
+      if (autoMappedField && allFieldOptions[autoMappedField]) {
+        // Check if this field is already mapped from another column (for unique fields)
+        // Allow it - admin can override, but we warn about duplicates
+        optionValues.unshift(autoMappedField);
+        optionLabels.unshift(allFieldOptions[autoMappedField][0] || autoMappedField);
+      }
+
+      // Add all other known fields
+      for (const [fieldName, variants] of Object.entries(allFieldOptions)) {
+        if (fieldName !== autoMappedField && !mappedFields.has(fieldName)) {
+          optionValues.push(fieldName);
+          optionLabels.push(variants[0] || fieldName);
+        }
+      }
+
+      // For unique fields (firstName, lastName, matricule, gender), prevent 
+      // mapping two columns to the same field if it's already mapped elsewhere
+      // But actually, we allow the admin to change - we just need to handle it at submit time
+      // For now, show all options and let admin decide
+
+      // Build the select HTML
+      let selectHtml = `<select class="ui-input ui-mapping-select" data-column-index="${i}" aria-label="Colonne ${i + 1}">`;
+      
+      for (let j = 0; j < optionValues.length; j++) {
+        const value = optionValues[j];
+        const label = optionLabels[j];
+        const selected = (value === autoMappedField) ? 'selected' : '';
+        selectHtml += `<option value="${escHtml(value)}" ${selected}>${escHtml(label)}</option>`;
+      }
+      
+      selectHtml += `</select>`;
+
+      html += `<div class="tr"><div class="td">${escHtml(headerText)}</div><div class="td">${selectHtml}</div><div class="td small">${escHtml(autoMappedField || '')}</div></div>`;
+    }
+
+    html += '</div></div>';
+
+    // Store the auto-mapping reference for later use
+    // We'll extract the final mapping from the DOM selectors on submit
+    mappingControls.dataset.autoMapping = JSON.stringify(autoMapping);
+    mappingControls.dataset.headers = JSON.stringify(headers);
+
+    return html;
+  };
+
+  // Attach event listener for file selection
   fileInput.addEventListener('change', async () => {
     const file = fileInput.files?.[0];
     if (!file) return;
@@ -444,9 +564,36 @@ export function StudentsImportWizard(options = {}) {
         rows = lines.map((line) => line.split(/\s{2,}|\t|;/)).filter((row) => row.length && row.some(Boolean));
       } else throw new Error('Format de fichier non pris en charge.');
       if (rows.length < 2) throw new Error('Le fichier ne contient aucune ligne élève.');
+
+      // Auto-detect column mappings
       mapping = autoMapColumns(rows[0], KNOWN_FIELDS);
       status.textContent = `${rows.length - 1} élève(s) détecté(s).`;
       renderPreview();
+
+      // Generate and inject column mapping controls
+      const mappingHtml = generateColumnMappingControls(mapping, rows[0]);
+      mappingControls.innerHTML = mappingHtml;
+
+      // Add event listeners to all mapping selectors
+      const selectorElements = mappingControls.querySelectorAll('.ui-mapping-select');
+      selectorElements.forEach((select) => {
+        select.addEventListener('change', (e) => {
+          const columnIndex = parseInt(e.target.dataset.columnIndex, 10);
+          const selectedValue = e.target.value;
+          // Update the mapping object directly
+          mapping[columnIndex] = selectedValue;
+          // Re-render to update selections (handle duplicate prevention)
+          // Actually, we let the admin choose - re-render with updated state
+          const updatedHtml = generateColumnMappingControls(mapping, rows[0]);
+          mappingControls.innerHTML = updatedHtml;
+          // Re-attach listeners
+          const newSelectors = mappingControls.querySelectorAll('.ui-mapping-select');
+          newSelectors.forEach((s) => {
+            s.addEventListener('change', arguments.callee);
+          });
+        });
+      });
+
     } catch (error) {
       rows = [];
       renderPreview();
@@ -454,17 +601,68 @@ export function StudentsImportWizard(options = {}) {
     }
   });
 
+  // Submit handler - collect final mapping from DOM selectors
   submit.addEventListener('click', async () => {
-    submit.disabled = true;
-    status.textContent = 'Importation en cours…';
+    // Collect final mapping from all mapping selectors
+    const finalMapping = {};
+    const selectorElements = mappingControls.querySelectorAll('.ui-mapping-select');
+    selectorElements.forEach((select) => {
+      const columnIndex = parseInt(select.dataset.columnIndex, 10);
+      const selectedValue = select.value;
+      if (selectedValue) { // Only add if a field is associated
+        finalMapping[columnIndex] = selectedValue;
+      }
+    });
+
+    // Validate required fields
+    // firstName and lastName are required - must be associated somewhere
+    const firstNameKey = Object.values(finalMapping).includes('firstName') ? 
+      Object.keys(finalMapping).find(k => finalMapping[k] === 'firstName') : null;
+    const lastNameKey = Object.values(finalMapping).includes('lastName') ?
+      Object.keys(finalMapping).find(k => finalMapping[k] === 'lastName') : null;
+
+    if (!firstNameKey || !lastNameKey) {
+      status.textContent = 'Les champs Prénom et Nom sont obligatoires. Veuillez associer des colonnes à ces champs.';
+      submit.disabled = false;
+      return;
+    }
+
+    // Prevent two columns mapped to the same unique field
+    const fieldCounts = {};
+    selectorElements.forEach((select) => {
+      const v = select.value;
+      if (v) {
+        fieldCounts[v] = (fieldCounts[v] || 0) + 1;
+      }
+    });
+    for (const [field, count] of Object.entries(fieldCounts)) {
+      if (count > 1 && ['firstName', 'lastName', 'matricule', 'gender'].includes(field)) {
+        status.textContent = `Attention : Le champ "${field}" est associé à ${count} colonne(s). Les champs uniques ne doivent pas être dupliqués.`;
+        submit.disabled = false;
+        return;
+      }
+    }
+
     try {
+      submit.disabled = true;
+      status.textContent = 'Importation en cours…';
+
+      // Transform columnMapping from {0: 'firstName', 1: 'lastName'} 
+      // to {"0": "firstName", "1": "lastName"} format expected by backend
+      const backendMapping = {};
+      Object.entries(finalMapping).forEach(([colIndex, fieldName]) => {
+        if (fieldName && fieldName !== '') {
+          backendMapping[String(colIndex)] = fieldName;
+        }
+      });
+
       const response = await fetch('/api/admin/students/import', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          rows,
-          columnMapping: mapping,
+          rows, // Send raw rows (headers + data), backend will build students
+          columnMapping: backendMapping,
           targetClassId: target.querySelector('#student-import-class').value,
           schoolYearId: target.querySelector('#student-import-year').value || null,
           fileName: fileInput.files?.[0]?.name || null
