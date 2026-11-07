@@ -166,7 +166,7 @@ export function parseCsvFileClient(file) {
   });
 }
 
-/* ============================== Parse simple XLSX (client-side, simplifié) ============================== */
+/* ============================== Parse XLSX (client-side, avec try/catch corrigé) ============================== */
 export function parseXlsxFileClient(file) {
   return new Promise((resolve, reject) => {
     if (!file) {
@@ -273,8 +273,9 @@ export function parseXlsxFileClient(file) {
         } else {
           reject(new Error('Feuille de calcul introuvable dans le fichier Excel'));
         }
-      } else {
-        reject(new Error('Format de fichier inconnu'));
+      } catch (error) {
+        // ** CORRECTION : Bloc try/catch complet et correctement fermé**
+        reject(error);
       }
     };
 

@@ -369,7 +369,7 @@ router.post('/students/import', authenticate, checkPermission('students.create')
         }
       }
 
-      // Traiter la ligne (vérifier doublons, créer l'élève)
+      // Traiter la ligne (vérifier doublons, créer l'élève et son inscription)
       const processResult = await processImportRow(db, {
         ...studentData,
         classId
@@ -399,50 +399,70 @@ router.post('/students/import', authenticate, checkPermission('students.create')
               });
               resolve();
             } else if (processResult.status === 'valid') {
-              // Créer l'élève dans la base de données
-              const [studentResult] = await db.execute(
-                `INSERT INTO students (matricule, first_name, last_name, gender, birth_date, guardian_name, guardian_phone, is_active)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
-                [
-                  processResult.student.matricule || null,
-                  processResult.student.first_name,
-                  processResult.student.last_name,
-                  processResult.student.gender || 'UNSPECIFIED',
-                  processResult.student.birth_date || null,
-                  processResult.student.guardian_name || null,
-                  processResult.student.guardian_phone || null
-                ]
-              );
+              // Utiliser une transaction pour garantir la cohérence élève + inscription
+              const enrollmentYearId = schoolYearId || 1;
+              const tailable = await db.beginTransaction();
 
-              // Si une classe cible est spécifiée, créer l'inscription
-              if (targetClassId && processResult.student.matricule) {
-                const enrollmentYearId = schoolYearId || 1;
-                await db.execute(
-                  `INSERT INTO enrollments (student_id, class_id, school_year_id, status)
-                   VALUES (?, ?, ?, 'ACTIVE')
-                   ON DUPLICATE KEY UPDATE class_id = VALUES(class_id), status = 'ACTIVE'`,
-                  [studentResult.insertId, targetClassId, enrollmentYearId]
+              try {
+                // 1. Créer l'élève
+                const [studentResult] = await db.execute(
+                  `INSERT INTO students (matricule, first_name, last_name, gender, birth_date, guardian_name, guardian_phone, is_active)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
+                  [
+                    processResult.student.matricule || null,
+                    processResult.student.first_name,
+                    processResult.student.last_name,
+                    processResult.student.gender || 'UNSPECIFIED',
+                    processResult.student.birth_date || null,
+                    processResult.student.guardian_name || null,
+                    processResult.student.guardian_phone || null
+                  ]
                 );
-              }
 
-              results.created++;
-              results.lines.push({
-                row: i + 2,
-                status: 'created',
-                message: `Élève créé avec succès : ${processResult.student.first_name} ${processResult.student.last_name}`
-              });
-              resolve();
+                // 2. Inscrire dans la classe (même si targetClassId est défini)
+                const enrollmentClassId = targetClassId || (availableClasses.length > 0 ? availableClasses[0].id : null);
+
+                if (enrollmentClassId) {
+                  await db.execute(
+                    `INSERT INTO enrollments (student_id, class_id, school_year_id, status)
+                     VALUES (?, ?, ?, 'ACTIVE')
+                     ON DUPLICATE KEY UPDATE class_id = VALUES(class_id), status = 'ACTIVE'`,
+                    [studentResult.insertId, enrollmentClassId, enrollmentYearId]
+                  );
+                }
+
+                // Valider la transaction
+                await tailable.commit();
+
+                // Compter comme créé seulement si élève + inscription (ou élève seul si pas de classe ciblée)
+                const classTargeted = targetClassId !== undefined && targetClassId !== null;
+                if (classTargeted) {
+                  // En classe ciblée : succès seulement si inscription aussi faite
+                  results.created++;
+                } else {
+                  // Pas de classe ciblée : création élève suffit
+                  results.created++;
+                }
+                results.lines.push({
+                  row: i + 2,
+                  status: 'created',
+                  message: `Élève créé avec succès : ${processResult.student.first_name} ${processResult.student.last_name}`
+                });
+                resolve();
+              } catch (error) {
+                // Annuler la transaction en cas d'erreur
+                try { await tailable.rollback(); } catch {}
+                console.error(`Erreur transaction ligne ${i + 2}:`, error);
+                results.errors++;
+                results.lines.push({
+                  row: i + 2,
+                  status: 'error',
+                  reason: 'erreur_connexion',
+                  message: error.message || 'Erreur lors de l\'enregistrement en base de données'
+                });
+                resolve();
+              }
             }
-          } catch (error) {
-            console.error(`Erreur ligne ${i + 2}:`, error);
-            results.errors++;
-            results.lines.push({
-              row: i + 2,
-              status: 'error',
-              reason: 'erreur_connexion',
-              message: error.message || 'Erreur lors de l\'enregistrement en base de données'
-            });
-            resolve();
           }
         })
       );

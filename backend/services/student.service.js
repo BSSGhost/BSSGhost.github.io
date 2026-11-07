@@ -14,6 +14,50 @@ const MAX_IMPORT_ROWS = 5000;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10Mo
 
 /**
+ * Générer un matricule unique
+ * @param {object} db - Pool MySQL connection
+ * @param {string} proposedMatricule - Matricule proposé
+ * @returns {Promise<string>} - Matricule unique garanti
+ */
+export async function generateUniqueMatricule(db, proposedMatricule) {
+  // Nettoyer le matricule proposé
+  const cleanMatricule = (proposedMatricule || '').trim().toUpperCase();
+  if (!cleanMatricule) {
+    // Générer un matricule par défaut si aucun fourni
+    return `SM-${Math.floor(Math.random() * 90000) + 10000}`;
+  }
+
+  // Vérifier si le matricule existe déjà
+  const [rows] = await db.execute(
+    'SELECT id FROM students WHERE matricule = ? AND is_active = TRUE',
+    [cleanMatricule]
+  );
+
+  if (rows.length === 0) {
+    return cleanMatricule; // Unique, on peut l'utiliser
+  }
+
+  // Matricule existant - ajouter un suffixe séquentiel
+  const base = cleanMatricule.replace(/[0-9]$/, '');
+  const lastNum = parseInt(cleanMatricule.replace(/^[^0-9]+/, ''), 10);
+  const newNum = lastNum + 1;
+  const newMatricule = base + newNum.toString().padStart(4, '0');
+
+  // Vérifier que ce nouveau matricule n'existe pas non plus
+  const [newRows] = await db.execute(
+    'SELECT id FROM students WHERE matricule = ? AND is_active = TRUE',
+    [newMatricule]
+  );
+
+  if (newRows.length === 0) {
+    return newMatricule;
+  }
+
+  // Si on arrive ici, essayer avec un numéro plus élevé
+  return generateUniqueMatricule(db, proposedMatricule + '1');
+}
+
+/**
  * Vérifier si un élève existe déjà (doublon)
  * @param {object} db - Pool MySQL connection
  * @param {string} matricule - Matricule de l'élève
@@ -486,9 +530,17 @@ export async function getSchoolYears(db) {
  */
 export async function processImportRow(db, studentData, existingClasses) {
   try {
-    // Vérifier si l'élève existe déjà (par matricule)
-    let existsCheck = { exists: false };
+    // Normaliser et garantir l'unicité du matricule
+    if (studentData.matricule) {
+      // Vérifier/unicité en base en utilisant la fonction dédiée
+      studentData.matricule = await generateUniqueMatricule(db, studentData.matricule);
+    } else {
+      // Aucun matricule fourni - en générer un unique
+      studentData.matricule = await generateUniqueMatricule(db, null);
+    }
 
+    // Vérifier si l'élève existe déjà (par matricule, après génération)
+    let existsCheck = { exists: false };
     if (studentData.matricule) {
       existsCheck = await checkStudentExists(db, studentData.matricule);
     }
