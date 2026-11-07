@@ -4,6 +4,7 @@
 import { icon } from './icons.js';
 import { createTimetables } from './timetables.js';
 import { $, esc, norm, debounce, initials, fmtDate, fmtDateTime, relTime, badge, statusBadge, empty, skeleton, paginate, pager, toast, modal, confirmDialog, formModal, field, input, select, barChart } from './ui.js';
+import { StudentsImportWizard } from './students.import.js';
 import { showAdminBulletin } from './bulletin.js';
 
 /* ============================== État & API ============================== */
@@ -44,7 +45,8 @@ const LOADERS = {
   terms: { ok: () => can('subjects.view') || can('reports.view') || can('grades.view'), url: '/api/admin/terms', pick: (d) => d.terms },
   assignments: { ok: () => can('subjects.view'), url: '/api/admin/class-subjects', pick: (d) => d.assignments },
   users: { ok: () => isPrincipal(), url: '/api/admin/users', pick: (d) => d.users },
-  logs: { ok: () => isPrincipal(), url: '/api/admin/audit/logs', pick: (d) => d.logs }
+  logs: { ok: () => isPrincipal(), url: '/api/admin/audit/logs', pick: (d) => d.logs },
+  students_import: { ok: () => can('students.create'), url: '/api/admin/students/import', pick: (d) => d.bilan }
 };
 async function loadAll() {
   const keys = Object.keys(LOADERS).filter((k) => LOADERS[k].ok());
@@ -59,7 +61,8 @@ async function mutate(fn, successMsg) { await fn(); await loadAll(); renderRoute
 const ROUTES = {
   accueil: { title: 'Vue générale', icon: 'layout-dashboard', group: 'PRINCIPAL', show: () => true, render: vOverview },
   annees: { title: 'Années scolaires', icon: 'calendar-days', group: 'GESTION SCOLAIRE', show: () => can('settings.edit') || can('classes.view'), render: vYears },
-  eleves: { title: 'Élèves', icon: 'graduation-cap', group: 'GESTION SCOLAIRE', show: () => can('students.view'), render: vStudents, list: lStudents },
+  eleves: { title: 'Élèves', icon: 'graduation-cap', group: 'GESTION SCOLAIRE', show: () => can('students.view'), render: vStudents, list: lStudentsImport },
+  eleves_import: { title: 'Import groupé', icon: 'upload', group: 'GESTION SCOLAIRE', show: () => can('students.create'), render: vStudentsImport, list: lStudentsImport },
   professeurs: { title: 'Professeurs', icon: 'presentation', group: 'GESTION SCOLAIRE', show: () => can('teachers.view'), render: vTeachers, list: lTeachers },
   classes: { title: 'Classes', icon: 'school', group: 'GESTION SCOLAIRE', show: () => can('classes.view'), render: vClasses, list: lClasses },
   matieres: { title: 'Matières', icon: 'book-open', group: 'GESTION PÉDAGOGIQUE', show: () => can('subjects.view'), render: vSubjects, list: lSubjects },
@@ -234,7 +237,7 @@ function yearNew() {
 /* ============================== VUE : Élèves ============================== */
 function vStudents() {
   const f = S.ui.students;
-  return pageHead('Élèves', 'Dossiers et inscriptions', can('students.create') && activeClasses().length ? btn('Ajouter un élève', 'student-new', 'plus') : '') + need(() => `${filterBar('students', [
+  return pageHead('Élèves', 'Dossiers et inscriptions', can('students.create') && activeClasses().length ? btn('Ajouter un élève', 'student-new', 'plus') + btn('Import groupé', 'eleves_import', 'upload') : '') + need(() => `${filterBar('students', [
     { key: 'cls', label: 'Classe', all: 'Toutes les classes', options: activeClasses().map((c) => ({ value: c.id, label: classLabel(c) })) },
     { key: 'year', label: 'Année', all: 'Toutes les années', options: (D.years || []).map((y) => ({ value: y.label, label: y.label })) },
     { key: 'status', label: 'Statut', all: 'Tous les statuts', options: STATUS_OPTS }])}<div id="list">${lStudents()}</div>`);
@@ -249,6 +252,32 @@ function lStudents() {
   const pg = paginate(rows, f.page); f.page = pg.page;
   if (!rows.length) return empty('graduation-cap', 'Aucun élève trouvé', (D.students || []).length ? 'Modifiez vos filtres ou votre recherche.' : 'Ajoutez le premier élève pour commencer.');
   return `<div class="ui-table-card"><table class="ui-table ui-table--student-actions"><thead><tr><th>Élève</th><th>Classe</th><th>Année</th><th>Statut</th><th class="ui-th-act"><span class="sr-only">Actions</span></th></tr></thead><tbody>${pg.items.map((s) => `<tr><td data-label="Élève"><button type="button" class="ui-person" data-act="student-view" data-id="${s.id}"><span class="ui-avatar">${esc(initials(`${s.first_name} ${s.last_name}`))}</span><span><strong>${esc(s.first_name)} ${esc(s.last_name)}</strong><small>${esc(s.matricule)}</small></span></button></td><td data-label="Classe">${esc(s.class_name || '—')}</td><td data-label="Année">${esc(s.school_year || '—')}</td><td data-label="Statut">${statusBadge(s.is_active)}</td><td class="ui-td-act"><div class="admin-student-actions"><button type="button" class="ghost-button prof-row-action" data-act="student-bulletin" data-id="${s.id}">Voir le bulletin</button>${can('students.edit') ? `<button type="button" class="ghost-button prof-row-action" data-act="student-edit" data-id="${s.id}">Modifier</button>${s.is_active ? `<button type="button" class="ghost-button prof-row-action prof-danger-text" data-act="toggle" data-entity="students" data-next="false" data-name="${esc(`${s.first_name} ${s.last_name}`)}" data-id="${s.id}">Supprimer</button>` : ''}` : ''}</div></td></tr>`).join('')}</tbody></table>${pager(pg, 'students')}</div>`;
+}
+function lStudentsImport() {
+  if (!S.loaded) return '';
+  const f = S.ui.students;
+  return `<div id="import-wizard"></div>`;
+}
+function vStudentsImport() {
+  return pageHead('Import groupé d\'élèves', 'Importer plusieurs élèves à partir d\'un fichier Excel, CSV ou PDF', can('students.create') && activeClasses().length ? btn('Annuler', 'eleves', 'arrow-left') : '') + need(() => {
+    const classes = activeClasses();
+    const years = D.years || [];
+    return `<div class="ui-import-container">
+      <div id="importWizard"></div>
+      <div class="ui-import-instructions">
+        <h4>Instructions</h4>
+        <ol>
+          <li>Sélectionnez un fichier Excel (.xlsx, .xls), CSV (.csv) ou PDF (.pdf) contenant les élèves à importer.</li>
+          <li>Le système détectera automatiquement les colonnes et proposera une correspondance avec les champs de SUNU MOYENNE.</li>
+          <li>Assignez les élèves à une classe existante.</li>
+          <li>Vérifiez la prévisualisation et corrigez les lignes avec erreurs.</li>
+          <li>Cliquez sur « Importer les élèves » pour enregistrer.</li>
+        </ol>
+        <p><strong>Formats acceptés :</strong> .xlsx, .xls, .csv, .pdf (texte sélectionnable)</p>
+        <p><strong>Taille maximale :</strong> 10 Mo par fichier.</p>
+      </div>
+    </div>`;
+  });
 }
 function studentView(id) {
   const s = (D.students || []).find((x) => String(x.id) === String(id)); if (!s) return;
@@ -600,7 +629,12 @@ async function boot() {
   $('profile-name').textContent = u.full_name || ''; $('profile-role').textContent = roleLabel(u.role_name); $('profile-initials').textContent = initials(u.full_name);
   try { document.body.classList.toggle('sb-collapsed', localStorage.getItem('sm-sb') === '1'); } catch {}
   S.loaded = false; renderRoute();
-  await loadAll(); renderRoute(false);
+  await loadAll(); 
+  // Initialiser le wizard d'import d'élèves
+  const importWizard = StudentsImportWizard();
+  // Garder une référence pour le nettoyage
+  window.importWizard = importWizard;
+  renderRoute();
 }
 async function load() {
   try {

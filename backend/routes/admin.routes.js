@@ -23,6 +23,14 @@ import {
   checkRole,
   protectAdmin
 } from '../middleware/adminAuth.js';
+import {
+  checkStudentExists,
+  buildStudentFromRow,
+  autoMapColumns,
+  getAvailableClasses,
+  getSchoolYears,
+  processImportRow
+} from '../services/student.service.js';
 
 const router = express.Router();
 
@@ -109,16 +117,15 @@ router.post('/change-password', authenticate, async (req, res) => {
     return res.status(200).json(result);
   } catch (error) {
     const status = error.message === 'ancien_mot_de_passe_invalide' ? 400 : 500;
-    return res.status(status).json(status === 400 ? { error: 'ancien_mot_de_passe_invalide' } : { error: 'serveur_indisponible' });
+    return res.status(status) === 400 ? json(res, 400, { error: 'ancien_mot_de_passe_invalide' }) : json(res, 500, { error: 'serveur_indisponible' });
   }
 });
 
 // === ADMINISTRATEURS (principal seulement) ===
 
-// Vérification : seul ladmin principal peut accéder à ces routes
 function principalOnly(req, res, next) {
   if (req.admin.role !== 'principal') {
-    return res.status(403).json({ error: 'droits_insuffisants', message: 'Seul l’administrateur principal peut effectuer cette action' });
+    return res.status(403).json({ error: 'droits_insuffisants', message: 'Seul l administrateur principal peut effectuer cette action' });
   }
   next();
 }
@@ -148,11 +155,10 @@ router.post('/users', authenticate, principalOnly, async (req, res) => {
     const result = await createAdmin({ email, full_name, role_id, password_initial }, creatorId);
     return res.status(201).json(result);
   } catch (error) {
-    const status = error.message === 'email_deja_pris' ? 409 : 
-                   error.message === 'droits_insuffisants' ? 403 : 500;
-    return res.status(status).json(status === 400 ? { error: 'ancien_mot_de_passe_invalide' } : { error: 'serveur_indisponible' });
+    const status = error.message === 'email_deja_pris' ? 409 : error.message === 'droits_insuffisants' ? 403 : 500;
+    return res.status(status) === 400 ? json(res, 400, { error: 'ancien_mot_de_passe_invalide' }) : res.status(status) === 403 ? json(res, 403, { error: 'droits_insuffisants' }) : json(res, 500, { error: 'serveur_indisponible' });
   }
-});
+};
 
 // PUT /api/admin/users/:id
 // Modifier un administrateur (principal seulement)
@@ -166,7 +172,7 @@ router.put('/users/:id', authenticate, principalOnly, async (req, res) => {
     return res.status(200).json(result);
   } catch (error) {
     const status = error.message === 'droits_insuffisants_modifier_principal' ? 403 : 500;
-    return res.status(status).json(status === 400 ? { error: 'ancien_mot_de_passe_invalide' } : { error: 'serveur_indisponible' });
+    return res.status(status) === 400 ? json(res, 400, { error: 'ancien_mot_de_passe_invalide' }) : json(res, 500, { error: 'serveur_indisponible' });
   }
 });
 
@@ -177,9 +183,8 @@ router.put('/users/:id/disable', authenticate, principalOnly, async (req, res) =
     const adminId = parseInt(req.params.id, 10);
     const modifierId = req.admin.id;
 
-    // Empêcher la désactivation du principal
     if (adminId === 1) {
-      return res.status(403).json({ error: 'impossible_desactiver_principal', message: 'Impossible de désactiver ladministrateur principal' });
+      return res.status(403).json({ error: 'impossible_desactiver_principal', message: 'Impossible de désactiver l administrateur principal' });
     }
 
     const result = await disableAdmin(adminId, modifierId);
@@ -254,6 +259,223 @@ router.post('/audit/clear', authenticate, principalOnly, async (req, res) => {
     return res.status(200).json({ ok: true, message: 'Journal dactivité vidé' });
   } catch (error) {
     console.error('Erreur route administration:', error); return res.status(500).json({ error: 'serveur_indisponible' });
+  }
+});
+
+// === IMPORT GROUPÉ D'ÉLÈVES ===
+
+// POST /api/admin/students/import
+// Import groupé d'élèves depuis données déjà analysées (JSON)
+// Le client analyse le fichier côté navigateur et envoie les données structurées
+router.post('/students/import', authenticate, checkPermission('students.create'), async (req, res) => {
+  try {
+    const db = req.pool;
+    const adminId = req.admin.id;
+    const { rows, columnMapping, targetClassId, schoolYearId, fileName } = req.body;
+
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ error: 'aucune_donnée', message: 'Aucune donnée fournie' });
+    }
+
+    // Vérifier la taille des données envoyées
+    const dataSize = JSON.stringify(req.body).length;
+    const MAX_DATA_BYTES = 5 * 1024 * 1024; // 5Mo de données JSON
+    if (dataSize > MAX_DATA_BYTES) {
+      return res.status(413).json({ error: 'donnees_trop_volumineuses', message: 'Les données envoyées dépassent la limite de 5Mo' });
+    }
+
+    // Première ligne = en-têtes (déjà présentes dans rows[0]), les données commencent à la ligne 2
+    const headers = rows[0];
+    const dataRows = rows.slice(1).filter((row) => row.length > 0);
+
+    if (dataRows.length === 0) {
+      return res.status(400).json({ error: 'aucune_donnée', message: 'Aucune ligne de données trouvé' });
+    }
+
+    // Mapping automatique des colonnes en se basant sur les en-têtes si non fourni
+    let mapping = columnMapping;
+    if (!mapping || Object.keys(mapping).length === 0) {
+      const knownFields = {
+        firstName: ['prénom', 'first_name', 'prenom'],
+        lastName: ['nom', 'last_name', 'surname'],
+        matricule: ['matricule', 'id_étudiant', 'student_id'],
+        gender: ['sexe', 'gender', 'genre'],
+        birthDate: ['date de naissance', 'birth_date', 'né(e) le'],
+        birthPlace: ['lieu de naissance', 'birth_place', 'lieu_né'],
+        classId: ['classe', 'class', 'classe_affectation']
+      };
+      mapping = autoMapColumns(headers, knownFields);
+    }
+
+    // Récupérer les classes disponibles
+    const availableClasses = await getAvailableClasses(db);
+    const schoolYears = await getSchoolYears(db);
+
+    // Construire une map d'identification de classe par nom
+    const classNameMap = new Map();
+    availableClasses.forEach(cls => {
+      classNameMap.set(cls.name.toLowerCase(), cls.id);
+      if (cls.level) {
+        classNameMap.set(`${cls.name.toLowerCase()} ${cls.level.toLowerCase()}`, cls.id);
+      }
+    });
+
+    // Traiter chaque ligne
+    const results = {
+      total: dataRows.length,
+      created: 0,
+      ignored: 0, // doublons
+      errors: 0,
+      duplicates: 0,
+      lines: []
+    };
+
+    const importPromises = [];
+
+    for (let i = 0; i < dataRows.length; i++) {
+      const row = dataRows[i];
+
+      // Construire les données élève depuis la ligne et le mapping
+      const studentData = buildStudentFromRow(row, mapping);
+
+      if (!studentData) {
+        results.lines.push({
+          row: i + 2, // +2 car row 0 = en-têtes, +1 pour le numéro de ligne humain
+          status: 'error',
+          reason: 'données_incomplètes',
+          message: 'Ligne incomplète : prénom et nom sont requis'
+        });
+        results.errors++;
+        continue;
+      }
+
+      // Normaliser la classe si c'est un nom de classe plutôt qu'un ID
+      let classId = targetClassId;
+      if (classId && typeof classId === 'string' && !Number(classId)) {
+        // C'est probablement un nom de classe
+        const foundClassId = classNameMap.get(classId.toLowerCase());
+        if (foundClassId) {
+          classId = foundClassId;
+        } else {
+          // Classe non trouvée - marquer comme erreur
+          results.lines.push({
+            row: i + 2,
+            status: 'error',
+            reason: 'classe_inconnue',
+            message: `Classe "${classId}" introuvable. Veuillez sélectionner une classe existante.`
+          });
+          results.errors++;
+          continue;
+        }
+      }
+
+      // Traiter la ligne (vérifier doublons, créer l'élève)
+      const processResult = await processImportRow(db, {
+        ...studentData,
+        classId
+      }, availableClasses);
+
+      importPromises.push(
+        new Promise(async (resolve) => {
+          try {
+            if (processResult.status === 'duplicate') {
+              results.duplicates++;
+              results.ignored++;
+              results.lines.push({
+                row: i + 2,
+                status: 'duplicate',
+                reason: 'élève_existant',
+                matricule: processResult.matricule,
+                message: `Élève déjà existant (matricule: ${processResult.matricule})`
+              });
+              resolve();
+            } else if (processResult.status === 'error') {
+              results.errors++;
+              results.lines.push({
+                row: i + 2,
+                status: 'error',
+                reason: processResult.reason,
+                message: processResult.message || 'Erreur lors du traitement'
+              });
+              resolve();
+            } else if (processResult.status === 'valid') {
+              // Créer l'élève dans la base de données
+              const [studentResult] = await db.execute(
+                `INSERT INTO students (matricule, first_name, last_name, gender, birth_date, guardian_name, guardian_phone, is_active)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
+                [
+                  processResult.student.matricule || null,
+                  processResult.student.first_name,
+                  processResult.student.last_name,
+                  processResult.student.gender || 'UNSPECIFIED',
+                  processResult.student.birth_date || null,
+                  processResult.student.guardian_name || null,
+                  processResult.student.guardian_phone || null
+                ]
+              );
+
+              // Si une classe cible est spécifiée, créer l'inscription
+              if (targetClassId && processResult.student.matricule) {
+                const enrollmentYearId = schoolYearId || 1;
+                await db.execute(
+                  `INSERT INTO enrollments (student_id, class_id, school_year_id, status)
+                   VALUES (?, ?, ?, 'ACTIVE')
+                   ON DUPLICATE KEY UPDATE class_id = VALUES(class_id), status = 'ACTIVE'`,
+                  [studentResult.insertId, targetClassId, enrollmentYearId]
+                );
+              }
+
+              results.created++;
+              results.lines.push({
+                row: i + 2,
+                status: 'created',
+                message: `Élève créé avec succès : ${processResult.student.first_name} ${processResult.student.last_name}`
+              });
+              resolve();
+            }
+          } catch (error) {
+            console.error(`Erreur ligne ${i + 2}:`, error);
+            results.errors++;
+            results.lines.push({
+              row: i + 2,
+              status: 'error',
+              reason: 'erreur_connexion',
+              message: error.message || 'Erreur lors de l\'enregistrement en base de données'
+            });
+            resolve();
+          }
+        })
+      );
+    }
+
+    // Attendre que toutes les lignes soient traitées
+    await Promise.all(importPromises);
+
+    // Enregistrer dans le journal d'activité
+    await db.execute(
+      `INSERT INTO audit_logs (admin_user_id, action, resource, resource_id, details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+      [adminId, 'students_import', 'students', null,
+        JSON.stringify({
+          total: results.total,
+          created: results.created,
+          duplicates: results.duplicates,
+          errors: results.errors,
+          targetClassId: targetClassId,
+          fileName: fileName || 'import inconnue'
+        }),
+        req.ip || 'unknown']
+    );
+
+    // Retourner le bilan
+    return res.status(200).json({
+      ok: true,
+      bilan: results,
+      message: `Import terminé : ${results.created} créés, ${results.duplicates} doublons, ${results.errors} erreurs sur ${results.total} lignes`
+    });
+
+  } catch (error) {
+    console.error('Erreur import élèves:', error);
+    return res.status(500).json({ error: 'serveur_indisponible', message: error.message || 'Erreur serveur lors de l'import' });
   }
 });
 
