@@ -117,7 +117,9 @@ router.post('/change-password', authenticate, async (req, res) => {
     return res.status(200).json(result);
   } catch (error) {
     const status = error.message === 'ancien_mot_de_passe_invalide' ? 400 : 500;
-    return res.status(status) === 400 ? json(res, 400, { error: 'ancien_mot_de_passe_invalide' }) : json(res, 500, { error: 'serveur_indisponible' });
+    return res.status(status).json(status === 400
+      ? { error: 'ancien_mot_de_passe_invalide' }
+      : { error: 'serveur_indisponible' });
   }
 });
 
@@ -156,9 +158,13 @@ router.post('/users', authenticate, principalOnly, async (req, res) => {
     return res.status(201).json(result);
   } catch (error) {
     const status = error.message === 'email_deja_pris' ? 409 : error.message === 'droits_insuffisants' ? 403 : 500;
-    return res.status(status) === 400 ? json(res, 400, { error: 'ancien_mot_de_passe_invalide' }) : res.status(status) === 403 ? json(res, 403, { error: 'droits_insuffisants' }) : json(res, 500, { error: 'serveur_indisponible' });
+    return res.status(status).json(status === 409
+      ? { error: 'email_deja_pris' }
+      : status === 403
+        ? { error: 'droits_insuffisants' }
+        : { error: 'serveur_indisponible' });
   }
-};
+});
 
 // PUT /api/admin/users/:id
 // Modifier un administrateur (principal seulement)
@@ -172,7 +178,9 @@ router.put('/users/:id', authenticate, principalOnly, async (req, res) => {
     return res.status(200).json(result);
   } catch (error) {
     const status = error.message === 'droits_insuffisants_modifier_principal' ? 403 : 500;
-    return res.status(status) === 400 ? json(res, 400, { error: 'ancien_mot_de_passe_invalide' }) : json(res, 500, { error: 'serveur_indisponible' });
+    return res.status(status).json(status === 403
+      ? { error: 'droits_insuffisants_modifier_principal' }
+      : { error: 'serveur_indisponible' });
   }
 });
 
@@ -261,6 +269,74 @@ router.post('/audit/clear', authenticate, principalOnly, async (req, res) => {
     console.error('Erreur route administration:', error); return res.status(500).json({ error: 'serveur_indisponible' });
   }
 });
+// === CONSULTATION DES ÉLÈVES D'UNE CLASSE ===
+
+// GET /api/admin/classes/:classId/students
+// Récupérer les élèves déjà inscrits dans une classe
+router.get(
+  '/classes/:classId/students',
+  authenticate,
+  checkPermission('students.view'),
+  async (req, res) => {
+    try {
+      const db = req.pool;
+      const classId = Number(req.params.classId);
+
+      if (!Number.isInteger(classId) || classId <= 0) {
+        return res.status(400).json({
+          error: 'classe_invalide',
+          message: 'Identifiant de classe invalide.'
+        });
+      }
+
+      // Vérifier que la classe existe et est active
+      const [classes] = await db.execute(
+        `SELECT id
+         FROM classes
+         WHERE id = ? AND is_active = TRUE
+         LIMIT 1`,
+        [classId]
+      );
+
+      if (classes.length === 0) {
+        return res.status(404).json({
+          error: 'classe_introuvable',
+          message: 'Cette classe est introuvable ou inactive.'
+        });
+      }
+
+      // Récupérer les élèves actuellement inscrits dans cette classe
+      const [students] = await db.execute(
+        `SELECT
+           s.id,
+           s.matricule,
+           s.first_name,
+           s.last_name,
+           s.gender
+         FROM students s
+         INNER JOIN enrollments e ON e.student_id = s.id
+         WHERE e.class_id = ?
+           AND e.status = 'ACTIVE'
+           AND s.is_active = TRUE
+         ORDER BY s.last_name ASC, s.first_name ASC`,
+        [classId]
+      );
+
+      return res.status(200).json({
+        ok: true,
+        students
+      });
+
+    } catch (error) {
+      console.error('Erreur récupération élèves classe:', error);
+
+      return res.status(500).json({
+        error: 'serveur_indisponible',
+        message: 'Impossible de récupérer les élèves de cette classe.'
+      });
+    }
+  }
+);
 
 // === IMPORT GROUPÉ D'ÉLÈVES ===
 
@@ -463,6 +539,16 @@ router.post('/students/import', authenticate, checkPermission('students.create')
                 resolve();
               }
             }
+          } catch (error) {
+            console.error(`Erreur traitement ligne ${i + 2}:`, error);
+            results.errors++;
+            results.lines.push({
+              row: i + 2,
+              status: 'error',
+              reason: 'erreur_traitement',
+              message: error.message || 'Erreur lors du traitement de la ligne'
+            });
+            resolve();
           }
         })
       );
@@ -495,7 +581,7 @@ router.post('/students/import', authenticate, checkPermission('students.create')
 
   } catch (error) {
     console.error('Erreur import élèves:', error);
-    return res.status(500).json({ error: 'serveur_indisponible', message: error.message || 'Erreur serveur lors de l'import' });
+    return res.status(500).json({ error: 'serveur_indisponible', message: error.message || "Erreur serveur lors de l'import" });
   }
 });
 
