@@ -3410,6 +3410,211 @@ html.dark-mode .about-privacy p {
   font-weight: 700;
 }
 
+/*
+   Bouton premium "Espace administration" dans le footer
+   Remplace le lien textuel "Administration" par un bouton bleu profond
+   avec icône shield-check, flèche animée, effets de survol et pilule arrondie.
+*/
+.admin-premium-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: linear-gradient(160deg, var(--blue-800) 0%, var(--blue-900) 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px; /* pilule arrondie */
+  font-family: var(--font-main);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 4px 12px rgba(16, 28, 47, 0.18);
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.admin-premium-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 55%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.admin-premium-btn:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(160deg, var(--blue-700) 0%, var(--blue-800) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 16px 36px rgba(16, 28, 47, 0.28);
+}
+
+.admin-premium-btn:hover::after {
+  opacity: 0.6;
+}
+
+.admin-premium-btn:focus-visible {
+  outline: 3px solid rgba(247, 201, 72, 0.9);
+  outline-offset: 3px;
+  /* On ajoute une lueur bleue subtile autour du bouton quand il a le focus clavier */
+  box-shadow: 0 0 0 4px rgba(41, 74, 128, 0.15);
+}
+
+.admin-premium-btn:focus-visible::after {
+  opacity: 0.8;
+}
+
+.admin-premium-btn:active {
+  transform: translateY(-1px) scale(0.99);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 6px 14px rgba(16, 28, 47, 0.22);
+}
+
+.admin-premium-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  filter: none;
+}
+
+/* icône shield-check (à gauche) */
+.admin-icon-shield {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: #fff;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.admin-premium-btn:hover .admin-icon-shield {
+  transform: rotate(4deg);
+  color: var(--gold-500);
+}
+
+/* flèche arrow-up-right (à droite) */
+.admin-arrow {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.25s ease;
+}
+
+.admin-premium-btn:hover .admin-arrow {
+  transform: translateX(3px) rotate(-2deg);
+}
+
+/* Pulsation subtile de l'icône au survol (optionnelle, très douce) */
+@keyframes shield-pulse {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(2deg);
+  }
+}
+
+.admin-premium-btn:hover .admin-icon-shield {
+  animation: shield-pulse 1.5s ease-in-out infinite;
+}
+
+/* ---- Responsive : Ordinateur ---- */
+@media (min-width: 860px) {
+  .site-footer {
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 20px 0 12px;
+    gap: 24px;
+  }
+
+  .footer-copyright {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+    font-size: 0.82rem;
+  }
+
+  .admin-premium-btn {
+    margin-left: auto;
+    /* S'assurer qu'il ne dépasse pas sur petit footer d'ordinateur */
+    flex-shrink: 0;
+  }
+}
+
+/* ---- Responsive : Mobile ---- */
+@media (max-width: 859px) {
+  .site-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 0 12px;
+  }
+
+  .footer-copyright {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    font-size: 0.74rem;
+  }
+
+  .admin-premium-btn {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+    /* Espacement harmonieux sur mobile */
+    padding: 12px 20px;
+    margin: 0;
+  }
+}
+
+/* ---- prefers-reduced-motion : animations atténuées ---- */
+@media (prefers-reduced-motion: reduce) {
+  .admin-premium-btn {
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+
+  .admin-premium-btn:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(160deg, var(--blue-700) 0%, var(--blue-800) 100%);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.12) inset,
+      0 10px 22px rgba(16, 28, 47, 0.24);
+  }
+
+  .admin-premium-btn:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+  .admin-icon-shield {
+    transition: transform 0.01s ease, color 0.01s ease;
+    animation: none;
+  }
+
+  .admin-arrow {
+    transition: transform 0.01s ease, color 0.01s ease;
+    transform: none !important;
+  }
+}
+*/
+
 .official-site-button {
   display: inline-flex;
   align-items: center;
