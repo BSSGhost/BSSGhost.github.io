@@ -84,8 +84,8 @@ const translations = {
     lang_change_replaced: "Les notes en {langue} ont été supprimées.",
     lang_change_kept_both: "La langue {langue} est conservée : les deux langues font désormais partie des matières de la classe.",
     legend_serie: "Quelle série suivez-vous ?",
-    opt_serie_s1: "Sem1",
-    opt_serie_s2: "Sem2",
+    opt_serie_s1: "S1",
+    opt_serie_s2: "S2",
     coefficient_badge_text: "Coefficient officiel suggéré — modifiable si besoin",
     label_matiere: "Matière",
     option_matiere_default: "-- Sélectionner une matière --",
@@ -820,8 +820,8 @@ const translations = {
     lang_change_replaced: "Grades saved in {langue} have been deleted.",
     lang_change_kept_both: "The {langue} language is kept: both languages are now part of the class subjects.",
     legend_serie: "Which series are you in?",
-    opt_serie_s1: "Sem1",
-    opt_serie_s2: "Sem2",
+    opt_serie_s1: "S1",
+    opt_serie_s2: "S2",
     coefficient_badge_text: "Suggested official coefficient — editable if needed",
     label_matiere: "Subject",
     option_matiere_default: "-- Select a subject --",
@@ -2392,11 +2392,11 @@ function renderMoyenneResult({ pillText, value, subtitleText, coefficientText, m
 
 /* Matières qui n'existent pas dans certaines classes :
    - E2C : absente en 4e, 3e, 1er et Tle
-   - Informatique : absente en Tle */
+   - Informatique : absente en 1er, 3e et Tle */
 const MATIERES_EXCLUES_PAR_CLASSE = {
   '4e': ['E2C'],
-  '3e': ['E2C'],
-  '1er': ['E2C'],
+  '3e': ['E2C', 'Informatique'],
+  '1er': ['E2C', 'Informatique'],
   'Tle': ['E2C', 'Informatique']
 };
 
@@ -2612,7 +2612,7 @@ function getStoredNotesForClasse(classe, semestre = getSemestreActuel()) {
   try {
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return {};
-    // D'anciennes notes de matières retirées d'une classe (E2C, Informatique en Tle…) sont ignorées
+    // D'anciennes notes de matières retirées d'une classe (E2C, Informatique en 1er/3e/Tle…) sont ignorées
     const exclues = getMatieresExclues(classe).filter((matiere) => Object.prototype.hasOwnProperty.call(parsed, matiere));
     if (exclues.length) {
       const copie = { ...parsed };
