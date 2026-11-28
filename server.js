@@ -89,6 +89,13 @@ function isDbUnavailable(error) {
   return error?.message === 'mysql_not_configured' || DB_UNAVAILABLE_CODES.has(error?.code);
 }
 
+function formatGradeForClient(value) {
+  if (value === null || value === undefined || value === '') return '';
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '';
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+}
+
 function json(res, status, payload) {
   const body = JSON.stringify(payload);
   res.writeHead(status, {
@@ -429,9 +436,9 @@ async function teacherApi(req, res, url) {
         for (const grade of grades) {
           const id = clientId(grade);
           notes[id] = {
-            d1: grade.devoir1 === null ? '' : String(grade.devoir1),
-            d2: grade.devoir2 === null ? '' : String(grade.devoir2),
-            compo: grade.composition === null ? '' : String(grade.composition)
+            d1: formatGradeForClient(grade.devoir1),
+            d2: formatGradeForClient(grade.devoir2),
+            compo: formatGradeForClient(grade.composition)
           };
         }
         store[className].semestres[termName][assignment.subject_name] = {

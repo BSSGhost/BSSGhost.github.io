@@ -421,9 +421,33 @@
     }, 500);
   }
 
+  /* Le serveur stocke les notes en DECIMAL(5,2) : « 17 » peut revenir « 17.00 »,
+     que la saisie par quarts de point refuse. On ramène chaque note au format saisi. */
+  function normalizeRemoteNote(raw) {
+    const text = String(raw ?? '').trim();
+    if (!/^\d{1,2}(?:[.,]\d{1,2})?$/.test(text)) return text;
+    const n = Number(text.replace(',', '.'));
+    if (!Number.isFinite(n)) return text;
+    return Number.isInteger(n) ? String(n) : n.toFixed(2);
+  }
+
+  function normalizeRemoteNotes(target) {
+    Object.values(target || {}).forEach((cls) => {
+      Object.values((cls && cls.semestres) || {}).forEach((subjects) => {
+        Object.values(subjects || {}).forEach((subject) => {
+          Object.values((subject && subject.notes) || {}).forEach((n) => {
+            if (!n || typeof n !== 'object') return;
+            ['d1', 'd2', 'compo'].forEach((k) => { if (k in n) n[k] = normalizeRemoteNote(n[k]); });
+          });
+        });
+      });
+    });
+  }
+
   async function loadRemoteStore() {
     const data = await profApi('/api/teacher/workspace');
     store = data.store && typeof data.store === 'object' ? data.store : {};
+    normalizeRemoteNotes(store);
     normalizeStore();
     try { localStorage.setItem(PROF_STORE_KEY, JSON.stringify(store)); } catch {}
     setSyncStatus('Données chargées depuis le serveur.');
